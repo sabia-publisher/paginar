@@ -1,15 +1,18 @@
 <script setup>
-defineProps({
-	msg: {
-		type: String,
-		required: true
-	}
-})
+import SummaryButton from './SummaryButton.ce.vue';
+import OptionsButton from './OptionsButton.ce.vue';
+
 </script>
 
 <template>
-	<div class="border bg-gray-100 mt-10">
-		<slot name="header"></slot>
+	<div class="bg-gray-800 flex justify-between items-center p-4">
+		<summary-button />
+
+		<div>
+			<slot name="header"></slot>
+		</div>
+
+		<options-button />
 	</div>
 </template>
 

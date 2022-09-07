@@ -1,44 +1,43 @@
 <script>
 import HeaderSlot from './components/HeaderSlot.ce.vue'
+import NavigationButton from './components/NavigationButton.ce.vue'
 
 export default {
 	components: {
-		HeaderSlot
+		HeaderSlot,
+		NavigationButton
 	},
-	props: {
-		propertyOne: {
-			type: String,
-			default: 'propertyOne: showing default prop... nothing from above'
-		}
-	}
+	props: {}
 }
 </script>
 
 <template>
-	<header class="text-center">
-		<p class="text-3xl font-bold underline">
-			Pre-headerSlot
-		</p>
-
-		<div class="wrapper">
+	<main>
+		<header class="headerWrapper mb-10">
 			<HeaderSlot>
 				<template #header>
 					<slot name="header" />
 				</template>
 			</HeaderSlot>
-		</div>
+		</header>
 
-		<p class="py-10">
-			{{ propertyOne }}
-		</p>
+		<div id="engine">
+			<div class="engineWrapper overflow-hidden">
+				<NavigationButton target="prev" />
 
-		<div class="contentSlot">
-			<slot name="content" />
+				<div class="doubleColumns">
+					<div class="[ typeArea ] h-full relative transition-opacity duration-100 opacity-100 px-24">
+						<slot name="content" />
+					</div>
+				</div>
+
+				<NavigationButton target="next" />
+			</div>
 		</div>
-	</header>
+	</main>
 </template>
 
-<style lang="scss" src="./assets/main.scss"></style>
+<style lang="scss" src="./assets/main.css"></style>
 
 <style>
 </style>
