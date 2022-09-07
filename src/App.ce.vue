@@ -15,8 +15,10 @@ export default {
 </script>
 
 <template>
-	<header>
-		<p>Pre-headerSlot</p>
+	<header class="text-center">
+		<p class="text-3xl font-bold underline">
+			Pre-headerSlot
+		</p>
 
 		<div class="wrapper">
 			<HeaderSlot>
@@ -26,7 +28,7 @@ export default {
 			</HeaderSlot>
 		</div>
 
-		<p class="propParagraph">
+		<p class="py-10">
 			{{ propertyOne }}
 		</p>
 
@@ -39,21 +41,4 @@ export default {
 <style lang="scss" src="./assets/main.scss"></style>
 
 <style>
-header {
-	background: #eee
-}
-
-* {
-	color: black;
-	text-align: center;
-}
-
-.propParagraph {
-	margin: 25px 0
-}
-
-.contentSlot {
-	text-align: center;
-		border: 1px dotted #000;
-}
 </style>
