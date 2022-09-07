@@ -1,27 +1,36 @@
 <script>
-import HelloWorld from './components/HelloWorld.ce.vue'
+import HeaderSlot from './components/HeaderSlot.ce.vue'
 
 export default {
 	components: {
-		HelloWorld
+		HeaderSlot
 	},
-	props: ['propertyOne']
+	props: {
+		propertyOne: {
+			type: String,
+			default: 'propertyOne: showing default prop... nothing from above'
+		}
+	}
 }
 </script>
 
 <template>
 	<header>
+		<p>Pre-headerSlot</p>
+
 		<div class="wrapper">
-			<HelloWorld msg="You did it!">
+			<HeaderSlot>
 				<template #header>
 					<slot name="header" />
 				</template>
-			</HelloWorld>
+			</HeaderSlot>
 		</div>
 
-		{{ propertyOne }}
+		<p class="propParagraph">
+			{{ propertyOne }}
+		</p>
 
-		<div>
+		<div class="contentSlot">
 			<slot name="content" />
 		</div>
 	</header>
@@ -31,10 +40,20 @@ export default {
 
 <style>
 header {
-	background: red
+	background: #eee
 }
 
 * {
-	color: pink
+	color: black;
+	text-align: center;
+}
+
+.propParagraph {
+	margin: 25px 0
+}
+
+.contentSlot {
+	text-align: center;
+		border: 1px dotted #000;
 }
 </style>
