@@ -26,7 +26,7 @@ export function useEstimatePages(viewport, content) {
 	watchDebounced(
 		width,
 		() => { estimatePages() },
-		{ debounce: 500, maxWait: 1000 },
+		{ debounce: 250, maxWait: 500 },
 	)
 
 	estimatePages()
