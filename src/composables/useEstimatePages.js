@@ -1,4 +1,4 @@
-import { ref, } from 'vue'
+import { ref } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 export function useEstimatePages(viewport, content) {
