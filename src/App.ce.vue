@@ -5,7 +5,7 @@ import HeaderSlot from './components/HeaderSlot.ce.vue'
 import NavigationButton from './components/NavigationButton.ce.vue'
 import FooterSlot from './components/FooterSlot.ce.vue'
 
-import { useEstimatePages } from './composables/useEstimatePages';
+import { useEstimatePages } from './composables/useEstimatePages'
 
 const engine = ref(null)
 const readerComponent = ref(null)
@@ -13,10 +13,19 @@ const contentArea = ref(null)
 
 const currPage = ref(1)
 const totalPages = ref(1)
+// const width = ref(0)
+// const height = ref(0)
 
 onMounted(() => {
-	const total = useEstimatePages(readerComponent, contentArea)
-	totalPages.value = total
+	const {
+		totalPages: totalPagesRef,
+		width: widthRef,
+		height: heightRef
+	} = useEstimatePages(readerComponent, contentArea)
+
+	totalPages.value = totalPagesRef
+	// width.value = widthRef
+	// height.value = heightRef
 })
 
 </script>
@@ -47,7 +56,9 @@ onMounted(() => {
 			</div>
 		</div>
 
-		<FooterSlot :currPage="currPage" :totalPages="totalPages" />
+		<FooterSlot :currPage="currPage" :totalPages="totalPages">
+			<!--  – width: {{ width }} height: {{ height}} -->
+		</FooterSlot>
 	</main>
 </template>
 

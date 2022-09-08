@@ -1,15 +1,39 @@
+import { ref, } from 'vue'
+import { useWindowSize, watchDebounced } from '@vueuse/core'
+
 export function useEstimatePages(viewport, content) {
-	if (viewport && content) {
-		const { width: viewportWidth } = viewport.value.getBoundingClientRect()
-		const { width: contentWidth } = content.value.getBoundingClientRect()
 
-		if (contentWidth > viewportWidth) {
-			return Math.ceil(contentWidth / viewportWidth)
+	const totalPages = ref(1)
 
+	function estimatePages() {
+		if (viewport && content) {
+			const { width: viewportWidth } = viewport.value.getBoundingClientRect()
+			const { width: contentWidth } = content.value.getBoundingClientRect()
+
+			if (contentWidth > viewportWidth) {
+				totalPages.value = Math.ceil(contentWidth / viewportWidth)
+
+			} else {
+				totalPages.value = 1
+			}
 		} else {
-			return 1
+			totalPages.value = 1
 		}
-	} else {
-		return 1
+	}
+
+	const { width, height } = useWindowSize()
+
+	watchDebounced(
+		width,
+		() => { estimatePages() },
+		{ debounce: 500, maxWait: 1000 },
+	)
+
+	estimatePages()
+
+	return {
+		totalPages,
+		width,
+		height
 	}
 }

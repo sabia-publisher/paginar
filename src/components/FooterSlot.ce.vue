@@ -9,7 +9,8 @@ const props = defineProps({
 	<div class="bg-gray-800 flex justify-center items-center p-2 text-white">
 		<div>
 			<slot name="footer">
-				<p>Página {{ props.currPage }} de {{ props.totalPages }}</p>
+				<span>Página {{ props.currPage }} de {{ props.totalPages }}</span>
+				<slot name="default"></slot>
 			</slot>
 		</div>
 	</div>
