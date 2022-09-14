@@ -12,12 +12,15 @@ function init(viewport, content) {
 	useEstimatePages.estimate(viewport, content)
 }
 
+// when resizing the viewport, totalPages change
+// this watch is to currentPage inside totalPages range
 watch(totalPages, () => {
 	if (totalPages.value < currentPage.value) {
 		set(totalPages.value)
 	}
 })
 
+// navigate by increase/decrease value
 function goTo(val) {
 	if (
 		(state.currentPage + val) > 0 &&
@@ -27,6 +30,7 @@ function goTo(val) {
 	}
 }
 
+// navigate to specific page
 function set(val) {
 	state.currentPage = val
 }
