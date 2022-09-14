@@ -1,39 +1,28 @@
-import { ref } from 'vue'
-import { useWindowSize, watchDebounced } from '@vueuse/core'
+import { computed, reactive, watch } from 'vue'
 
-export function useEstimatePages(viewport, content) {
+const state = reactive({
+	totalPages: 1
+})
 
-	const totalPages = ref(1)
+function estimate(viewport, content) {
+	if (viewport && content) {
+		const { width: viewportWidth } = viewport.value.getBoundingClientRect()
+		const { width: contentWidth } = content.value.getBoundingClientRect()
 
-	function estimatePages() {
-		if (viewport && content) {
-			const { width: viewportWidth } = viewport.value.getBoundingClientRect()
-			const { width: contentWidth } = content.value.getBoundingClientRect()
+		if (contentWidth > viewportWidth) {
+			state.totalPages = Math.ceil(contentWidth / viewportWidth)
 
-			if (contentWidth > viewportWidth) {
-				totalPages.value = Math.ceil(contentWidth / viewportWidth)
-
-			} else {
-				totalPages.value = 1
-			}
 		} else {
-			totalPages.value = 1
+			state.totalPages = 1
 		}
+	} else {
+		state.totalPages = 1
 	}
+}
 
-	const { width, height } = useWindowSize()
+const totalPages = computed(() => state.totalPages)
 
-	watchDebounced(
-		width,
-		() => { estimatePages() },
-		{ debounce: 250, maxWait: 500 },
-	)
-
-	estimatePages()
-
-	return {
-		totalPages,
-		width,
-		height
-	}
+export default {
+	totalPages,
+	estimate
 }

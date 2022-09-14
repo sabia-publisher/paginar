@@ -1,30 +1,28 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot.ce.vue'
 import NavigationButton from './components/NavigationButton.ce.vue'
 import FooterSlot from './components/FooterSlot.ce.vue'
 
-import { usePagination } from './composables/usePagination'
+import usePagination from './composables/usePagination'
+import useEstimatePages from './composables/useEstimatePages'
+
+const { currentPage, totalPages, goTo, init } = usePagination
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
-
-const totalPages = ref(1)
-const currentPage = ref(1)
-let goTo = ref(null)
-
 onMounted(() => {
-	const {
-		totalPages: totalPagesRef,
-		currentPage: currentPageRef,
-		goTo: goToRef
-	} = usePagination(readerComponent, contentArea)
-
-	totalPages.value = computed(() => totalPagesRef.value)
-	currentPage.value = computed(() => currentPageRef.value)
-	goTo.value = goToRef
+	init(readerComponent, contentArea)
 })
+
+const { width, height } = useWindowSize()
+watchDebounced(
+	[width, height],
+	() => useEstimatePages.estimate(readerComponent, contentArea),
+	{ debounce: 250, maxWait: 500 }
+)
 
 </script>
 
@@ -42,7 +40,7 @@ onMounted(() => {
 
 				<div id="reader-component" ref="readerComponent">
 					<div class="doubleColumns"
-						:style="`margin-left: -${100 * (currentPage.value - 1)}%`"
+						:style="`margin-left: -${100 * (currentPage - 1)}%`"
 					>
 						<div class="[ typeArea ] h-full relative transition-opacity duration-100 opacity-100 px-24">
 							<section id="content-area" ref="contentArea">

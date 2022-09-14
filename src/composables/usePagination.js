@@ -1,22 +1,40 @@
-import { ref, watch } from 'vue'
-import { useEstimatePages } from './useEstimatePages'
+import { reactive, computed, watch } from 'vue'
+import useEstimatePages from './useEstimatePages'
 
-export function usePagination(viewport, content) {
-	const currentPage = ref(1)
-	const totalPages = ref(useEstimatePages(viewport, content).totalPages)
+const state = reactive({
+	currentPage: 1
+})
 
-	function goTo(val) {
-		if (
-			(currentPage.value + val) > 0 &&
-			(currentPage.value + val) <= totalPages.value
-		) {
-			currentPage.value = currentPage.value + val
-		}
+const currentPage = computed(() => state.currentPage)
+const totalPages = computed(() => useEstimatePages.totalPages.value)
+
+function init(viewport, content) {
+	useEstimatePages.estimate(viewport, content)
+}
+
+watch(totalPages, () => {
+	if (totalPages.value < currentPage.value) {
+		set(totalPages.value)
 	}
+})
 
-	return {
-		currentPage,
-		totalPages,
-		goTo
+function goTo(val) {
+	if (
+		(state.currentPage + val) > 0 &&
+		(state.currentPage + val) <= totalPages.value
+	) {
+		state.currentPage = state.currentPage + val
 	}
+}
+
+function set(val) {
+	state.currentPage = val
+}
+
+export default {
+	currentPage,
+	totalPages,
+	goTo,
+	init,
+	set
 }
