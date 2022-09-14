@@ -1,4 +1,5 @@
 import { reactive, computed, watch } from 'vue'
+import { onKeyStroke } from '@vueuse/core'
 import useEstimatePages from './useEstimatePages'
 
 const state = reactive({
@@ -21,14 +22,25 @@ watch(totalPages, () => {
 })
 
 // navigate by increase/decrease value
-function goTo(val) {
-	if (
-		(state.currentPage + val) > 0 &&
-		(state.currentPage + val) <= totalPages.value
-	) {
-		state.currentPage = state.currentPage + val
+function next() {
+	if ((state.currentPage + 1) <= totalPages.value) {
+		state.currentPage = state.currentPage + 1
 	}
 }
+onKeyStroke('ArrowRight', (e) => {
+	e.preventDefault()
+	next()
+})
+
+function prev() {
+	if ((state.currentPage - 1) > 0) {
+		state.currentPage = state.currentPage - 1
+	}
+}
+onKeyStroke('ArrowLeft', (e) => {
+	e.preventDefault()
+	prev()
+})
 
 // navigate to specific page
 function set(val) {
@@ -38,7 +50,8 @@ function set(val) {
 export default {
 	currentPage,
 	totalPages,
-	goTo,
+	next,
+	prev,
 	init,
 	set
 }

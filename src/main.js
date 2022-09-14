@@ -7,9 +7,9 @@ import HeaderSlot from './components/HeaderSlot.ce.vue'
 import tailwindStyles from  './tailwind.css'
 
 const styles = [
+	...[tailwindStyles],
 	...App.styles,
-	...HeaderSlot.styles,
-	...[tailwindStyles]
+	...HeaderSlot.styles
 ]
 
 customElements.define(

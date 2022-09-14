@@ -13,7 +13,7 @@ defineProps({
 	bookTitle: String
 })
 
-const { currentPage, totalPages, goTo, init } = usePagination
+const { currentPage, totalPages, next, prev, init } = usePagination
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
@@ -40,7 +40,7 @@ watchDebounced(
 
 		<div id="engine">
 			<div class="engineWrapper overflow-hidden">
-				<NavigationButton target="prev" @clicked="goTo(-1)" />
+				<NavigationButton target="prev" @clicked="prev()" />
 
 				<div id="reader-component" ref="readerComponent">
 					<div class="doubleColumns"
@@ -54,7 +54,7 @@ watchDebounced(
 					</div>
 				</div>
 
-				<NavigationButton target="next" @clicked="goTo(1)" />
+				<NavigationButton target="next" @clicked="next()" />
 			</div>
 		</div>
 
@@ -63,6 +63,3 @@ watchDebounced(
 </template>
 
 <style lang="scss" src="./assets/main.css"></style>
-
-<style>
-</style>
