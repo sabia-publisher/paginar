@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineProps } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot.ce.vue'
@@ -8,6 +8,10 @@ import FooterSlot from './components/FooterSlot.ce.vue'
 
 import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
+
+defineProps({
+	bookTitle: String
+})
 
 const { currentPage, totalPages, goTo, init } = usePagination
 
