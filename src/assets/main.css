@@ -1,0 +1,61 @@
+header.wrapper {
+	width: 200px;
+	margin: 0 auto;
+}
+
+#engine {
+	height: calc(100vh - 10.1rem);
+	position: relative;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.engineWrapper {
+	height: calc(100% - 3rem);
+    display: flex;
+    justify-content: space-between;
+	position: relative;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.doubleColumns {
+	-moz-column-count: 2;
+    column-count: 2;
+    grid-column-gap: 0;
+    -moz-column-gap: 0;
+    column-gap: 0;
+    height: 100%;
+    padding: 0;
+    width: 100%;
+}
+
+.nav-prev {
+	@apply left-0;
+}
+
+.nav-next {
+	@apply right-0;
+}
+
+.viewer-nav {
+	height: 100%;
+
+	@apply fixed md:relative z-10 inset-y-0 transition duration-500 ease-in-out self-center w-10 cursor-pointer flex-shrink-0;
+
+
+	&:focus,
+	&:active {
+		border: none !important;
+		box-shadow: none !important;
+		outline-color: transparent !important;
+	}
+}
+
+.viewer-nav-icon {
+	@apply opacity-0 md:opacity-80;
+}
