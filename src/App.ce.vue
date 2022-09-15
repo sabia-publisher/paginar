@@ -4,7 +4,6 @@ import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot.ce.vue'
 import SummaryContent from './components/SummaryContent.ce.vue'
-import NavigationButton from './components/NavigationButton.ce.vue'
 import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'
 import FooterSlot from './components/FooterSlot.ce.vue'
@@ -18,7 +17,7 @@ const props = defineProps({
 	bookSummary: String
 })
 
-const { currentPage, totalPages, next, prev, init } = usePagination
+const { currentPage, totalPages, init } = usePagination
 const { content } = useTextContent
 
 const readerComponent = ref(null)

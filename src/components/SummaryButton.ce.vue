@@ -1,24 +1,92 @@
 <script setup>
+import { ref, defineProps } from 'vue'
+import { onClickOutside, onKeyStroke } from '@vueuse/core'
+
+import IconHome from './icons/Home.vue'
+import IconClose from './icons/Close.vue'
+import IconSummary from './icons/Summary.vue'
+
 import useTextContent from '../composables/useTextContent'
 const { summary } = useTextContent
+
+const props = defineProps({
+	book: Object,
+	chapter: Object,
+	locale: String,
+	summary: Array,
+})
+
+const show = ref(false)
+const button = ref(null)
+
+function toggleSummary() {
+	show.value = !show.value
+}
+function hide() {
+	show.value = false
+}
+onClickOutside(button, () => hide())
+onKeyStroke('Escape', () => hide())
 </script>
 
 <template>
-	<button class="border p-3 shadow flex items-center
-			 border-white text-white
-			 ">
-		<svg data-v-5a653ff5="" width="24" height="19" viewBox="0 0 24 19" fill="none" stroke="currentColor"
-			xmlns="http://www.w3.org/2000/svg">
-			<line x1="5" y1="1.08447" x2="1" y2="1.08447" stroke-width="2" stroke-linecap="round"></line>
-			<line x1="23" y1="1.04248" x2="11" y2="1.04248" stroke-width="2" stroke-linecap="round"></line>
-			<line x1="23" y1="9.08447" x2="14" y2="9.08447" stroke-width="2" stroke-linecap="round"></line>
-			<line x1="8" y1="9.14905" x2="4" y2="9.14905" stroke-width="2" stroke-linecap="round"></line>
-			<line x1="23" y1="17.149" x2="10.9993" y2="17.149" stroke-width="2" stroke-linecap="round"></line>
-			<line x1="5" y1="17.2429" x2="1" y2="17.2429" stroke-width="2" stroke-linecap="round"></line>
-		</svg>
-		<span class="ml-3">Sumário</span>
-	</button>
-</template>
+	<div ref="button" class="relative">
+		<div class="flex">
+			<a href="/" title="Homepage"
+				class="hidden md:flex items-center border p-3 shadow mr-3
+					border-gray-800 text-gray-800 dark:border-white dark:text-white"
+			>
+				<IconHome class="w-6 h-6"/>
+			</a>
 
-<style>
-</style>
+			<button @click.prevent="toggleSummary()"
+				class="border p-3 shadow flex items-center"
+				:class="{
+					'border-white text-white': invertBackground || show,
+					'border-gray-800 text-gray-800 dark:border-white dark:text-white': !invertBackground && !show,
+					'bg-terra': show
+				}"
+				id="summary-menu" aria-haspopup="true" :aria-expanded="show"
+			>
+				<IconSummary v-if="!show" />
+				<IconClose v-else class="w-6 h-6" />
+
+				<span class="block ml-3">
+					Sumário
+				</span>
+			</button>
+		</div>
+
+		<transition enter-active-class="transition ease-out duration-100 transform" enter-class="opacity-0 scale-95"
+			enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-75 transform"
+			leave-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95"
+		>
+			<div v-if="show"
+				class="absolute top-14 py-4 px-3 shadow-lg w-60 md:w-104
+					text-areia -left-2 md:left-16 z-10 bg-white"
+				:role="Sumário"
+				aria-orientation="vertical"
+				aria-labelledby="summary-menu"
+			>
+				<nav>
+					<a href="/" class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
+						Voltar ao catálogo
+					</a>
+					<div class="my-3 border-b"></div>
+					<a href="/" class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
+						Capa
+					</a>
+
+					<a v-for="item in summary"
+						:key="item.link"
+						:href="item.link"
+						:title="`Navegar para capítulo ${item.title}`"
+						class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2"
+					>
+						{{ item.title }}
+					</a>
+				</nav>
+			</div>
+		</transition>
+	</div>
+</template>
