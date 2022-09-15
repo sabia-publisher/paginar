@@ -6,11 +6,14 @@ const state = reactive({
 })
 
 const content = computed(() => state.content)
+const summary = computed(() => state.summary)
 
 async function initContent(summaryString) {
 	const summary = summaryString
 		? JSON.parse(summaryString)
 		: null
+
+	state.summary = summary
 
 	if (summary?.[0]?.file) {
 		getContent(summary?.[0]?.file)
@@ -18,7 +21,6 @@ async function initContent(summaryString) {
 }
 
 async function getContent(location) {
-	console.log('chamou')
 	try {
 		const dataRef = await fetch(location)
 		const text = await dataRef.text()
@@ -31,6 +33,7 @@ async function getContent(location) {
 
 export default {
 	content,
+	summary,
 	initContent,
 	getContent
 }

@@ -1,4 +1,6 @@
 <script setup>
+import useTextContent from '../composables/useTextContent'
+const { summary } = useTextContent
 </script>
 
 <template>

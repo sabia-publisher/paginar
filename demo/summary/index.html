@@ -23,7 +23,9 @@
 			{ title: 'Chapter 3', file: './_content/3chapter.html' }
 		]
 		const paginationEl = document.getElementById('pagination-el')
-		paginationEl.setAttribute("book-summary", JSON.stringify(summary))
+		if (paginationEl) {
+			paginationEl.setAttribute("book-summary", JSON.stringify(summary))
+		}
 	</script>
 	<script type="module" src="/src/main.js"></script>
 

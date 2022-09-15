@@ -5,6 +5,8 @@ import { useWindowSize, watchDebounced } from '@vueuse/core'
 import HeaderSlot from './components/HeaderSlot.ce.vue'
 import SummaryContent from './components/SummaryContent.ce.vue'
 import NavigationButton from './components/NavigationButton.ce.vue'
+import EngineWrapper from './components/EngineWrapper.vue'
+import ReaderWrapper from './components/ReaderWrapper.vue'
 import FooterSlot from './components/FooterSlot.ce.vue'
 
 import usePagination from './composables/usePagination'
@@ -32,7 +34,6 @@ watchDebounced(
 	() => useEstimatePages.estimate(readerComponent, contentArea),
 	{ debounce: 125, maxWait: 250 }
 )
-
 </script>
 
 <template>
@@ -40,6 +41,7 @@ watchDebounced(
 		<HeaderSlot>
 			<template #header>
 				<slot name="header">
+
 					<p class="text-white text-center text-xs">
 						{{ props.bookTitle }}
 					</p>
@@ -47,35 +49,18 @@ watchDebounced(
 			</template>
 		</HeaderSlot>
 
-		<div id="engine">
-			<div class="engineWrapper overflow-hidden">
-				<NavigationButton
-					target="prev"
-					@clicked="prev()"
-				/>
-
-				<div id="reader-component" ref="readerComponent">
-					<div class="doubleColumns"
-						:style="`margin-left: -${100 * (currentPage - 1)}%`"
-					>
-						<div class="[ typeArea ] h-full relative
-							transition-opacity duration-100 opacity-100 px-24"
-						>
-							<section id="content-area" ref="contentArea">
-								<slot name="content">
-									<SummaryContent :bookSummary="bookSummary" />
-								</slot>
-							</section>
-						</div>
-					</div>
-				</div>
-
-				<NavigationButton
-					target="next"
-					@clicked="next()"
-				/>
+		<EngineWrapper>
+			<div id="reader-component" ref="readerComponent">
+				<ReaderWrapper>
+					<section id="content-area" ref="contentArea">
+						<slot name="content">
+							<!-- default when no content slot, and there is a summary -->
+							<SummaryContent :bookSummary="bookSummary" />
+						</slot>
+					</section>
+				</ReaderWrapper>
 			</div>
-		</div>
+		</EngineWrapper>
 
 		<FooterSlot
 			:currPage="currentPage"

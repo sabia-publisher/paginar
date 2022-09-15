@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, onMounted } from 'vue'
 
 import useTextContent from '../composables/useTextContent'
 const { content, initContent } = useTextContent
@@ -8,9 +8,13 @@ const props = defineProps({
 	bookSummary: String
 })
 
-initContent(props.bookSummary)
+onMounted(() => {
+	initContent(props.bookSummary)
+})
 </script>
 
 <template>
-	<div v-html="content"></div>
+	<div>
+		<div v-html="content"></div>
+	</div>
 </template>
