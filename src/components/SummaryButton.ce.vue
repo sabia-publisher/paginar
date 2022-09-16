@@ -7,6 +7,7 @@ import IconClose from './icons/Close.vue'
 import IconSummary from './icons/Summary.vue'
 
 import useTextContent from '../composables/useTextContent'
+import usePagination from '../composables/usePagination'
 const { summary } = useTextContent
 
 const props = defineProps({
@@ -16,15 +17,17 @@ const props = defineProps({
 	summary: Array,
 })
 
+function getChapter(item) {
+	useTextContent.getContent(item.file)
+	usePagination.set(1)
+}
+
 const show = ref(false)
 const button = ref(null)
 
-function toggleSummary() {
-	show.value = !show.value
-}
-function hide() {
-	show.value = false
-}
+const toggleSummary = () => show.value = !show.value
+const hide = () => show.value = false
+
 onClickOutside(button, () => hide())
 onKeyStroke('Escape', () => hide())
 </script>
@@ -77,14 +80,15 @@ onKeyStroke('Escape', () => hide())
 						Capa
 					</a>
 
-					<a v-for="item in summary"
+					<component v-for="item in summary" :is="item.link ? 'a' : 'button'"
 						:key="item.link"
 						:href="item.link"
 						:title="`Navegar para capítulo ${item.title}`"
-						class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2"
+						class="w-full text-left block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2"
+						@click="item.file ? getChapter(item) : null"
 					>
 						{{ item.title }}
-					</a>
+					</component>
 				</nav>
 			</div>
 		</transition>

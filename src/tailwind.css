@@ -624,6 +624,10 @@ video {
   width: 15rem;
 }
 
+.w-full {
+  width: 100%;
+}
+
 .scale-95 {
   --tw-scale-x: .95;
   --tw-scale-y: .95;
@@ -718,6 +722,10 @@ video {
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+.text-left {
+  text-align: left;
 }
 
 .text-center {

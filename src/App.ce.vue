@@ -40,7 +40,6 @@ watchDebounced(
 		<HeaderSlot>
 			<template #header>
 				<slot name="header">
-
 					<p class="text-white text-center text-xs">
 						{{ props.bookTitle }}
 					</p>
