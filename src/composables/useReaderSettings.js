@@ -1,3 +1,4 @@
+import { set } from '@vueuse/core'
 import { reactive, computed, watch } from 'vue'
 
 const state = reactive({
@@ -20,6 +21,11 @@ const fontSize = computed(() => state.fontSize)
 const fontsOptions = computed(() => state.fontsOptions)
 const columns = computed(() => state.columns)
 const mode = computed(() => state.mode)
+
+watch(
+	[baseFont, textFont, fontSize, columns, mode],
+	() => saveSettings()
+)
 
 async function initSettings(settingsString) {
 	const settings = settingsString
@@ -54,22 +60,25 @@ async function initSettings(settingsString) {
 			state.textFont = defaultTextFont.name
 	}
 
+	loadSavedSettings(settings)
 }
 
-function setColumns(value) {
-	state.columns = value
-}
+function loadSavedSettings(settings) {
+	const hasSettings = localStorage.getItem('readerSettings')
 
-function setTextFont(value) {
-	state.textFont = value
-}
+	if (hasSettings) {
+		const savedSettings = JSON.parse(hasSettings)
 
-function setFontSize(value) {
-	state.fontSize = value
-}
+		state.fontSize = savedSettings.fontSize
+		state.columns = savedSettings.columns
+		state.mode = savedSettings.mode
 
-function setMode(value) {
-	state.mode = value
+		if (settings?.fontsOptions &&
+			settings?.fontsOptions?.find(item => item.name === savedSettings.textFont)
+		) {
+			state.textFont = savedSettings.textFont
+		}
+	}
 }
 
 function fontLoader(fontsOptions) {
@@ -89,6 +98,34 @@ function fontLoader(fontsOptions) {
 	}
 }
 
+function setColumns(value) {
+	state.columns = value
+}
+
+function setTextFont(value) {
+	state.textFont = value
+}
+
+function setFontSize(value) {
+	state.fontSize = value
+}
+
+function setMode(value) {
+	state.mode = value
+}
+
+function saveSettings() {
+	localStorage.setItem(
+		'readerSettings',
+		JSON.stringify({
+			textFont: textFont.value,
+			fontSize: fontSize.value,
+			columns: columns.value,
+			mode: mode.value
+		})
+	)
+}
+
 export default {
 	baseFont,
 	textFont,
@@ -100,5 +137,6 @@ export default {
 	setTextFont,
 	setFontSize,
 	mode,
-	setMode
+	setMode,
+	saveSettings
 }

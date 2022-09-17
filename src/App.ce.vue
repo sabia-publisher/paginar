@@ -22,6 +22,7 @@ const props = defineProps({
 const { currentPage, totalPages, init } = usePagination
 const { content } = useTextContent
 const { initSettings, baseFont, textFont, fontSize, columns } = useReaderSettings
+const { width, height } = useWindowSize()
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
@@ -31,7 +32,6 @@ onMounted(() => {
 	initSettings(props.readerSettings)
 })
 
-const { width, height } = useWindowSize()
 watchDebounced(
 	[width, height, content, columns, fontSize, textFont],
 	() => useEstimatePages.estimate(readerComponent, contentArea),
