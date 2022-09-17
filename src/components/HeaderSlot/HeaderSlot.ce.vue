@@ -5,7 +5,7 @@ import OptionsButton from './OptionsButton/OptionsButton.ce.vue';
 </script>
 
 <template>
-	<div class="bg-gray-800 flex justify-between items-center p-4 mb-10">
+	<div class="bg-gray-800 flex justify-between items-center p-4">
 		<summary-button />
 
 		<div>

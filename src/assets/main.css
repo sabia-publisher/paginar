@@ -4,12 +4,24 @@ header.wrapper {
 }
 
 #engine {
-	height: calc(100vh - 10.1rem);
+	height: calc(100vh - 7.6rem);
 	position: relative;
     right: 0;
     left: 0;
     bottom: 0;
     width: 100%;
+
+	&.light {
+		background-color: #fff7e0
+	}
+
+	&.dark {
+		background-color: #2d2d2d;
+
+		#content-area {
+			color: #fff
+		}
+	}
 }
 
 #reader-component {
@@ -21,7 +33,7 @@ header.wrapper {
 }
 
 .engineWrapper {
-	height: calc(100% - 3rem);
+	height: calc(100% - 2rem);
     display: flex;
     justify-content: space-between;
 	position: relative;

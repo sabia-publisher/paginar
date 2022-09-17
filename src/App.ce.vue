@@ -55,7 +55,7 @@ watchDebounced(
 			<div id="reader-component" ref="readerComponent">
 				<ReaderWrapper>
 					<section id="content-area" ref="contentArea"
-						:style="`font-family: ${textFont}; font-size: ${fontSize}`"
+						:style="`font-family: ${textFont}; font-size: ${fontSize}px`"
 					>
 						<slot name="content">
 							<!-- default when no content slot, and there is a summary -->

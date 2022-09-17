@@ -9,8 +9,9 @@ const state = reactive({
 		{ name: 'Arial, sans-serif' },
 		{ name: 'Verdana, sans-serif' },
 	],
-	fontSize: '16px',
-	columns: 'singleColumns'
+	fontSize: 16,
+	columns: 'singleColumns',
+	mode: 'light'
 })
 
 const baseFont = computed(() => state.baseFont)
@@ -18,6 +19,7 @@ const textFont = computed(() => state.textFont)
 const fontSize = computed(() => state.fontSize)
 const fontsOptions = computed(() => state.fontsOptions)
 const columns = computed(() => state.columns)
+const mode = computed(() => state.mode)
 
 async function initSettings(settingsString) {
 	const settings = settingsString
@@ -31,7 +33,7 @@ async function initSettings(settingsString) {
 		state.textFont = settings.textFont
 
 	if (settings?.fontSize)
-		state.fontSize = settings.fontSize
+		state.fontSize = Number(settings.fontSize)
 
 	if (settings?.fontsOptions) {
 		state.fontsOptions = settings.fontsOptions
@@ -62,6 +64,14 @@ function setTextFont(value) {
 	state.textFont = value
 }
 
+function setFontSize(value) {
+	state.fontSize = value
+}
+
+function setMode(value) {
+	state.mode = value
+}
+
 function fontLoader(fontsOptions) {
 	const fontsToLoad = fontsOptions.filter(item => item.link)
 
@@ -87,5 +97,8 @@ export default {
 	columns,
 	initSettings,
 	setColumns,
-	setTextFont
+	setTextFont,
+	setFontSize,
+	mode,
+	setMode
 }
