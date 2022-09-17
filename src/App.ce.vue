@@ -2,7 +2,7 @@
 import { ref, onMounted, defineProps, watch } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
-import HeaderSlot from './components/HeaderSlot.ce.vue'
+import HeaderSlot from './components/HeaderSlot/HeaderSlot.ce.vue'
 import FileContent from './components/FileContent.ce.vue'
 import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'

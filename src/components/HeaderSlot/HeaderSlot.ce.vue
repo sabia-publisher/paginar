@@ -1,6 +1,6 @@
 <script setup>
-import SummaryButton from './SummaryButton.ce.vue';
-import OptionsButton from './OptionsButton.ce.vue';
+import SummaryButton from './SummaryButton/SummaryButton.ce.vue';
+import OptionsButton from './OptionsButton/OptionsButton.ce.vue';
 
 </script>
 
