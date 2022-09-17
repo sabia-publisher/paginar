@@ -33,7 +33,7 @@ onMounted(() => {
 
 const { width, height } = useWindowSize()
 watchDebounced(
-	[width, height, content, columns],
+	[width, height, content, columns, fontSize, textFont],
 	() => useEstimatePages.estimate(readerComponent, contentArea),
 	{ debounce: 125, maxWait: 250 }
 )
