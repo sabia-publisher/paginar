@@ -1,5 +1,5 @@
 <script setup>
-import { ref, defineProps } from 'vue'
+import { ref } from 'vue'
 import { onClickOutside, onKeyStroke } from '@vueuse/core'
 
 import IconHome from './icons/Home.vue'
@@ -9,13 +9,6 @@ import IconSummary from './icons/Summary.vue'
 import useTextContent from '../composables/useTextContent'
 import usePagination from '../composables/usePagination'
 const { summary } = useTextContent
-
-const props = defineProps({
-	book: Object,
-	chapter: Object,
-	locale: String,
-	summary: Array,
-})
 
 function getChapter(item) {
 	useTextContent.getContent(item.file)
