@@ -12,6 +12,14 @@ header.wrapper {
     width: 100%;
 }
 
+#reader-component {
+	width: 100%;
+}
+
+.typeArea {
+	width: 100%;
+}
+
 .engineWrapper {
 	height: calc(100% - 3rem);
     display: flex;
@@ -33,6 +41,20 @@ header.wrapper {
     padding: 0;
     width: 100%;
 }
+
+.singleColumns {
+	column-count: 1;
+	column-gap: 0;
+	height: 100%;
+    padding: 0;
+    width: 100%;
+
+	#content-area {
+		max-width: 37em;
+		margin: 0 auto;
+	}
+}
+
 
 .nav-prev {
 	@apply left-0;

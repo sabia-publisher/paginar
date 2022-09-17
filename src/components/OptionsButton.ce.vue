@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { onClickOutside, onKeyStroke, useFullscreen } from '@vueuse/core'
 
 import IconThreeDots from './icons/ThreeDots.vue'
@@ -12,7 +12,9 @@ import DoubleColumn from './icons/DoubleColumn.vue'
 
 import useReaderSettings from '../composables/useReaderSettings'
 
-const { columns, setColumns } = useReaderSettings
+const { textFont, fontsOptions, fontSize, setTextFont,
+	columns, setColumns
+} = useReaderSettings
 
 const show = ref(false)
 const button = ref(null)
@@ -24,6 +26,10 @@ onClickOutside(button, () => hide())
 onKeyStroke('Escape', () => hide())
 
 const { toggle: toggleFullScreen } = useFullscreen()
+
+onMounted(() => {
+
+})
 
 </script>
 
@@ -98,41 +104,24 @@ const { toggle: toggleFullScreen } = useFullscreen()
 					</div>
 
 
-					<!--<div class="w-full grid grid-cols-4 gap-2 my-3">
+					<div class="w-full grid grid-cols-4 gap-2 my-3">
 
-						<button @click.prevent="changeFontFamily('LibreFranklin')"
-							class="LibreFranklin font-light text-lg tracking-wide border border-urucum w-full h-10 flex justify-center items-center"
+						<button v-for="font in fontsOptions"
+							:key="font.name"
+							@click.prevent="setTextFont(font.name)"
+							class="font-light text-lg tracking-wide border border-urucum w-full h-10 flex justify-center items-center"
 							:class="{
-										'bg-areia text-terra': fontFamily === 'LibreFranklin'
-									}" title="Libre Franklin">Ff</button>
-
-						<button @click.prevent="changeFontFamily('OpenDyslexic')"
-							class="OpenDyslexic font-bold text-lg leading-none tracking-wide border border-urucum w-full h-10 flex justify-center items-center"
-							:class="{
-										'bg-areia text-terra': fontFamily === 'OpenDyslexic'
-									}" title="Open Dyslexic">
-							<span class="relative -top-1">Ff</span>
-						</button>
-
-						<button @click.prevent="changeFontFamily('Atkinson')"
-							class="Atkinson font-bold text-lg leading-relaxed tracking-wide border border-urucum w-full h-10 flex justify-center items-center"
-							:class="{
-										'bg-areia text-terra': fontFamily === 'Atkinson'
-									}" title="Atkinson Hyperlegible">
-							Ff
-						</button>
-
-						<button @click.prevent="changeFontFamily('Alegreya')"
-							class="Alegreya font-bold text-lg leading-relaxed tracking-wide border border-urucum w-full h-10 flex justify-center items-center"
-							:class="{
-										'bg-areia text-terra': fontFamily === 'Alegreya'
-									}" title="Alegreya">
+								'bg-gray-100 text-gray-800 border-2 border-gray-500': textFont === font.name
+							}"
+							:style="`font-family: ${font.name}`"
+							:title="font.label ?? font.name"
+						>
 							Ff
 						</button>
 
 					</div>
 
-					<div class="w-full grid grid-cols-4 gap-2 my-3">
+					<!--<div class="w-full grid grid-cols-4 gap-2 my-3">
 
 						<button @click.prevent="changeFontSize(fontSize + 1)"
 							class="font-light text-base border border-urucum w-full h-10 flex justify-center items-center">+

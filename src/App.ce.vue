@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, defineProps } from 'vue'
+import { ref, onMounted, defineProps, watch } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot.ce.vue'
@@ -21,7 +21,7 @@ const props = defineProps({
 
 const { currentPage, totalPages, init } = usePagination
 const { content } = useTextContent
-const { initSettings, baseFont, columns } = useReaderSettings
+const { initSettings, baseFont, textFont, fontSize, columns } = useReaderSettings
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
@@ -54,7 +54,9 @@ watchDebounced(
 		<EngineWrapper>
 			<div id="reader-component" ref="readerComponent">
 				<ReaderWrapper>
-					<section id="content-area" ref="contentArea">
+					<section id="content-area" ref="contentArea"
+						:style="`font-family: ${textFont}; font-size: ${fontSize}`"
+					>
 						<slot name="content">
 							<!-- default when no content slot, and there is a summary -->
 							<FileContent :bookContent="bookContent" />
