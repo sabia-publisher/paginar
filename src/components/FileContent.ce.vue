@@ -5,11 +5,11 @@ import useTextContent from '../composables/useTextContent'
 const { content, initContent } = useTextContent
 
 const props = defineProps({
-	bookSummary: String
+	bookContent: String
 })
 
 onMounted(() => {
-	initContent(props.bookSummary)
+	initContent(props.bookContent)
 })
 </script>
 

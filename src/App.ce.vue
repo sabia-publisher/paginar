@@ -3,7 +3,7 @@ import { ref, onMounted, defineProps } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot.ce.vue'
-import SummaryContent from './components/SummaryContent.ce.vue'
+import FileContent from './components/FileContent.ce.vue'
 import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'
 import FooterSlot from './components/FooterSlot.ce.vue'
@@ -11,20 +11,24 @@ import FooterSlot from './components/FooterSlot.ce.vue'
 import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
 import useTextContent from './composables/useTextContent'
+import useReaderSettings from './composables/useReaderSettings'
 
 const props = defineProps({
 	bookTitle: String,
-	bookSummary: String
+	bookContent: String,
+	readerSettings: String
 })
 
 const { currentPage, totalPages, init } = usePagination
 const { content } = useTextContent
+const { initSettings, baseFont } = useReaderSettings
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
 
 onMounted(() => {
 	init(readerComponent, contentArea)
+	initSettings(props.readerSettings)
 })
 
 const { width, height } = useWindowSize()
@@ -36,7 +40,7 @@ watchDebounced(
 </script>
 
 <template>
-	<main>
+	<main :style="`font-family: ${baseFont}`">
 		<HeaderSlot>
 			<template #header>
 				<slot name="header">
@@ -53,7 +57,7 @@ watchDebounced(
 					<section id="content-area" ref="contentArea">
 						<slot name="content">
 							<!-- default when no content slot, and there is a summary -->
-							<SummaryContent :bookSummary="bookSummary" />
+							<FileContent :bookContent="bookContent" />
 						</slot>
 					</section>
 				</ReaderWrapper>

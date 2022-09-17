@@ -10,24 +10,30 @@
 
 <body>
 	<div id="app">
-		<paginate-content
-			id="pagination-el"
-			book-title="A Tale of Two Cities"
-		/>
+		<paginate-content id="pagination-el" book-title="A Tale of Two Cities" />
 	</div>
 
 	<script>
-		const summary = [
-			{ title: 'Chapter 1', file: './_content/1chapter.html' },
-			{ title: 'Chapter 2', file: './_content/2chapter.html' },
-			{ title: 'Chapter 3', file: './_content/3chapter.html' }
-		]
+		const settings = {
+			baseFont: '"Comic Sans MS", "Comic Sans", cursive',
+		}
+
+		const content = {
+			summary: [
+				{ title: 'Chapter 1', file: './_content/1chapter.html' },
+				{ title: 'Chapter 2', file: './_content/2chapter.html' },
+				{ title: 'Chapter 3', file: './_content/3chapter.html' }
+			]
+		}
+
 		const paginationEl = document.getElementById('pagination-el')
 		if (paginationEl) {
-			paginationEl.setAttribute("book-summary", JSON.stringify(summary))
+			paginationEl.setAttribute("reader-settings", JSON.stringify(settings))
+			paginationEl.setAttribute("book-content", JSON.stringify(content))
 		}
 	</script>
 	<script type="module" src="/src/main.js"></script>
 
 </body>
+
 </html>

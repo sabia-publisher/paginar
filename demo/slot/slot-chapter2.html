@@ -335,14 +335,22 @@
 		</paginate-content>
 	</div>
 	<script>
-		const summary = [
-			{ title: 'Chapter 1', link: './slot-chapter1.html' },
-			{ title: 'Chapter 2', link: './slot-chapter2.html' },
-			{ title: 'Chapter 3', link: './slot-chapter3.html' }
-		]
+			const settings = {
+				baseFont: 'Verdana, sans-serif',
+			}
+
+			const content = {
+				summary: [
+					{ title: 'Chapter 1', link: '/demo/slot/slot-chapter1.html' },
+					{ title: 'Chapter 2', link: '/demo/slot/slot-chapter2.html' },
+					{ title: 'Chapter 3', link: '/demo/slot/slot-chapter3.html' }
+				]
+		}
+
 		const paginationEl = document.getElementById('pagination-el')
 		if (paginationEl) {
-			paginationEl.setAttribute("book-summary", JSON.stringify(summary))
+			paginationEl.setAttribute("reader-settings", JSON.stringify(settings))
+			paginationEl.setAttribute("book-content", JSON.stringify(content))
 		}
 	</script>
 	<script type="module" src="/src/main.js"></script>

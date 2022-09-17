@@ -8,15 +8,16 @@ const state = reactive({
 const content = computed(() => state.content)
 const summary = computed(() => state.summary)
 
-async function initContent(summaryString) {
-	const summary = summaryString
-		? JSON.parse(summaryString)
+async function initContent(contentString) {
+	const content = contentString
+		? JSON.parse(contentString)
 		: null
 
-	state.summary = summary
+	if (content?.summary)
+		state.summary = content.summary
 
-	if (summary?.[0]?.file) {
-		getContent(summary?.[0]?.file)
+	if (content?.summary?.[0]?.file) {
+		getContent(content.summary?.[0]?.file)
 	}
 }
 
