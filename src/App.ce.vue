@@ -49,6 +49,22 @@ watchDebounced(
 					</p>
 				</slot>
 			</template>
+
+			<template #summaryTop>
+				<slot name="summaryTop"></slot>
+			</template>
+
+			<template #summaryBottom>
+				<slot name="summaryBottom"></slot>
+			</template>
+
+			<template #optionsTop>
+				<slot name="optionsTop"></slot>
+			</template>
+
+			<template #optionsBottom>
+				<slot name="optionsBottom"></slot>
+			</template>
 		</HeaderSlot>
 
 		<EngineWrapper>

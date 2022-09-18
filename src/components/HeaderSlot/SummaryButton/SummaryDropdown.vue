@@ -14,13 +14,7 @@ function getChapter(item) {
 			text-areia -left-2 md:left-16 z-10 bg-white" :role="Sumário" aria-orientation="vertical"
 		aria-labelledby="summary-menu">
 		<nav>
-			<a href="/" class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
-				Voltar ao catálogo
-			</a>
-			<div class="my-3 border-b"></div>
-			<a href="/" class="block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
-				Capa
-			</a>
+			<slot name="summaryTop" />
 
 			<component v-for="item in summary" :is="item.link ? 'a' : 'button'" :key="item.link"
 				:href="item.link" :title="`Navegar para capítulo ${item.title}`"
@@ -28,6 +22,8 @@ function getChapter(item) {
 				@click="item.file ? getChapter(item) : null">
 				{{ item.title }}
 			</component>
+
+			<slot name="summaryBottom" />
 		</nav>
 	</div>
 </template>

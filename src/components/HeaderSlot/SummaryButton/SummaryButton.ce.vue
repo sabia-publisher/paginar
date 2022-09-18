@@ -27,7 +27,8 @@ onKeyStroke('Escape', () => hide())
 				<IconHome class="w-6 h-6"/>
 			</a>
 
-			<button @click.prevent="toggleSummary()"
+			<button
+				@click.prevent="toggleSummary()"
 				class="border p-3 shadow flex items-center"
 				:class="{
 					'border-white text-white': invertBackground || show,
@@ -49,7 +50,15 @@ onKeyStroke('Escape', () => hide())
 			enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-75 transform"
 			leave-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95"
 		>
-			<SummaryDropdown v-if="show" />
+			<SummaryDropdown v-if="show">
+				<template #summaryTop>
+					<slot name="summaryTop"/>
+				</template>
+
+				<template #summaryBottom>
+					<slot name="summaryBottom"/>
+				</template>
+			</SummaryDropdown>
 		</transition>
 	</div>
 </template>

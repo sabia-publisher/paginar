@@ -47,7 +47,14 @@ const { toggle: toggleFullScreen } = useFullscreen()
 			enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-75 transform"
 			leave-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95"
 		>
-			<OptionsDropdown v-show="show" />
+			<OptionsDropdown v-show="show">
+				<template #optionsTop>
+					<slot name="optionsTop"/>
+				</template>
+				<template #optionsBottom>
+					<slot name="optionsBottom"/>
+				</template>
+			</OptionsDropdown>
 		</transition>
 	</div>
 </template>

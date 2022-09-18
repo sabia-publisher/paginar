@@ -10,7 +10,39 @@
 
 <body>
 	<div id="app">
-		<paginate-content id="pagination-el" book-title="A Tale of Two Cities" />
+		<paginate-content id="pagination-el" book-title="A Tale of Two Cities">
+			<div slot="summaryTop">
+				<a href="/" title="Catálogo" class="w-full text-left block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
+					Catálogo
+				</a>
+				<div class="my-3 border-b border-gray-100"></div>
+			</div>
+
+			<div slot="summaryBottom">
+				<div class="my-3 border-b border-gray-100"></div>
+				<a href="/" title="Catálogo" class="w-full text-left block text-black py-2 px-3 hover:bg-gray-100 rounded">
+					Referências
+				</a>
+			</div>
+
+			<div slot="header">
+				<img src="https://sabia.pub/images/logo-mobile-dark.svg" style="height: 40px">
+			</div>
+
+			<div slot="optionsTop">
+				<a href="/" title="Catálogo" class="w-full block text-black text-center py-2 px-3 hover:bg-gray-100 rounded mb-2">
+					Minha conta
+				</a>
+				<div class="my-3 border-b border-gray-100"></div>
+			</div>
+
+			<div slot="optionsBottom">
+				<div class="my-3 border-b border-gray-100"></div>
+				<a href="https://sabia.pub" target="_blank" title="Sobre a Editora" class="w-full block text-black text-center text-xs py-2 px-3 hover:bg-gray-100 rounded">
+					<img src="https://sabia.pub/images/logo.svg" style="height: 48px; margin: 0 auto; display: block;">
+				</a>
+			</div>
+		</paginate-content>
 	</div>
 
 	<script>

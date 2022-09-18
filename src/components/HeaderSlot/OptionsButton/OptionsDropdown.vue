@@ -14,7 +14,10 @@ import OptionsColor from './OptionsColor.vue'
 		aria-orientation="vertical"
 		aria-labelledby="options-menu"
 	>
-		<div class="pb-3">
+		<div>
+
+			<slot name="optionsTop" />
+
 			<div class="w-full flex justify-center items-center py-3">
 				<IconEye class="w-6 h-6" />
 				<span class="ml-4">Visualização</span>
@@ -30,6 +33,8 @@ import OptionsColor from './OptionsColor.vue'
 			</div>
 
 			<div class="hidden w-full border-b border-areia my-8"></div>
+
+			<slot name="optionsBottom" />
 		</div>
 	</div>
 </template>
