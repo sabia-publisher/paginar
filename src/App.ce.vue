@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, defineProps, watch } from 'vue'
+import { ref, onMounted, defineProps } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot/HeaderSlot.ce.vue'
@@ -16,31 +16,37 @@ import useReaderSettings from './composables/useReaderSettings'
 const props = defineProps({
 	bookTitle: String,
 	bookContent: String,
-	readerSettings: String
+	readerSettings: String,
+	cssFile: String
 })
 
+const { initSettings, baseFont, textFont, fontSize, columns, setColumns } = useReaderSettings
 const { currentPage, totalPages, init } = usePagination
 const { content } = useTextContent
-const { initSettings, baseFont, textFont, fontSize, columns } = useReaderSettings
 const { width, height } = useWindowSize()
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
 	init(readerComponent, contentArea)
 	initSettings(props.readerSettings)
 })
 
 watchDebounced(
 	[width, height, content, columns, fontSize, textFont],
-	() => useEstimatePages.estimate(readerComponent, contentArea),
+	() => {
+		if (width.value < 1024 && columns.value === 'doubleColumns')
+			setColumns('singleColumns')
+		else
+			useEstimatePages.estimate(readerComponent, contentArea)
+	},
 	{ debounce: 125, maxWait: 250 }
 )
 </script>
 
 <template>
-	<main :style="`font-family: ${baseFont}`">
+	<main ref="comp" :style="`font-family: ${baseFont}`">
 		<HeaderSlot>
 			<template #header>
 				<slot name="header">

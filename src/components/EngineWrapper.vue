@@ -11,7 +11,7 @@ const { mode } = useReaderSettings
 
 <template>
 	<div id="engine"
-		class="pt-10"
+		class="pt-10 transition-colors"
 		:class="mode"
 	>
 		<div class="engineWrapper overflow-hidden">

@@ -1,0 +1,143 @@
+ #content-area {
+	font-size: calc(1vw + 0.85em);
+	font-family: 'Libre Franklin', sans-serif;
+	line-height: 1.55;
+	counter-reset: line-number;
+	display: none !important;
+	/* Let's make sure all's aligned */
+}
+ #content-area h1, #content-area .h1 {
+	font-size: 4em;
+	line-height: 1.52380952em;
+	margin-bottom: 0.5em;
+	font-family: "Faune", sans-serif;
+	font-weight: bold;
+}
+ #content-area h2, #content-area .h2 {
+	font-size: 3em;
+	line-height: 1.22380952em;
+	margin-bottom: 0.5em;
+	font-family: "Faune", sans-serif;
+	font-weight: bold;
+	padding-right: 20%;
+}
+ #content-area h3, #content-area .h3 {
+	font-size: 2em;
+	line-height: 1.23076923em;
+	margin-top: 1.23076923em;
+	margin-bottom: 1.23076923em;
+	font-family: "Faune", sans-serif;
+	font-weight: bold;
+	padding-right: 25%;
+}
+ #content-area h4, #content-area .h4 {
+	font-size: 1.25em;
+	line-height: 2em;
+	margin-top: 2em;
+	margin-bottom: 2em;
+	font-family: "Faune", sans-serif;
+	font-weight: bold;
+}
+ #content-area h5, #content-area .h5 {
+	font-size: 1em;
+	line-height: 2em;
+	margin-top: 2em;
+	margin-bottom: 2em;
+	font-family: "Faune", sans-serif;
+	font-weight: bold;
+}
+ #content-area p {
+	text-indent: 2em;
+	font-weight: 300;
+}
+ #content-area .featured-text {
+	font-size: 2em;
+	margin: 2em 0;
+	font-family: "Faune", sans-serif;
+	text-align: right;
+}
+ #content-area .featured-text * {
+	font-weight: bold;
+	text-transform: uppercase;
+	text-indent: 0;
+}
+ #content-area ul, #content-area ol, #content-area pre, #content-area table {
+	margin: 2em 0;
+	font-weight: 300;
+}
+ #content-area blockquote {
+	margin: 2em 0 2em 2em;
+	padding-left: 2em;
+	font-style: italic;
+	font-weight: 300;
+}
+ #content-area ul ul, #content-area ol ol, #content-area ul ol, #content-area ol ul {
+	margin-top: 0em;
+	margin-bottom: 0em;
+}
+ #content-area hr, #content-area .hr {
+	border: 1px solid;
+	margin: -1px 0;
+}
+ #content-area a, #content-area b, #content-area i, #content-area strong, #content-area em, #content-area small, #content-area code, #content-area em {
+	line-height: 0;
+}
+ #content-area sub, #content-area sup {
+	line-height: 0;
+	position: relative;
+	vertical-align: baseline;
+}
+ #content-area sup {
+	top: -0.5em;
+}
+ #content-area sub {
+	bottom: -0.25em;
+}
+ #content-area em, #content-area i {
+	font-style: italic;
+}
+ #content-area strong, #content-area b {
+	font-weight: bold;
+}
+ #content-area h1 + p, #content-area h2 + p, #content-area h3 + p, #content-area h4 + p, #content-area h5 + p, #content-area h6 + p {
+	text-indent: 0 !important;
+}
+ #content-area .separator {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	padding: 2.5em 0;
+}
+ #content-area .separator span {
+	display: block;
+	width: 100px;
+	border-bottom: 1px solid #ccc;
+}
+ #content-area .list-item-style {
+	padding: 0.5em 0 0.5em 2em;
+	position: relative;
+	text-indent: 0 !important;
+}
+ #content-area .list-item-style::before {
+	content: '•';
+	position: absolute;
+	top: 0.65em;
+	left: 0;
+	width: 1em;
+	font-size: 2em;
+	line-height: 0;
+}
+ #content-area .list-number-style {
+	padding: 0.5em 0 0.5em 2em;
+	position: relative;
+	text-indent: 0 !important;
+	counter-increment: line-number;
+}
+ #content-area .list-number-style::before {
+	content: counter(line-number) '.';
+	position: absolute;
+	top: 1.3em;
+	left: 0;
+	font-size: 1em;
+	line-height: 0;
+}
