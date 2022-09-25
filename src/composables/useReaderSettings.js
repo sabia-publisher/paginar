@@ -1,4 +1,5 @@
 import { reactive, computed, watch } from 'vue'
+import useStyles from './useStyles'
 
 const state = reactive({
 	baseFont: 'Arial, sans-serif',
@@ -42,7 +43,7 @@ async function initSettings(settingsString) {
 
 	if (settings?.fontsOptions) {
 		state.fontsOptions = settings.fontsOptions
-		fontLoader(settings.fontsOptions)
+		useStyles.fontLoader(settings.fontsOptions)
 
 		// baseFont
 		const defaultBaseFont = settings.fontsOptions.find(
@@ -77,23 +78,6 @@ function loadSavedSettings(settings) {
 		) {
 			state.textFont = savedSettings.textFont
 		}
-	}
-}
-
-function fontLoader(fontsOptions) {
-	const fontsToLoad = fontsOptions.filter(item => item.link)
-
-	if (fontsToLoad.length > 0) {
-		const style = document.createElement('style')
-		const head = document.head || document.getElementsByTagName('head')[0]
-		head.appendChild(style)
-
-		style.type = 'text/css'
-		let css = ''
-		fontsToLoad.forEach(
-			item => css = css + `@import url(${item.link}); \n`
-		)
-		style.appendChild(document.createTextNode(css))
 	}
 }
 

@@ -12,6 +12,7 @@ import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
 import useTextContent from './composables/useTextContent'
 import useReaderSettings from './composables/useReaderSettings'
+import useStyles from './composables/useStyles'
 
 const props = defineProps({
 	bookTitle: String,
@@ -27,10 +28,15 @@ const { width, height } = useWindowSize()
 
 const readerComponent = ref(null)
 const contentArea = ref(null)
+const rootComponent = ref(null)
 
 onMounted(async () => {
 	init(readerComponent, contentArea)
 	initSettings(props.readerSettings)
+
+	if (props.cssFile) {
+		useStyles.stylesheetLoader(props.cssFile, rootComponent)
+	}
 })
 
 watchDebounced(
@@ -46,7 +52,7 @@ watchDebounced(
 </script>
 
 <template>
-	<main ref="comp" :style="`font-family: ${baseFont}`">
+	<main ref="rootComponent" :style="`font-family: ${baseFont}`">
 		<HeaderSlot>
 			<template #header>
 				<slot name="header">

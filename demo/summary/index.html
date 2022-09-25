@@ -6,11 +6,16 @@
 	<link rel="icon" href="/favicon.ico" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Sumário - Paginar</title>
+	<link rel="stylesheet" href="reset.css">
 </head>
 
 <body>
 	<div id="app">
-		<paginate-content id="pagination-el" book-title="A Tale of Two Cities" css-file="style.css">
+		<paginate-content
+			id="pagination-el"
+			book-title="A Tale of Two Cities"
+			css-file="https://paginar-css.surge.sh/style.css"
+		>
 			<div slot="summaryTop">
 				<a href="/" title="Catálogo" class="w-full text-left block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2">
 					Catálogo
@@ -87,6 +92,7 @@
 			paginationEl.setAttribute("book-content", JSON.stringify(content))
 		}
 	</script>
+	<!-- <script type="module" src="./js/index.es.js"></script> -->
 	<script type="module" src="/src/main.js"></script>
 
 </body>
