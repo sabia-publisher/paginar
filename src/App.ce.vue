@@ -2,11 +2,11 @@
 import { ref, onMounted, defineProps } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
-import HeaderSlot from './components/HeaderSlot/HeaderSlot.ce.vue'
-import FileContent from './components/FileContent.ce.vue'
+import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
+import BookContent from './components/BookContent.vue'
 import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'
-import FooterSlot from './components/FooterSlot.ce.vue'
+import FooterSlot from './components/FooterSlot.vue'
 
 import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
@@ -49,6 +49,7 @@ watchDebounced(
 	},
 	{ debounce: 125, maxWait: 250 }
 )
+
 </script>
 
 <template>
@@ -85,10 +86,11 @@ watchDebounced(
 					<section id="content-area" ref="contentArea"
 						:style="`font-family: ${textFont}; font-size: ${fontSize}px`"
 					>
-						<slot name="content">
-							<!-- default when no content slot, and there is a summary -->
-							<FileContent :bookContent="bookContent" />
-						</slot>
+						<BookContent :bookContent="bookContent">
+							<template #content>
+								<slot name="content"></slot>
+							</template>
+						</BookContent>
 					</section>
 				</ReaderWrapper>
 			</div>

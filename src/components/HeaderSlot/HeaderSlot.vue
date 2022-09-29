@@ -1,6 +1,6 @@
 <script setup>
-import SummaryButton from './SummaryButton/SummaryButton.ce.vue';
-import OptionsButton from './OptionsButton/OptionsButton.ce.vue';
+import SummaryButton from './SummaryButton/SummaryButton.vue';
+import OptionsButton from './OptionsButton/OptionsButton.vue';
 </script>
 
 <template>
@@ -28,10 +28,3 @@ import OptionsButton from './OptionsButton/OptionsButton.ce.vue';
 		</options-button>
 	</div>
 </template>
-
-<style>
-.headerSlot {
-	text-align: center;
-	border: 1px dashed #000;
-}
-</style>

@@ -15,6 +15,7 @@ onMounted(() => {
 
 <template>
 	<div>
-		<div v-html="content"></div>
+		<div v-if="content" v-html="content"></div>
+		<slot v-else name="content"></slot>
 	</div>
 </template>

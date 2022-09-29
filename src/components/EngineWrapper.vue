@@ -1,5 +1,5 @@
 <script setup>
-import NavigationButton from './NavigationButton.ce.vue'
+import NavigationButton from './NavigationButton.vue'
 
 import usePagination from '../composables/usePagination'
 import useReaderSettings from '../composables/useReaderSettings'

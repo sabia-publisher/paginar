@@ -2,14 +2,12 @@
 import { defineCustomElement } from 'vue'
 
 import App from './App.ce.vue'
-import HeaderSlot from './components/HeaderSlot/HeaderSlot.ce.vue'
 
 import tailwindStyles from  './tailwind.css'
 
 const styles = [
 	...[tailwindStyles],
-	...App.styles,
-	...HeaderSlot.styles
+	...App.styles
 ]
 
 customElements.define(
