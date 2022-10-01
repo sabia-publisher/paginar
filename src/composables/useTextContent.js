@@ -10,7 +10,7 @@ const state = reactive({
 const content = computed(() => state.content)
 const summary = computed(() => state.summary)
 
-async function initContent(contentString) {
+async function initContent(contentString, contentWrapper) {
 	const { setReferences, applyReferences, listenToReferencesClick } = useReferences
 
 	const content = contentString
@@ -41,7 +41,8 @@ async function initContent(contentString) {
 		}
 	}
 
-	listenToReferencesClick()
+	// after applying references above, now we start to listen to its clicks
+	listenToReferencesClick(contentWrapper)
 }
 
 async function getContent(location) {

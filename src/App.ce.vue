@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, defineProps } from 'vue'
+import { ref, onMounted, defineProps, onBeforeUnmount } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
@@ -13,6 +13,7 @@ import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
 import useTextContent from './composables/useTextContent'
 import useReaderSettings from './composables/useReaderSettings'
+import useReferences from './composables/useReferences'
 import useStyles from './composables/useStyles'
 
 const props = defineProps({

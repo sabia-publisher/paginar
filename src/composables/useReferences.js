@@ -1,4 +1,5 @@
 import { computed, reactive } from 'vue'
+import { useEventListener } from '@vueuse/core'
 
 const state = reactive({
 	references: [],
@@ -25,10 +26,10 @@ function applyReferences(contentRaw) {
 		if (!content) return content
 
 		if (content.includes(reference.cit)) {
-			var regex = new RegExp(reference.cit, "g");
+			var regex = new RegExp(reference.cit, 'g');
 			const newContent = content.replace(
 				regex,
-				`<span class="reference" data-ref="${reference.cit}">${reference.cit}</span>`
+				`<span class='reference' data-ref='${reference.cit}'>${reference.cit}</span>`
 			);
 			return newContent
 		}
@@ -36,18 +37,14 @@ function applyReferences(contentRaw) {
 	}, contentRaw)
 }
 
-function listenToReferencesClick() {
+function listenToReferencesClick(contentWrapper) {
 	setTimeout(() => {
-		var elements = document.getElementsByClassName("reference");
-
-		for (var i = 0; i < elements.length; i++) {
-			elements[i].addEventListener('click', getClickedReferenceData)
-		}
-	}, 250)
+		useEventListener(contentWrapper, 'click', getClickedReferenceData)
+	}, 100)
 }
 
 function getClickedReferenceData(event) {
-	var attribute = event.target.getAttribute("data-ref")
+	var attribute = event.target.getAttribute('data-ref')
 	const ref = state.references.find(item => item.cit === attribute)
 	if (ref) {
 		state.reference = ref
