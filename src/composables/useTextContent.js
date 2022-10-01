@@ -56,9 +56,16 @@ async function getContent(location) {
 	}
 }
 
+function applyContent(text) {
+	const { applyReferences } = useReferences
+	const newContent = applyReferences(text)
+	state.content = newContent
+}
+
 export default {
 	content,
 	summary,
 	initContent,
-	getContent
+	getContent,
+	applyContent
 }

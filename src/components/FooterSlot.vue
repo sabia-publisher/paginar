@@ -1,22 +1,31 @@
 <script setup>
+import { ref } from 'vue'
+import Slider from '@vueform/slider'
+
 import usePagination from '../composables/usePagination';
 const { totalPages, currentPage, set } = usePagination
+
+const height = ref(10)
+
 </script>
 
 <template>
-	<div class="bg-gray-800 flex justify-center items-center p-2 text-white">
-		<div>
-			<input type="range"
-				:min="1"
-				:max="totalPages"
-				:value="currentPage"
-				@input="event => set(Number(event.target.value))"
-			>
-
-			<slot name="footer">
+	<div class="p-2 text-gray-700 dark:text-white">
+		<slot name="footer">
+			<div class="w-full text-center text-sm mb-2">
 				<span>Página {{ currentPage }} de {{ totalPages }}</span>
-				<slot name="default"></slot>
-			</slot>
-		</div>
+			</div>
+		</slot>
+
+		<Slider
+			:modelValue="currentPage"
+			@update:modelValue="set(Math.round($event))"
+			:min="1"
+			:max="totalPages"
+			:step="-1"
+			:tooltips="false"
+			:lazy="false"
+			class="w-full"
+		/>
 	</div>
 </template>

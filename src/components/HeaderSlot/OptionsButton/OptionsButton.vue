@@ -23,9 +23,8 @@ const { toggle: toggleFullScreen } = useFullscreen()
 	<div ref="button" class="relative">
 		<div class="flex">
 			<button @click.prevent="toggleSummary()" class="border p-3 shadow flex items-center" :class="{
-				'border-white text-white': invertBackground || show,
-				'border-gray-800 text-gray-800 dark:border-white dark:text-white': !invertBackground && !show,
-				'bg-terra': show
+				'border-white text-white': show,
+				'border-gray-800 text-gray-800 dark:border-white dark:text-white': !show
 			}" id="summary-menu" aria-haspopup="true" :aria-expanded="show">
 				<span class="block mr-3">
 					Opções

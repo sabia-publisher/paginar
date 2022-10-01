@@ -3,8 +3,9 @@ import useTextContent from '../../../composables/useTextContent'
 import usePagination from '../../../composables/usePagination'
 const { summary } = useTextContent
 
-function getChapter(item) {
-	useTextContent.getContent(item.file)
+async function getChapter(item) {
+	const text = await useTextContent.getContent(item.file)
+	useTextContent.applyContent(text)
 	usePagination.set(1)
 }
 </script>
