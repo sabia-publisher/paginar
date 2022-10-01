@@ -6,6 +6,7 @@ import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
 import BookContent from './components/BookContent.vue'
 import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'
+import ReferencePopup from './components/ReferencePopup.vue'
 import FooterSlot from './components/FooterSlot.vue'
 
 import usePagination from './composables/usePagination'
@@ -100,6 +101,8 @@ watchDebounced(
 			:currPage="currentPage"
 			:totalPages="totalPages"
 		/>
+
+		<ReferencePopup />
 	</main>
 </template>
 
