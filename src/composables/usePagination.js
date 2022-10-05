@@ -11,6 +11,7 @@ const totalPages = computed(() => useEstimatePages.totalPages.value)
 
 function init(viewport, content) {
 	useEstimatePages.estimate(viewport, content)
+	addEventListener('wheel', onWheel)
 }
 
 // when resizing the viewport, totalPages change
@@ -31,6 +32,14 @@ onKeyStroke('ArrowRight', (e) => {
 	e.preventDefault()
 	next()
 })
+
+function onWheel(event) {
+	if (event.wheelDelta < 0) {
+		next()
+	} else {
+		prev()
+	}
+};
 
 function prev() {
 	if ((state.currentPage - 1) > 0) {

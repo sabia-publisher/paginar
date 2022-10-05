@@ -61,7 +61,7 @@ watchDebounced(content,
 </script>
 
 <template>
-	<div>
+	<div class="rootWrapper">
 		<main id="rootComponent" ref="rootComponent" :class="mode" :style="`font-family: ${baseFont}`">
 			<HeaderSlot>
 				<template #header>

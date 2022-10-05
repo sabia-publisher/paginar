@@ -5,16 +5,16 @@ import Slider from '@vueform/slider'
 import usePagination from '../composables/usePagination';
 const { totalPages, currentPage, set } = usePagination
 
-const height = ref(10)
+function format() {
+	return `${currentPage.value} de ${totalPages.value}`
+}
 
 </script>
 
 <template>
-	<div class="p-2 text-gray-700 dark:text-white">
+	<div class="py-2 px-10 text-gray-700 dark:text-white">
 		<slot name="footer">
-			<div class="w-full text-center text-sm mb-2">
-				<span>Página {{ currentPage }} de {{ totalPages }}</span>
-			</div>
+			<p>&nbsp;</p>
 		</slot>
 
 		<Slider
@@ -23,7 +23,8 @@ const height = ref(10)
 			:min="1"
 			:max="totalPages"
 			:step="-1"
-			:tooltips="false"
+			showTooltip="drag"
+			:format="format"
 			:lazy="false"
 			class="w-full"
 		/>
