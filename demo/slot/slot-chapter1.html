@@ -14,6 +14,19 @@
 		#app {
 			height: 100vh;
 		}
+
+		html {
+			--bg-light-mode: #fff7e0;
+			--bg-dark-mode: rgb(45,45,45);
+			--theme-primary: rgb(45,45,45);
+			--theme-primary-extralight: rgb(243 244 246);
+			--theme-secondary: #cd2800;
+		}
+
+		#pagination-el *::selection {
+			color: var(--theme-primary-extralight, #690000);
+			background: var(--theme-secondary, #ffa03c);
+		}
 	</style>
 
 	<div id="app">

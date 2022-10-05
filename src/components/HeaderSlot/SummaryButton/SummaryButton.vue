@@ -22,18 +22,14 @@ onKeyStroke('Escape', () => hide())
 		<div class="flex">
 			<a href="/" title="Homepage"
 				class="hidden md:flex items-center border p-3 shadow mr-3
-					border-gray-800 text-gray-800 dark:border-white dark:text-white"
+					border-white text-white"
 			>
 				<IconHome class="w-6 h-6"/>
 			</a>
 
 			<button
 				@click.prevent="toggleSummary()"
-				class="border p-3 shadow flex items-center"
-				:class="{
-					'border-white text-white': show,
-					'border-gray-800 text-gray-800 dark:border-white dark:text-white': !show
-				}"
+				class="border p-3 shadow flex items-center border-white text-white"
 				id="summary-menu" aria-haspopup="true" :aria-expanded="show"
 			>
 				<IconSummary v-if="!show" />

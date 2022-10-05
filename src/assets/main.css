@@ -1,3 +1,15 @@
+.border-primary { border-color: var(--theme-primary, #690000); }
+.text-primary { color: var(--theme-primary, #690000); }
+.bg-primary { background-color: var(--theme-primary, #690000); }
+
+.border-primary-extralight { border-color: var(--theme-primary-extralight, #f3f4f6); }
+.text-primary-extralight { color: var(--theme-primary-extralight, #f3f4f6); }
+.bg-primary-extralight { background-color: var(--theme-primary-extralight, #f3f4f6); }
+
+.border-secondary { border-color: var(--theme-secondary, #ffa03c); }
+.text-secondary { color: var(--theme-secondary, #ffa03c); }
+.bg-secondary { background-color: var(--theme-secondary, #ffa03c); }
+
 .rootWrapper {
 	max-height: 100%;
     height: 100%;
@@ -8,25 +20,17 @@ main#rootComponent {
 	max-height: 100%;
 
 	&.light {
-		background-color: #fff7e0
+		background-color: var(--bg-light-mode, #fff7e0)
 	}
 
 	&.dark {
-		background-color: #2d2d2d;
+		background-color: var(--bg-dark-mode, #2d2d2d);
 
 		#content-area {
 			color: #fff
 		}
 	}
 }
-
-.border-theme { border-color: #690000; }
-.text-theme { color: #690000; }
-.bg-theme { background-color: #690000; }
-
-.border-secondary { border-color: #ffa03c; }
-.text-secondary { color: #ffa03c; }
-.bg-secondary { background-color: #ffa03c; }
 
 header.wrapper {
 	width: 200px;
@@ -113,11 +117,14 @@ header.wrapper {
 	}
 }
 
+#content-area *::selection {
+	color: var(--theme-primary-extralight, #690000);
+	background: var(--theme-secondary, #ffa03c);
+}
+
 .viewer-nav-icon {
 	@apply opacity-0 md:opacity-80;
 }
-
-
 /* slider */
 
 .slider-target,.slider-target *{
@@ -218,7 +225,7 @@ header.wrapper {
     border-radius:var(--slider-radius,9999px)
 }
 .slider-connect{
-    background:var(--slider-connect-bg,#10b981);
+    background:var(--theme-secondary, #690000);
     cursor:pointer
 }
 .slider-draggable{
@@ -253,12 +260,13 @@ header.wrapper {
     cursor:not-allowed
 }
 [disabled] .slider-tooltip{
-    background:var(--slider-tooltip-bg-disabled,#9ca3af);
-    border-color:var(--slider-tooltip-bg-disabled,#9ca3af)
+    background:var(--theme-secondary, #690000);
+    border-color:var(--theme-secondary, #690000);
+	opacity: 0.5;
 }
 .slider-tooltip{
-    background:var(--slider-tooltip-bg,#10b981);
-    border:1px solid var(--slider-tooltip-bg,#10b981);
+    background:var(--theme-secondary, #690000);
+    border:1px solid var(--theme-secondary, #690000);
     border-radius:var(--slider-tooltip-radius,5px);
     color:var(--slider-tooltip-color,#fff);
     display:block;

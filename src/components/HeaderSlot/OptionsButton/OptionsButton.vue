@@ -22,10 +22,10 @@ const { toggle: toggleFullScreen } = useFullscreen()
 <template>
 	<div ref="button" class="relative">
 		<div class="flex">
-			<button @click.prevent="toggleSummary()" class="border p-3 shadow flex items-center" :class="{
-				'border-white text-white': show,
-				'border-gray-800 text-gray-800 dark:border-white dark:text-white': !show
-			}" id="summary-menu" aria-haspopup="true" :aria-expanded="show">
+			<button @click.prevent="toggleSummary()"
+				class="border p-3 shadow flex items-center border-white text-white"
+				id="summary-menu" aria-haspopup="true" :aria-expanded="show"
+			>
 				<span class="block mr-3">
 					Opções
 				</span>
@@ -34,10 +34,9 @@ const { toggle: toggleFullScreen } = useFullscreen()
 				<IconThreeDots v-else class="w-6 h-6" />
 			</button>
 
-			<button @click.prevent="toggleFullScreen()" class="hidden md:flex items-center border p-3 shadow ml-3" :class="{
-				'border-white text-white': invertBackground,
-				'border-gray-800 text-gray-800 dark:border-white dark:text-white': !invertBackground
-			}">
+			<button @click.prevent="toggleFullScreen()"
+				class="hidden md:flex items-center border p-3 shadow ml-3 border-white text-white"
+			>
 				<IconExpand class="w-6 h-6" />
 			</button>
 		</div>

@@ -4,7 +4,7 @@ import OptionsButton from './OptionsButton/OptionsButton.vue';
 </script>
 
 <template>
-	<div class="bg-gray-800 flex justify-between items-center p-4">
+	<div class="bg-primary flex justify-between items-center p-4">
 		<summary-button>
 			<template #summaryTop>
 				<slot name="summaryTop" />
