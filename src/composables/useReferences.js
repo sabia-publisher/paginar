@@ -26,11 +26,11 @@ function applyReferences(contentRaw) {
 		if (!content) return content
 
 		if (content.includes(reference.cit)) {
-			var regex = new RegExp(reference.cit, 'g');
+			const regex = new RegExp(reference.cit, 'g');
 			const newContent = content.replace(
 				regex,
 				`<span class='reference' data-ref='${reference.cit}'>${reference.cit}</span>`
-			);
+			)
 			return newContent
 		}
 		return content
@@ -44,10 +44,12 @@ function listenToReferencesClick(contentWrapper) {
 }
 
 function getClickedReferenceData(event) {
-	var attribute = event.target.getAttribute('data-ref')
-	const ref = state.references.find(item => item.cit === attribute)
-	if (ref) {
-		state.reference = ref
+	console.log(event.target.classList)
+	if (event.target.classList.value.includes('reference')) {
+		const ref = state.references.find(item => item.cit === event.target.innerText)
+		if (ref) {
+			state.reference = ref
+		}
 	}
 }
 

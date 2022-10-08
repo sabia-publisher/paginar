@@ -106,7 +106,7 @@ header.wrapper {
 .viewer-nav {
 	height: 100%;
 
-	@apply fixed md:relative z-10 inset-y-0 transition duration-500 ease-in-out self-center w-10 cursor-pointer flex-shrink-0;
+	@apply relative z-10 inset-y-0 transition duration-500 ease-in-out self-center w-10 cursor-pointer flex-shrink-0;
 
 
 	&:focus,
@@ -125,6 +125,13 @@ header.wrapper {
 .viewer-nav-icon {
 	@apply opacity-0 md:opacity-80;
 }
+
+.columnsArea {
+	@media only screen and (max-width: 600px) {
+		transition: margin 100ms;
+	}
+}
+
 /* slider */
 
 .slider-target,.slider-target *{
