@@ -78,6 +78,14 @@ function loadSavedSettings(settings) {
 		) {
 			state.textFont = savedSettings.textFont
 		}
+
+		if (savedSettings.mode === 'dark') {
+			const htmlRoot = document.querySelector('html')
+			if (htmlRoot) {
+				htmlRoot.classList.remove("light")
+				htmlRoot.classList.add("dark")
+			}
+		}
 	}
 }
 
@@ -95,6 +103,18 @@ function setFontSize(value) {
 
 function setMode(value) {
 	state.mode = value
+
+	const htmlRoot = document.querySelector('html')
+	if (htmlRoot) {
+		if (htmlRoot.classList.contains("dark")) {
+			htmlRoot.classList.remove("dark")
+			htmlRoot.classList.add("light")
+
+		} else {
+			htmlRoot.classList.remove("light")
+			htmlRoot.classList.add("dark")
+		}
+	}
 }
 
 function saveSettings() {

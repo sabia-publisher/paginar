@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { usePointerSwipe } from '@vueuse/core'
+import { usePointerSwipe, useWindowSize } from '@vueuse/core'
 
 import usePagination from '../composables/usePagination'
 import useReaderSettings from '../composables/useReaderSettings'
@@ -9,13 +9,17 @@ const { columns } = useReaderSettings
 const { currentPage } = usePagination
 
 const el = ref(null)
+
+const { width } = useWindowSize()
 const { distanceX } = usePointerSwipe(el, {
 	onSwipeEnd() {
-		if (distanceX.value > 150) {
-			usePagination.next()
-		}
-		if (distanceX.value < -150) {
-			usePagination.prev()
+		if (width.value < 600) {
+			if (distanceX.value > 100) {
+				usePagination.next()
+			}
+			if (distanceX.value < -100) {
+				usePagination.prev()
+			}
 		}
 	}
 })
