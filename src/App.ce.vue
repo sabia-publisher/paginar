@@ -49,8 +49,8 @@ onMounted(async () => {
 watchDebounced(
 	[width, height, content, columns, fontSize, textFont],
 	() => {
-		if (width.value < 1024 && columns.value === 'doubleColumns')
-			setColumns('singleColumns')
+		if (width.value < 1024 && columns.value === 'double')
+			setColumns('single')
 		else
 			useEstimatePages.estimate(readerComponent, contentArea)
 	},
@@ -68,7 +68,12 @@ watchDebounced(content,
 	<div class="rootWrapper">
 		<main id="rootComponent"
 			ref="rootComponent"
-			:class="`${mode} ${props.rootClass}`"
+			:class="mode
+				.concat(` ${props.rootClass}`)
+				.concat(` currentPage-${currentPage}`)
+				.concat(` totalPages-${totalPages}`)
+				.concat(` columns-${columns}`)
+			"
 			:style="`font-family: ${baseFont}`"
 		>
 			<HeaderSlot>

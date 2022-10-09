@@ -11,7 +11,7 @@ const state = reactive({
 		{ name: 'Verdana, sans-serif' },
 	],
 	fontSize: 16,
-	columns: 'singleColumns',
+	columns: 'single',
 	mode: 'light'
 })
 

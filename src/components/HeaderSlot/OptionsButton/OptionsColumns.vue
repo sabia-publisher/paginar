@@ -14,10 +14,10 @@ const { width } = useWindowSize()
 		<button
 			class="col-span-1 text-primary text-center cursor-pointer py-3 rounded-sm border"
 			:class="{
-				'border-gray-300': columns !== 'singleColumns',
-				'bg-primary-extralight border-2 border-primary': columns === 'singleColumns'
+				'border-gray-300': columns !== 'single',
+				'bg-primary-extralight border-2 border-primary': columns === 'single'
 			}"
-			@click.prevent="setColumns('singleColumns')"
+			@click.prevent="setColumns('single')"
 			aria-label="Coluna única"
 			title="Coluna única"
 		>
@@ -27,11 +27,11 @@ const { width } = useWindowSize()
 		<button
 			class="col-span-2 text-primary text-center cursor-pointer py-3 rounded-sm border"
 			:class="{
-				'border-gray-300': columns !== 'doubleColumns',
-				'bg-primary-extralight border-2 border-primary': columns === 'doubleColumns',
+				'border-gray-300': columns !== 'double',
+				'bg-primary-extralight border-2 border-primary': columns === 'double',
 				'opacity-30': width < 1024
 			}"
-			@click.prevent="width >= 1024 && setColumns('doubleColumns')"
+			@click.prevent="width >= 1024 && setColumns('double')"
 			aria-label="Coluna dupla"
 			title="Coluna dupla"
 		>

@@ -65,7 +65,7 @@ header.wrapper {
     width: 100%;
 }
 
-.doubleColumns {
+.columns-double .columnsArea {
 	-moz-column-count: 2;
     column-count: 2;
     grid-column-gap: 0;
@@ -81,7 +81,7 @@ header.wrapper {
 	}
 }
 
-.singleColumns {
+.columns-single .columnsArea {
 	column-count: 1;
 	column-gap: 0;
 	height: 100%;
