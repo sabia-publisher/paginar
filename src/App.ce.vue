@@ -20,6 +20,10 @@ const props = defineProps({
 	bookTitle: String,
 	bookContent: String,
 	readerSettings: String,
+	rootClass: {
+		type: String,
+		default: ''
+	},
 	cssFile: String
 })
 
@@ -62,7 +66,11 @@ watchDebounced(content,
 
 <template>
 	<div class="rootWrapper">
-		<main id="rootComponent" ref="rootComponent" :class="mode" :style="`font-family: ${baseFont}`">
+		<main id="rootComponent"
+			ref="rootComponent"
+			:class="`${mode} ${props.rootClass}`"
+			:style="`font-family: ${baseFont}`"
+		>
 			<HeaderSlot>
 				<template #header>
 					<slot name="header">
@@ -90,7 +98,7 @@ watchDebounced(content,
 			</HeaderSlot>
 
 			<EngineWrapper>
-				<div id="reader-component" ref="readerComponent">
+				<div id="reader-component" ref="readerComponent" >
 					<ReaderWrapper>
 						<section id="content-area" ref="contentArea"
 							:style="`font-family: ${textFont}; font-size: ${fontSize}px`">
