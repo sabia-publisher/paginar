@@ -30,7 +30,9 @@
 	</style>
 
 	<div id="app">
-		<paginate-content id="pagination-el" book-title="A Tale of Two Cities">
+		<paginate-content id="pagination-el" book-title="A Tale of Two Cities"
+			css-string="#rootComponent.currentPage-1{background-color: red !important; transition: background-color 200ms linear;}"
+		>
 			<div slot="header">
 				<img src="https://sabia.pub/images/logo-mobile-dark.svg" style="height: 40px">
 			</div>

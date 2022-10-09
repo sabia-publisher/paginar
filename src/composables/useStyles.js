@@ -21,10 +21,7 @@ async function stylesheetLoader(stylesheet, ref) {
 			const dataRef = await fetch(stylesheet)
 			const cssText = await dataRef.text()
 
-			const style = document.createElement('style')
-			ref.value.appendChild(style)
-			style.type = 'text/css'
-			style.appendChild(document.createTextNode(cssText))
+			applyStylesheet(cssText, ref)
 
 		} catch (err) {
 			console.log({ err })
@@ -32,7 +29,15 @@ async function stylesheetLoader(stylesheet, ref) {
 	}
 }
 
+async function applyStylesheet(stylesheet, ref) {
+	const style = document.createElement('style')
+	ref.value.appendChild(style)
+	style.type = 'text/css'
+	style.appendChild(document.createTextNode(stylesheet))
+}
+
 export default {
 	fontLoader,
-	stylesheetLoader
+	stylesheetLoader,
+	applyStylesheet
 }

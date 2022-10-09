@@ -24,7 +24,8 @@ const props = defineProps({
 		type: String,
 		default: ''
 	},
-	cssFile: String
+	cssFile: String,
+	cssString: String
 })
 
 const { initSettings, baseFont, textFont, fontSize, columns, setColumns, mode } = useReaderSettings
@@ -43,6 +44,10 @@ onMounted(async () => {
 
 	if (props.cssFile) {
 		useStyles.stylesheetLoader(props.cssFile, rootComponent)
+	}
+
+	if (props.cssString) {
+		useStyles.applyStylesheet(props.cssString, rootComponent)
 	}
 })
 
