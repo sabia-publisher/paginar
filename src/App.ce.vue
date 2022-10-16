@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, defineProps, onBeforeUnmount } from 'vue'
+import { ref, onMounted, defineProps, watch } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
@@ -8,18 +8,19 @@ import EngineWrapper from './components/EngineWrapper.vue'
 import ReaderWrapper from './components/ReaderWrapper.vue'
 import ReferencePopup from './components/ReferencePopup.vue'
 import FooterSlot from './components/FooterSlot.vue'
+import FootnotesAside from './components/FootnotesAside.vue'
 
 import usePagination from './composables/usePagination'
 import useEstimatePages from './composables/useEstimatePages'
 import useTextContent from './composables/useTextContent'
 import useReaderSettings from './composables/useReaderSettings'
-import useReferences from './composables/useReferences'
 import useStyles from './composables/useStyles'
 
 const props = defineProps({
 	bookTitle: String,
 	bookContent: String,
 	readerSettings: String,
+	readerBlocked: Boolean,
 	rootClass: {
 		type: String,
 		default: ''
@@ -30,8 +31,7 @@ const props = defineProps({
 
 const { initSettings, baseFont, textFont, fontSize, columns, setColumns, mode } = useReaderSettings
 const { currentPage, totalPages, init } = usePagination
-const { content } = useTextContent
-const { listenToReferencesClick } = useReferences
+const { content, listenToClicks } = useTextContent
 const { width, height } = useWindowSize()
 
 const readerComponent = ref(null)
@@ -42,6 +42,10 @@ onMounted(async () => {
 	init(readerComponent, contentArea)
 	initSettings(props.readerSettings)
 
+	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
+		useReaderSettings.setBlocked(props.readerBlocked)
+	}
+
 	if (props.cssFile) {
 		useStyles.stylesheetLoader(props.cssFile, rootComponent)
 	}
@@ -50,6 +54,18 @@ onMounted(async () => {
 		useStyles.applyStylesheet(props.cssString, rootComponent)
 	}
 })
+
+watch(
+	props,
+	() => {
+		if (props.hasOwnProperty('readerBlocked')) {
+			const readerBlocked = typeof props.readerBlocked === 'boolean'
+				? props.readerBlocked
+				: props.readerBlocked === 'true'
+			useReaderSettings.setBlocked(readerBlocked)
+		}
+	}
+)
 
 watchDebounced(
 	[width, height, content, columns, fontSize, textFont],
@@ -63,7 +79,7 @@ watchDebounced(
 )
 
 watchDebounced(content,
-	() => listenToReferencesClick(contentArea),
+	() => listenToClicks(contentArea),
 	{ debounce: 125, maxWait: 250 }
 )
 
@@ -126,6 +142,8 @@ watchDebounced(content,
 
 			<ReferencePopup />
 		</main>
+
+		<FootnotesAside />
 	</div>
 </template>
 

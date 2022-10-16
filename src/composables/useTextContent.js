@@ -1,6 +1,8 @@
 import { computed, reactive } from 'vue'
+import { useEventListener } from '@vueuse/core'
 
 import useReferences from './useReferences'
+import useFootnotes from './useFootnotes'
 
 const state = reactive({
 	summary: null,
@@ -11,7 +13,8 @@ const content = computed(() => state.content)
 const summary = computed(() => state.summary)
 
 async function initContent(contentString, contentWrapper) {
-	const { setReferences, applyReferences, listenToReferencesClick } = useReferences
+	const { setReferences, applyReferences } = useReferences
+	const { setFootnotes } = useFootnotes
 
 	const content = contentString
 		? JSON.parse(contentString)
@@ -22,6 +25,9 @@ async function initContent(contentString, contentWrapper) {
 
 	if (content?.references)
 		setReferences(content.references)
+
+	if (content?.footnotes)
+		setFootnotes(content.footnotes)
 
 	// if content comes from file, apply references to file
 	if (content?.summary?.[0]?.file) {
@@ -42,7 +48,7 @@ async function initContent(contentString, contentWrapper) {
 	}
 
 	// after applying references above, now we start to listen to its clicks
-	listenToReferencesClick(contentWrapper)
+	listenToClicks(contentWrapper)
 }
 
 async function getContent(location) {
@@ -62,10 +68,27 @@ function applyContent(text) {
 	state.content = newContent
 }
 
+function listenToClicks(contentWrapper) {
+	setTimeout(() => {
+		useEventListener(contentWrapper, 'click', getClickedReferenceData)
+	}, 100)
+}
+
+function getClickedReferenceData(event) {
+	if (event.target.classList.value.includes('reference')) {
+		useReferences.applyReference(event)
+	}
+
+	if (event.target.classList.value.includes('footnote')) {
+		useFootnotes.applyFootnote(event)
+	}
+}
+
 export default {
 	content,
 	summary,
 	initContent,
 	getContent,
-	applyContent
+	applyContent,
+	listenToClicks
 }

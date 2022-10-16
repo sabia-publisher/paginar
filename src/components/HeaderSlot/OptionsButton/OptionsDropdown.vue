@@ -1,9 +1,14 @@
 <script setup>
 import IconEye from '../../icons/Eye.vue'
+import IconFootnote from '../../icons/Footnote.vue'
+
 import OptionsColumns from './OptionsColumns.vue';
 import OptionsFontFamily from './OptionsFontFamily.vue';
 import OptionsFontSize from './OptionsFontSize.vue';
 import OptionsColor from './OptionsColor.vue'
+
+import useFootnotes from '../../../composables/useFootnotes'
+
 </script>
 
 <template>
@@ -18,7 +23,17 @@ import OptionsColor from './OptionsColor.vue'
 
 			<slot name="optionsTop" />
 
-			<div class="w-full flex justify-center items-center py-3">
+			<button @click.prevent="useFootnotes.setShowFootnotes(true)"
+				class="w-full flex justify-center items-center py-3 lowercase"
+			>
+				<IconFootnote class="w-6 h-6" />
+				<span class="ml-4">Notas de rodapé</span>
+			</button>
+
+			<div class="w-full border-b border-areia my-3"></div>
+
+
+			<div class="w-full flex justify-center items-center py-3 lowercase">
 				<IconEye class="w-6 h-6" />
 				<span class="ml-4">Visualização</span>
 			</div>

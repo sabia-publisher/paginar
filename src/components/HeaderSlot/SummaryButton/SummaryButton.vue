@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { onClickOutside, onKeyStroke } from '@vueuse/core'
 
+import useReaderSettings from '../../../composables/useReaderSettings'
+
 import IconHome from '../../icons/Home.vue'
 import IconClose from '../../icons/Close.vue'
 import IconSummary from '../../icons/Summary.vue'
@@ -11,7 +13,11 @@ const show = ref(false)
 const button = ref(null)
 
 const toggleSummary = () => show.value = !show.value
-const hide = () => show.value = false
+const hide = () => {
+	if (!useReaderSettings.blocked.value) {
+		show.value = false
+	}
+}
 
 onClickOutside(button, () => hide())
 onKeyStroke('Escape', () => hide())

@@ -4,7 +4,7 @@
 	"description": "A flipping page web component for reading long texts on the brower",
 	"main": "dist/index.es.js",
 	"module": "dist/index.es.js",
-	"version": "0.1.7",
+	"version": "0.2.0",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/educkf/paginar.git"

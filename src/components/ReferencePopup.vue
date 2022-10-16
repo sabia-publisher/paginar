@@ -1,6 +1,9 @@
 <script setup>
 import { onKeyStroke } from '@vueuse/core'
+
+import useReaderSettings from '../composables/useReaderSettings'
 import useReferences from '../composables/useReferences'
+
 const { reference, setHighlightedReference } = useReferences
 
 function closeRef() {
@@ -8,7 +11,9 @@ function closeRef() {
 }
 
 onKeyStroke('Escape', () => {
-	setHighlightedReference(null)
+	if (!useReaderSettings.blocked.value) {
+		setHighlightedReference(null)
+	}
 })
 
 </script>

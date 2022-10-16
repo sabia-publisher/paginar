@@ -1,5 +1,4 @@
 import { computed, reactive } from 'vue'
-import { useEventListener } from '@vueuse/core'
 
 const state = reactive({
 	references: [],
@@ -37,27 +36,18 @@ function applyReferences(contentRaw) {
 	}, contentRaw)
 }
 
-function listenToReferencesClick(contentWrapper) {
-	setTimeout(() => {
-		useEventListener(contentWrapper, 'click', getClickedReferenceData)
-	}, 100)
-}
-
-function getClickedReferenceData(event) {
-	console.log(event.target.classList)
-	if (event.target.classList.value.includes('reference')) {
-		const ref = state.references.find(item => item.cit === event.target.innerText)
-		if (ref) {
-			state.reference = ref
-		}
+function applyReference(event) {
+	const ref = state.references.find(item => item.cit === event.target.innerText)
+	if (ref) {
+		state.reference = ref
 	}
 }
 
 export default {
 	references,
 	reference,
+	applyReference,
 	setReferences,
 	setHighlightedReference,
 	applyReferences,
-	listenToReferencesClick
 }

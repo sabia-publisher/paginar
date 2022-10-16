@@ -12,7 +12,8 @@ const state = reactive({
 	],
 	fontSize: 16,
 	columns: 'single',
-	mode: 'light'
+	mode: 'light',
+	blocked: false
 })
 
 const baseFont = computed(() => state.baseFont)
@@ -21,6 +22,7 @@ const fontSize = computed(() => state.fontSize)
 const fontsOptions = computed(() => state.fontsOptions)
 const columns = computed(() => state.columns)
 const mode = computed(() => state.mode)
+const blocked = computed(() => state.blocked)
 
 watch(
 	[baseFont, textFont, fontSize, columns, mode],
@@ -101,6 +103,10 @@ function setFontSize(value) {
 	state.fontSize = value
 }
 
+function setBlocked(value) {
+	state.blocked = value
+}
+
 function setMode(value) {
 	state.mode = value
 
@@ -139,7 +145,9 @@ export default {
 	setColumns,
 	setTextFont,
 	setFontSize,
+	setBlocked,
 	mode,
+	blocked,
 	setMode,
 	saveSettings
 }
