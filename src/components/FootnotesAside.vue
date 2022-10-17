@@ -85,7 +85,7 @@ watch(
 							:id="footnoteItem.id"
 							v-html="`<span class='footnote-index'>${index + 1}.</span> ${footnoteItem.text}`"
 							class="text-left border-b border-b-white/25 last:border-transparent
-								pb-10 mt-10 px-10 relative
+								p-10 relative
 							"
 							:class="footnote && footnote.id !== footnoteItem.id
 								? 'opacity-50'
