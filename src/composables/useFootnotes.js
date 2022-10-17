@@ -22,7 +22,7 @@ function setHighlightedFootnote(footnote) {
 }
 
 function applyFootnote(event) {
-	const classList = event.target.classList.value.split(' ')
+	const classList = event.target.closest('.footnote')?.classList.value.split(' ')
 
 	if (classList.length === 0)
 		return

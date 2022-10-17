@@ -37,7 +37,9 @@ function applyReferences(contentRaw) {
 }
 
 function applyReference(event) {
-	const ref = state.references.find(item => item.cit === event.target.innerText)
+	const target = event.target.closest('.reference')?.getAttribute("data-ref")
+
+	const ref = state.references.find(item => target && item.cit === target)
 	if (ref) {
 		state.reference = ref
 	}

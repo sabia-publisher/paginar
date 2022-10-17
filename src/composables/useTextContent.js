@@ -32,14 +32,16 @@ async function initContent(contentString, contentWrapper) {
 	// if content comes from file, apply references to file
 	if (content?.summary?.[0]?.file) {
 		const text = await getContent(content.summary?.[0]?.file)
-		const newContent = applyReferences(text)
+		const newContent = content.applyReferences
+			? applyReferences(text)
+			: text
 		state.content = newContent
 
 	// else if content comes from slot, apply references to slot
 	} else {
 		const content = document.querySelectorAll('[slot="content"]')
 
-		if (content && content?.[0]?.innerHTML) {
+		if (content && content?.[0]?.innerHTML && content.applyReferences) {
 			const newContent = applyReferences(content?.[0]?.innerHTML)
 			if (newContent) {
 				content[0].innerHTML = newContent
@@ -75,11 +77,11 @@ function listenToClicks(contentWrapper) {
 }
 
 function getClickedReferenceData(event) {
-	if (event.target.classList.value.includes('reference')) {
+	if (event.target.closest('.reference')) {
 		useReferences.applyReference(event)
 	}
 
-	if (event.target.classList.value.includes('footnote')) {
+	if (event.target.closest('.footnote')) {
 		useFootnotes.applyFootnote(event)
 	}
 }

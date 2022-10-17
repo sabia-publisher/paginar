@@ -133,8 +133,8 @@ header.wrapper {
 }
 
 #asidebar {
-	background: var(--theme-primary, #690000);
-	color: var(--theme-primary-extralight, #f3f4f6);
+	background: var(--sidebar-backgorund, #690000);
+	color: var(--sidebar-text, #f3f4f6);
 }
 
 /* slider */

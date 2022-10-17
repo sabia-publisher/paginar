@@ -14,19 +14,12 @@ const showFootnotes = computed(() => useFootnotes.showFootnotes.value)
 const footnotes = computed(() => useFootnotes.footnotes.value)
 
 const oldBlockedValue = ref(null)
+const footnoteList = ref(null)
 
 function hideAside() {
 	useFootnotes.setHighlightedFootnote(null)
 	useFootnotes.setShowFootnotes(false)
 }
-
-onMounted(() => {
-	if (footnote.value) {
-		var topPos = document.getElementById(footnote.value.id).offsetTop
-		document.getElementById('asidebar').scrollTop = topPos - 50
-		document.getElementById(footnote.value.id).focus()
-	}
-})
 
 onKeyStroke('Escape', () => {
 	if (footnote.value || showFootnotes.value) {
@@ -49,6 +42,14 @@ watch(
 			}
 			oldBlockedValue.value = null
 		}
+
+		if (footnote.value) {
+			setTimeout(() => {
+				const element = footnoteList.value.querySelector(`#${footnote.value.id}`)
+				element.scrollIntoView()
+				element.focus()
+			}, 50)
+		}
 	}
 )
 
@@ -57,15 +58,15 @@ watch(
 <template>
 	<transition name="width">
 		<div v-if="show || showFootnotes" id="asidebar"
-			class="absolute top-0 right-0 w-96 flex-shrink-0 h-screen overflow-auto overflow-x-hidden z-20 shadow-2xl"
+			class="absolute top-0 right-0 w-96 md:w-[40em] flex-shrink-0 h-screen overflow-auto overflow-x-hidden z-20 shadow-2xl"
 		>
 			<button @click.prevent="hideAside()" class="fixed top-4 right-8 z-20">
 				<IconClose class="w-6 h-6 text-white" />
 			</button>
 
-			<div class="w-96 p-4">
+			<div class="w-full p-4">
 				<header class="text-areia py-4 pl-4">
-					<div class="flex items-center mb-10">
+					<div class="flex items-center mb-6">
 						<IconNotes class="w-8 h-8" />
 						<span class="ml-4">
 
@@ -78,10 +79,10 @@ watch(
 				</header>
 
 				<section>
-					<ul>
+					<ul ref="footnoteList">
 						<li v-for="(footnoteItem, index) in footnotes"
-							:key="footnoteItem._id"
-							:id="footnoteItem._id"
+							:key="footnoteItem.id"
+							:id="footnoteItem.id"
 							v-html="`<span class='footnote-index'>${index + 1}.</span> ${footnoteItem.text}`"
 							class="text-left border-b border-b-white/25 last:border-transparent
 								pb-10 mt-10 px-10 relative
