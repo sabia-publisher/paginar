@@ -8,7 +8,8 @@ import useTextContent from './useTextContent'
 const state = reactive({
 	currentPage: 1,
 	nextTry: 0,
-	prevTry: 0
+	prevTry: 0,
+	willRedirect: false
 })
 
 const currentPage = computed(() => state.currentPage)
@@ -44,20 +45,24 @@ watch(totalPages, () => {
 })
 
 // navigate by increase/decrease value
-function next() {
+function next(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
 			state.currentPage = state.currentPage + 1
 		} else {
 			// prevent going too fast to next chapter on
 			// stronger scroll
-			if (state.nextTry < 4) {
+			if (usingScroll && state.nextTry < 4) {
 				state.nextTry += 1
 				return
 			}
-			const context = useTextContent.context.value
-			if (context.surround?.after) {
-				window.location.href = context.surround.after.link + (`?origin=prev`)
+
+			if (state.willRedirect === false) {
+				const context = useTextContent.context.value
+				if (context.surround?.after) {
+					window.location.href = context.surround.after.link + (`?origin=prev`)
+					state.willRedirect = true
+				}
 			}
 		}
 	}
@@ -69,26 +74,30 @@ onKeyStroke('ArrowRight', (e) => {
 
 function onWheel(event) {
 	if (event.wheelDelta < 0) {
-		next()
+		next(true)
 	} else {
-		prev()
+		prev(true)
 	}
 };
 
-function prev() {
+function prev(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
 			state.currentPage = state.currentPage - 1
 		} else {
 			// prevent going too fast to prev chapter on
 			// stronger scroll
-			if (state.prevTry < 4) {
+			if (usingScroll && state.prevTry < 4) {
 				state.prevTry += 1
 				return
 			}
-			const context = useTextContent.context.value
-			if (context.surround?.before) {
-				window.location.href = context.surround.before.link + (`?origin=next`)
+
+			if (state.willRedirect === false) {
+				const context = useTextContent.context.value
+				if (context.surround?.before) {
+					window.location.href = context.surround.before.link + (`?origin=next`)
+				}
+				state.willRedirect = true
 			}
 		}
 	}
