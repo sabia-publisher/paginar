@@ -4,6 +4,7 @@ import { onKeyStroke } from '@vueuse/core'
 import useReaderSettings from './useReaderSettings'
 import useEstimatePages from './useEstimatePages'
 import useTextContent from './useTextContent'
+import useBrowser from './useBrowser'
 
 const state = reactive({
 	currentPage: 1,
@@ -29,7 +30,9 @@ function init(viewport, content) {
 		}, 200)
 	}
 
-	addEventListener('wheel', onWheel)
+	if (!useBrowser.isApple && !useBrowser.isSafari) {
+		addEventListener('wheel', onWheel)
+	}
 
 	setInterval(() => {
 		useEstimatePages.estimate(viewport, content)

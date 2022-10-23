@@ -16,6 +16,10 @@ export default defineConfig({
 		'process.env': {}
 	},
 
+	server: {
+		host: true
+	},
+
 	build: {
 		lib: {
 			entry: 'src/main.js',

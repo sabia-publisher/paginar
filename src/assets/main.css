@@ -46,6 +46,15 @@ header.wrapper {
     width: 100%;
 }
 
+.rootWrapper.safari {
+	max-height: initial;
+	height: initial;
+}
+
+.rootWrapper.safari #engine {
+	height: auto !important;
+}
+
 #reader-component {
 	width: 100%;
 }
@@ -65,7 +74,7 @@ header.wrapper {
     width: 100%;
 }
 
-.columns-double .columnsArea {
+.rootWrapper:not(.safari) .columns-double .columnsArea {
 	-moz-column-count: 2;
     column-count: 2;
     grid-column-gap: 0;
@@ -81,7 +90,7 @@ header.wrapper {
 	}
 }
 
-.columns-single .columnsArea {
+.rootWrapper:not(.safari) .columns-single .columnsArea {
 	column-count: 1;
 	column-gap: 0;
 	height: 100%;
@@ -138,6 +147,11 @@ header.wrapper {
 }
 
 /* slider */
+
+.rootWrapper.safari .slider-target,
+.rootWrapper.safari .slider-target *{
+	display: none !important;
+}
 
 .slider-target,.slider-target *{
     -webkit-touch-callout:none;

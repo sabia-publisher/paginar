@@ -15,6 +15,7 @@ import useEstimatePages from './composables/useEstimatePages'
 import useTextContent from './composables/useTextContent'
 import useReaderSettings from './composables/useReaderSettings'
 import useStyles from './composables/useStyles'
+import useBrowser from './composables/useBrowser'
 
 const props = defineProps({
 	bookTitle: String,
@@ -88,7 +89,7 @@ watchDebounced(content,
 </script>
 
 <template>
-	<div class="rootWrapper">
+	<div class="rootWrapper" :class="useBrowser.isSafari ? 'safari' : ''">
 		<main id="rootComponent"
 			ref="rootComponent"
 			:class="mode

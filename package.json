@@ -4,7 +4,7 @@
 	"description": "A flipping page web component for reading long texts on the brower",
 	"main": "dist/index.es.js",
 	"module": "dist/index.es.js",
-	"version": "0.2.5",
+	"version": "0.2.7",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/educkf/paginar.git"
@@ -12,7 +12,7 @@
 	"license": "Apache-2.0",
 	"homepage": "https://github.com/educkf/paginar",
 	"scripts": {
-		"dev": "concurrently \"npm run start:css\" \"npm run start\"",
+		"dev": "concurrently \"npm run start:css\" \"npm run start --host\"",
 		"start": "vite",
 		"start:css": "tailwindcss -o src/tailwind.css --watch",
 		"build": "npm run build:css && vite build",
