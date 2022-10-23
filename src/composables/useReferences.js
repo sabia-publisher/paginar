@@ -28,7 +28,9 @@ function applyReferences(contentRaw) {
 			const regex = new RegExp(reference.cit, 'g');
 			const newContent = content.replace(
 				regex,
-				`<span class='reference' data-ref='${reference.cit}'>${reference.cit}</span>`
+				`<span class='reference reference-${reference.cit.replaceAll(' ', '')}'>
+					${reference.cit}
+				</span>`
 			)
 			return newContent
 		}
@@ -37,12 +39,22 @@ function applyReferences(contentRaw) {
 }
 
 function applyReference(event) {
-	const target = event.target.closest('.reference')?.getAttribute("data-ref")
+	const classList = event.target.closest('.reference')?.classList.value.split(' ')
 
-	const ref = state.references.find(item => target && item.cit === target)
-	if (ref) {
-		state.reference = ref
+	if (classList.length === 0)
+		return
+
+	const target = classList.find(item => item.startsWith('reference-'))
+
+	if (target) {
+		const ref = state.references.find(
+			item => target && item.cit.replaceAll(' ', '') === target.replace('reference-', '')
+		)
+		if (ref) {
+			state.reference = ref
+		}
 	}
+
 }
 
 export default {

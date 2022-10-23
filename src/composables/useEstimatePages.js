@@ -11,12 +11,15 @@ function estimate(viewport, content) {
 
 		if (contentWidth > viewportWidth) {
 			state.totalPages = Math.ceil(contentWidth / viewportWidth)
+			return Math.ceil(contentWidth / viewportWidth)
 
 		} else {
 			state.totalPages = 1
+			return 1
 		}
 	} else {
 		state.totalPages = 1
+		return 1
 	}
 }
 

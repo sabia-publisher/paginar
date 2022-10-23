@@ -3,9 +3,12 @@ import { onKeyStroke } from '@vueuse/core'
 
 import useReaderSettings from './useReaderSettings'
 import useEstimatePages from './useEstimatePages'
+import useTextContent from './useTextContent'
 
 const state = reactive({
-	currentPage: 1
+	currentPage: 1,
+	nextTry: 0,
+	prevTry: 0
 })
 
 const currentPage = computed(() => state.currentPage)
@@ -13,6 +16,18 @@ const totalPages = computed(() => useEstimatePages.totalPages.value)
 
 function init(viewport, content) {
 	useEstimatePages.estimate(viewport, content)
+
+	// check if there is a query string for oring, and
+	// if previews chapter was the next one. If so,
+	// start from the end, as we are coming backwards
+	const urlParams = new URLSearchParams(window.location.search)
+	const origin = urlParams.get('origin')
+	if (origin && origin === 'next') {
+		setTimeout(() => {
+			state.currentPage = totalPages.value
+		}, 200)
+	}
+
 	addEventListener('wheel', onWheel)
 
 	setInterval(() => {
@@ -33,6 +48,17 @@ function next() {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
 			state.currentPage = state.currentPage + 1
+		} else {
+			// prevent going too fast to next chapter on
+			// stronger scroll
+			if (state.nextTry < 4) {
+				state.nextTry += 1
+				return
+			}
+			const context = useTextContent.context.value
+			if (context.surround?.after) {
+				window.location.href = context.surround.after.link + (`?origin=prev`)
+			}
 		}
 	}
 }
@@ -53,6 +79,17 @@ function prev() {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
 			state.currentPage = state.currentPage - 1
+		} else {
+			// prevent going too fast to prev chapter on
+			// stronger scroll
+			if (state.prevTry < 4) {
+				state.prevTry += 1
+				return
+			}
+			const context = useTextContent.context.value
+			if (context.surround?.before) {
+				window.location.href = context.surround.before.link + (`?origin=next`)
+			}
 		}
 	}
 }

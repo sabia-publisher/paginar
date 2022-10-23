@@ -10,18 +10,18 @@ const { mode, setMode } = useReaderSettings
 <template>
 	<button @click.prevent="setMode('light')"
 		title="Leitura diurna"
-		class="font-light text-base border border-urucum w-full h-10 flex justify-center items-center"
+		class="font-light text-base border w-full h-10 flex justify-center items-center"
 		:class="{
-			'bg-primary-extralight text-gray-800 border-2 border-primary': mode === 'light'
+			'bg-primary-extralight text-primary border-2 border-primary': mode === 'light'
 		}">
 		<IconSun class="w-5 h-5" />
 	</button>
 
 	<button @click.prevent="setMode('dark')"
 		title="Leitura noturna"
-		class="font-light text-base border border-urucum w-full h-10 flex justify-center items-center"
+		class="font-light text-base border w-full h-10 flex justify-center items-center"
 		:class="{
-			'bg-primary-extralight text-gray-800 border-2 border-primary':  mode === 'dark'
+			'bg-primary-extralight text-primary border-2 border-primary':  mode === 'dark'
 		}">
 		<IconMoon class="w-5 h-5" />
 	</button>

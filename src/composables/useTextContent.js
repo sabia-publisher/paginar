@@ -11,6 +11,22 @@ const state = reactive({
 
 const content = computed(() => state.content)
 const summary = computed(() => state.summary)
+const context = computed(() => {
+	const current = state.summary.findIndex(
+		chapter => window.location.href.includes(chapter.link)
+	)
+	return {
+		chapter: state.summary[current],
+		surround: {
+			before: current - 1 >= 0
+				? state.summary[current - 1]
+				: null,
+			after: current + 1 <= state.summary.length
+				? state.summary[current + 1]
+				: null,
+		}
+	}
+})
 
 async function initContent(contentString, contentWrapper) {
 	const { setReferences, applyReferences } = useReferences
@@ -92,5 +108,6 @@ export default {
 	initContent,
 	getContent,
 	applyContent,
-	listenToClicks
+	listenToClicks,
+	context
 }
