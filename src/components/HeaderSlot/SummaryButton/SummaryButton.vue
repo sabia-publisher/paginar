@@ -24,7 +24,7 @@ onKeyStroke('Escape', () => hide())
 </script>
 
 <template>
-	<div ref="button" class="relative">
+	<div id="summary-button" ref="button" class="relative">
 		<div class="flex">
 			<a href="/" title="Homepage"
 				class="hidden md:flex items-center border p-3 shadow mr-3

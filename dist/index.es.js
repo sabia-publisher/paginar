@@ -9840,6 +9840,7 @@ onKeyStroke('Escape', () => hide());
 
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", {
+    id: "summary-button",
     ref_key: "button",
     ref: button,
     class: "relative"
@@ -10282,6 +10283,7 @@ const { toggle: toggleFullScreen } = useFullscreen();
 
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", {
+    id: "options-button",
     ref_key: "button",
     ref: button,
     class: "relative"

@@ -26,7 +26,7 @@ const { toggle: toggleFullScreen } = useFullscreen()
 </script>
 
 <template>
-	<div ref="button" class="relative">
+	<div id="options-button" ref="button" class="relative">
 		<div class="flex">
 			<button @click.prevent="toggleSummary()"
 				class="border p-3 shadow flex items-center border-white text-white"
