@@ -9815,6 +9815,7 @@ const _hoisted_1$m = { class: "flex" };
 const _hoisted_2$i = {
   href: "/",
   title: "Homepage",
+  id: "home-button",
   class: "hidden md:flex items-center border p-3 shadow mr-3 border-white text-white"
 };
 const _hoisted_3$c = ["aria-expanded"];
@@ -9840,7 +9841,7 @@ onKeyStroke('Escape', () => hide());
 
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", {
-    id: "summary-button",
+    id: "summary-menu",
     ref_key: "button",
     ref: button,
     class: "relative"
@@ -9852,7 +9853,7 @@ return (_ctx, _cache) => {
       createBaseVNode("button", {
         onClick: _cache[0] || (_cache[0] = withModifiers($event => (toggleSummary()), ["prevent"])),
         class: "border p-3 shadow flex items-center border-white text-white",
-        id: "summary-menu",
+        id: "summary-button",
         "aria-haspopup": "true",
         "aria-expanded": show.value
       }, [
@@ -10025,7 +10026,10 @@ function _sfc_render$4(_ctx, _cache) {
 }
 const DoubleColumn = /*#__PURE__*/_export_sfc(_sfc_main$i, [['render',_sfc_render$4]]);
 
-const _hoisted_1$f = { class: "w-full hidden md:grid grid-cols-3 gap-2 mt-3" };
+const _hoisted_1$f = {
+  id: "columns-menu",
+  class: "w-full hidden md:grid grid-cols-3 gap-2 mt-3"
+};
 const _hoisted_2$b = ["title"];
 
 const _sfc_main$h = {
@@ -10044,6 +10048,7 @@ const isSafari = computed(() => {
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", _hoisted_1$f, [
     createBaseVNode("button", {
+      id: "single-column-button",
       class: normalizeClass(["col-span-1 text-primary text-center cursor-pointer py-3 rounded-sm border", {
 				'border-gray-300': unref(columns) !== 'single',
 				'bg-primary-extralight border-2 border-primary': unref(columns) === 'single',
@@ -10056,6 +10061,7 @@ return (_ctx, _cache) => {
       createVNode(SingleColumn, { class: "mx-auto h-10 opacity-75" })
     ], 10, _hoisted_2$b),
     createBaseVNode("button", {
+      id: "double-column-button",
       class: normalizeClass(["col-span-2 text-primary text-center cursor-pointer py-3 rounded-sm border", {
 				'border-gray-300': unref(columns) !== 'double',
 				'bg-primary-extralight border-2 border-primary': unref(columns) === 'double',
@@ -10076,7 +10082,10 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$e = { class: "w-full grid grid-cols-4 gap-2 my-3" };
+const _hoisted_1$e = {
+  id: "font-family-menu",
+  class: "w-full grid grid-cols-4 gap-2 my-3"
+};
 const _hoisted_2$a = ["onClick", "title"];
 
 const _sfc_main$g = {
@@ -10115,10 +10124,12 @@ const { fontSize, setFontSize } = useReaderSettings;
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock(Fragment, null, [
     createBaseVNode("button", {
+      id: "fontsize-add-button",
       onClick: _cache[0] || (_cache[0] = withModifiers($event => (unref(setFontSize)(unref(fontSize) + 1)), ["prevent"])),
       class: "font-light text-base border border-urucum w-full h-10 flex justify-center items-center"
     }, " + A "),
     createBaseVNode("button", {
+      id: "fontsize-subtr-button",
       onClick: _cache[1] || (_cache[1] = withModifiers($event => (unref(setFontSize)(unref(fontSize) - 1)), ["prevent"])),
       class: "font-light text-base border border-urucum w-full h-10 flex justify-center items-center"
     }, " - A ")
@@ -10184,6 +10195,7 @@ const { mode, setMode } = useReaderSettings;
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock(Fragment, null, [
     createBaseVNode("button", {
+      id: "lightmode-button",
       onClick: _cache[0] || (_cache[0] = withModifiers($event => (unref(setMode)('light')), ["prevent"])),
       title: "Leitura diurna",
       class: normalizeClass(["font-light text-base border w-full h-10 flex justify-center items-center", {
@@ -10193,6 +10205,7 @@ return (_ctx, _cache) => {
       createVNode(IconSun, { class: "w-5 h-5" })
     ], 2),
     createBaseVNode("button", {
+      id: "darkmode-button",
       onClick: _cache[1] || (_cache[1] = withModifiers($event => (unref(setMode)('dark')), ["prevent"])),
       title: "Leitura noturna",
       class: normalizeClass(["font-light text-base border w-full h-10 flex justify-center items-center", {
@@ -10215,7 +10228,10 @@ const _hoisted_1$b = {
 };
 const _hoisted_2$7 = /*#__PURE__*/createBaseVNode("span", { class: "ml-4" }, "Notas de rodapé", -1);
 const _hoisted_3$5 = /*#__PURE__*/createBaseVNode("div", { class: "w-full border-b border-areia my-3" }, null, -1);
-const _hoisted_4$2 = { class: "w-full flex justify-center items-center py-3 lowercase" };
+const _hoisted_4$2 = {
+  class: "w-full flex justify-center items-center py-3 lowercase",
+  id: "visualize-title"
+};
 const _hoisted_5$2 = /*#__PURE__*/createBaseVNode("span", { class: "ml-4" }, "Visualização", -1);
 const _hoisted_6$2 = { class: "w-full grid grid-cols-4 gap-2 my-3" };
 const _hoisted_7$1 = /*#__PURE__*/createBaseVNode("div", { class: "hidden w-full border-b border-areia my-8" }, null, -1);
@@ -10232,6 +10248,7 @@ return (_ctx, _cache) => {
       renderSlot(_ctx.$slots, "optionsTop"),
       createBaseVNode("button", {
         onClick: _cache[0] || (_cache[0] = withModifiers($event => (unref(useFootnotes).setShowFootnotes(true)), ["prevent"])),
+        id: "footnotes-button",
         class: "w-full flex justify-center items-center py-3 lowercase"
       }, [
         createVNode(IconFootnote, { class: "w-6 h-6" }),
@@ -10283,7 +10300,7 @@ const { toggle: toggleFullScreen } = useFullscreen();
 
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", {
-    id: "options-button",
+    id: "options-menu",
     ref_key: "button",
     ref: button,
     class: "relative"
@@ -10292,7 +10309,7 @@ return (_ctx, _cache) => {
       createBaseVNode("button", {
         onClick: _cache[0] || (_cache[0] = withModifiers($event => (toggleSummary()), ["prevent"])),
         class: "border p-3 shadow flex items-center border-white text-white",
-        id: "options-menu",
+        id: "options-button",
         "aria-haspopup": "true",
         "aria-expanded": show.value
       }, [
