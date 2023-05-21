@@ -10292,7 +10292,7 @@ return (_ctx, _cache) => {
       createBaseVNode("button", {
         onClick: _cache[0] || (_cache[0] = withModifiers($event => (toggleSummary()), ["prevent"])),
         class: "border p-3 shadow flex items-center border-white text-white",
-        id: "summary-menu",
+        id: "options-menu",
         "aria-haspopup": "true",
         "aria-expanded": show.value
       }, [

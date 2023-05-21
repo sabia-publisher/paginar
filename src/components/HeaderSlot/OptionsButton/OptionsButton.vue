@@ -30,7 +30,7 @@ const { toggle: toggleFullScreen } = useFullscreen()
 		<div class="flex">
 			<button @click.prevent="toggleSummary()"
 				class="border p-3 shadow flex items-center border-white text-white"
-				id="summary-menu" aria-haspopup="true" :aria-expanded="show"
+				id="options-menu" aria-haspopup="true" :aria-expanded="show"
 			>
 				<span class="block mr-3">
 					Opções
