@@ -8,7 +8,7 @@ const { mode, setMode } = useReaderSettings
 </script>
 
 <template>
-	<button @click.prevent="setMode('light')"
+	<button id="lightmode-button" @click.prevent="setMode('light')"
 		title="Leitura diurna"
 		class="font-light text-base border w-full h-10 flex justify-center items-center"
 		:class="{
@@ -17,7 +17,7 @@ const { mode, setMode } = useReaderSettings
 		<IconSun class="w-5 h-5" />
 	</button>
 
-	<button @click.prevent="setMode('dark')"
+	<button id="darkmode-button" @click.prevent="setMode('dark')"
 		title="Leitura noturna"
 		class="font-light text-base border w-full h-10 flex justify-center items-center"
 		:class="{

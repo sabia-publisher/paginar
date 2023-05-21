@@ -24,6 +24,7 @@ import useFootnotes from '../../../composables/useFootnotes'
 			<slot name="optionsTop" />
 
 			<button @click.prevent="useFootnotes.setShowFootnotes(true)"
+				id="footnotes-button"
 				class="w-full flex justify-center items-center py-3 lowercase"
 			>
 				<IconFootnote class="w-6 h-6" />
@@ -33,7 +34,9 @@ import useFootnotes from '../../../composables/useFootnotes'
 			<div class="w-full border-b border-areia my-3"></div>
 
 
-			<div class="w-full flex justify-center items-center py-3 lowercase">
+			<div class="w-full flex justify-center items-center py-3 lowercase"
+				id="visualize-title"
+			>
 				<IconEye class="w-6 h-6" />
 				<span class="ml-4">Visualização</span>
 			</div>

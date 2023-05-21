@@ -17,8 +17,9 @@ const isSafari = computed(() => {
 </script>
 
 <template>
-	<div class="w-full hidden md:grid grid-cols-3 gap-2 mt-3">
+	<div id="columns-menu" class="w-full hidden md:grid grid-cols-3 gap-2 mt-3">
 		<button
+			id="single-column-button"
 			class="col-span-1 text-primary text-center cursor-pointer py-3 rounded-sm border"
 			:class="{
 				'border-gray-300': columns !== 'single',
@@ -33,6 +34,7 @@ const isSafari = computed(() => {
 		</button>
 
 		<button
+			id="double-column-button"
 			class="col-span-2 text-primary text-center cursor-pointer py-3 rounded-sm border"
 			:class="{
 				'border-gray-300': columns !== 'double',

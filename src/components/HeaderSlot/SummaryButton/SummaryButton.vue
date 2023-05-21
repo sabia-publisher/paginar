@@ -24,9 +24,9 @@ onKeyStroke('Escape', () => hide())
 </script>
 
 <template>
-	<div id="summary-button" ref="button" class="relative">
+	<div id="summary-menu" ref="button" class="relative">
 		<div class="flex">
-			<a href="/" title="Homepage"
+			<a href="/" title="Homepage" id="home-button"
 				class="hidden md:flex items-center border p-3 shadow mr-3
 					border-white text-white"
 			>
@@ -36,7 +36,7 @@ onKeyStroke('Escape', () => hide())
 			<button
 				@click.prevent="toggleSummary()"
 				class="border p-3 shadow flex items-center border-white text-white"
-				id="summary-menu" aria-haspopup="true" :aria-expanded="show"
+				id="summary-button" aria-haspopup="true" :aria-expanded="show"
 			>
 				<IconSummary v-if="!show" />
 				<IconClose v-else class="w-6 h-6" />
