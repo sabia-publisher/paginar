@@ -2,6 +2,8 @@
 
 Web Component para transformar conteúdos HTML em uma visualização paginada, melhorando a leitura no browser, navegação, customização etc.
 
+-----
+
 ### Como usar
 
 Via CDN, basta incluir ao final do html, antes do fechamento da tag body, o script:
@@ -19,6 +21,7 @@ No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o
     </div>
 </paginate-content>
 ```
+-----
 
 ### Exemplos didáticos
 
@@ -39,6 +42,8 @@ Referências bibliográficas (em breve)
 Customizar cores (em breve)
 
 Customizar apresentaçào de páginas (abertura, cores de fundo, quebra de pagina etc. Em breve)
+
+-----
 
 ### Exemplo real em uso (com alguma complexidade)
 
