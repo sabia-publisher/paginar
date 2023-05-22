@@ -12,7 +12,7 @@ Via CDN, basta incluir ao final do html, antes do fechamento da tag body, o scri
 <script type="module" src="https://cdn.jsdelivr.net/gh/sabia-publisher/paginar/dist/index.es.js"></script>
 ```
 
-No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, dentro de um div com propriedade slot="content":
+No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
 
 ```html
 <paginate-content id="pagination-el" book-title="Título do livro">
