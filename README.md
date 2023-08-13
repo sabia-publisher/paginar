@@ -34,7 +34,7 @@ No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o
 O web component disponibiliza algumas interfaces de customização por via de um objeto a ser linkado ao web component, conforme o exemplo:
 
 ```html
-<paginate-content id="pagination-el" book-title="Título do livro">
+<paginate-content id="pagination-el">
     <div slot="content">
         <p>Conteúdo de uma pagina.</p>
     </div>
