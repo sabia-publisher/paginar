@@ -171,7 +171,6 @@ No entanto, a maneira acima demonstrada não possibilita alterar o estilo da int
 Para alterar o estilo da interface do web component, precisamos inserir o CSS almejado no escopo do web component. Para isso, disponibilizamos uma interface via parametros da configuração do componente, conforme exemplo a seguir:
 
 ```html
-
 <paginate-content id="pagination-el" book-title="Título do livro">
 	<div slot="content">
 		<p>Conteúdo de uma pagina.</p>
@@ -193,7 +192,6 @@ Para alterar o estilo da interface do web component, precisamos inserir o CSS al
 		paginationEl.setAttribute("reader-settings", JSON.stringify(settings))
 	}
 </script>
-
 ```
 
 
