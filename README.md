@@ -143,18 +143,18 @@ No exemplo abaixo, na classe `.page-break` criamos uma classe-auxiliar que forç
 	.page-break {
 		break-before: column;
 	}
-
+	
 	p {
 		text-indent: 4rem;
 	}
 </style>
 
 <paginate-content id="pagination-el" book-title="Título do livro">
-    <div slot="content">
-        <p>Conteúdo de uma pagina.</p>
+	<div slot="content">
+		<p>Conteúdo de uma pagina.</p>
 		<div class="page-break"></div>
 		<p>Conteúdo da próxima página.</div>
-    </div>
+	</div>
 </paginate-content>
 
 ```
