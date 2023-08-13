@@ -12,7 +12,7 @@ async function getChapter(item) {
 
 <template>
 	<div class="absolute top-14 py-4 px-3 shadow-lg w-60 md:w-104
-			text-areia -left-2 md:left-16 z-10 bg-white" :role="Sumário" aria-orientation="vertical"
+			text-areia z-10 bg-white" :role="Sumário" aria-orientation="vertical"
 		aria-labelledby="summary-menu">
 		<nav>
 			<slot name="summaryTop" />

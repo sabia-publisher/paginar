@@ -30,8 +30,8 @@ const props = defineProps({
 	cssString: String
 })
 
-const { initSettings, baseFont, textFont, fontSize, columns, setColumns, mode } = useReaderSettings
-const { currentPage, totalPages, init } = usePagination
+const { baseFont, bookTitle, chapterTitle, textFont, fontSize, columns, setColumns, mode } = useReaderSettings
+const { currentPage, totalPages } = usePagination
 const { content, listenToClicks } = useTextContent
 const { width, height } = useWindowSize()
 
@@ -40,26 +40,19 @@ const contentArea = ref(null)
 const rootComponent = ref(null)
 
 onMounted(async () => {
-	init(readerComponent, contentArea)
-	initSettings(props.readerSettings)
+	usePagination.init(readerComponent, contentArea)
+	useReaderSettings.initSettings(props.readerSettings)
+	useStyles.initStyles(props, rootComponent)
 
 	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
 		useReaderSettings.setBlocked(props.readerBlocked)
 	}
 
-	if (props.cssFile) {
-		useStyles.stylesheetLoader(props.cssFile, rootComponent)
-	}
-
-	if (props.cssString) {
-		useStyles.applyStylesheet(props.cssString, rootComponent)
-	}
 })
 
 watch(
 	props,
 	() => {
-		console.log(props)
 		if (props.hasOwnProperty('readerBlocked')) {
 			const readerBlocked = typeof props.readerBlocked === 'boolean'
 				? props.readerBlocked
@@ -103,8 +96,11 @@ watchDebounced(content,
 			<HeaderSlot>
 				<template #header>
 					<slot name="header">
+						<p class="text-white text-center text-sm">
+							{{ props.bookTitle || bookTitle }}
+						</p>
 						<p class="text-white text-center text-xs">
-							{{ props.bookTitle }}
+							{{ props.chapterTitle || chapterTitle }}
 						</p>
 					</slot>
 				</template>

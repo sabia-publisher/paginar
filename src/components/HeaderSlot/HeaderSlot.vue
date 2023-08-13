@@ -4,7 +4,7 @@ import OptionsButton from './OptionsButton/OptionsButton.vue';
 </script>
 
 <template>
-	<div class="bg-primary flex justify-between items-center p-4">
+	<header id="component-header" class="bg-primary flex justify-between items-center p-4">
 		<summary-button>
 			<template #summaryTop>
 				<slot name="summaryTop" />
@@ -14,7 +14,7 @@ import OptionsButton from './OptionsButton/OptionsButton.vue';
 			</template>
 		</summary-button>
 
-		<div>
+		<div id="header-titles">
 			<slot name="header" />
 		</div>
 
@@ -26,5 +26,5 @@ import OptionsButton from './OptionsButton/OptionsButton.vue';
 				<slot name="optionsBottom" />
 			</template>
 		</options-button>
-	</div>
+	</header>
 </template>

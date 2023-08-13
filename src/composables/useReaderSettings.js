@@ -13,7 +13,11 @@ const state = reactive({
 	fontSize: 16,
 	columns: 'double',
 	mode: 'light',
-	blocked: false
+	blocked: false,
+
+	bookTitle: null,
+	chapterTitle: null,
+	homeUrl: null,
 })
 
 const baseFont = computed(() => state.baseFont)
@@ -24,6 +28,10 @@ const columns = computed(() => state.columns)
 const mode = computed(() => state.mode)
 const blocked = computed(() => state.blocked)
 
+const bookTitle = computed(() => state.bookTitle)
+const chapterTitle = computed(() => state.chapterTitle)
+const homeUrl = computed(() => state.homeUrl)
+
 watch(
 	[baseFont, textFont, fontSize, columns, mode],
 	() => saveSettings()
@@ -33,6 +41,8 @@ async function initSettings(settingsString) {
 	const settings = settingsString
 		? JSON.parse(settingsString)
 		: null
+
+	console.log(settings)
 
 	if (settings?.baseFont)
 		state.baseFont = settings.baseFont
@@ -61,6 +71,15 @@ async function initSettings(settingsString) {
 		if (defaultTextFont)
 			state.textFont = defaultTextFont.name
 	}
+
+	if (settings?.bookTitle)
+		state.bookTitle = settings.bookTitle
+
+	if (settings?.chapterTitle)
+		state.chapterTitle = settings.chapterTitle
+
+	if (settings?.homeUrl)
+		state.homeUrl = settings.homeUrl
 
 	loadSavedSettings(settings)
 }
@@ -149,5 +168,9 @@ export default {
 	mode,
 	blocked,
 	setMode,
-	saveSettings
+	saveSettings,
+
+	bookTitle,
+	chapterTitle,
+	homeUrl
 }

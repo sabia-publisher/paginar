@@ -35,15 +35,25 @@
 		.reference:hover, .footnote:hover {
 			border-bottom: 2px solid #333;
 		}
+
+		p {
+			text-indent: 4rem;
+		}
+
+		.page-break {
+			break-before: column;
+		}
+
+		.page-break span {
+			background-color: #eee;
+			padding: 5px;
+			font-family: monospace;
+			display: block;
+		}
 	</style>
 
 	<div id="app">
-		<paginate-content id="pagination-el" book-title="A Tale of Two Cities"
-			css-string="#rootComponent.currentPage-1{background-color: transparent !important; transition: background-color 200ms linear;}"
-		>
-			<div slot="header">
-				<img src="https://sabia.pub/images/logo-mobile-dark.svg" style="height: 40px">
-			</div>
+		<paginate-content id="pagination-el">
 			<div slot="content">
 				<h2>
 					CHAPTER I.<br>The Period
@@ -59,6 +69,9 @@
 					authorities insisted on its being received, for good or for evil, in the
 					superlative degree of comparison only.
 				</p>
+				<div class="page-break">
+					<span>Page Break</span>
+				</div>
 				<p>
 					There were a king with a large jaw and a queen with a plain face, on the
 					throne of England; there were a king with (LEON, 2006) a large jaw and a queen with a
@@ -148,7 +161,21 @@
 	</div>
 	<script>
 		const settings = {
-			baseFont: 'Verdana, sans-serif'
+			baseFont: 'Verdana, sans-serif',
+
+			homeUrl: 'https://sabia.pub',
+
+			bookTitle: 'A Tale of Two Cities',
+			chapterTitle: 'Chapter One - The Period',
+
+			cssString: `
+				header#component-header {
+					background-color: #000;
+				}
+				#footnotes-button {
+					display: none;
+				}
+			`
 		}
 
 		const content = {

@@ -1,3 +1,21 @@
+function initStyles(props, rootComponent) {
+	const settings = props.readerSettings
+		? JSON.parse(props.readerSettings)
+		: null
+
+	if (props.cssFile) {
+		stylesheetLoader(props.cssFile, rootComponent)
+	}
+
+	if (props.cssString) {
+		applyStylesheet(props.cssString, rootComponent)
+	}
+
+	if (settings?.cssString) {
+		applyStylesheet(settings.cssString, rootComponent)
+	}
+}
+
 function fontLoader(fontsOptions) {
 	const fontsToLoad = fontsOptions.filter(item => item.link)
 
@@ -37,6 +55,7 @@ async function applyStylesheet(stylesheet, ref) {
 }
 
 export default {
+	initStyles,
 	fontLoader,
 	stylesheetLoader,
 	applyStylesheet
