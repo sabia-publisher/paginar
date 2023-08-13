@@ -173,12 +173,12 @@ Para alterar o estilo da interface do web component, precisamos inserir o CSS al
 ```html
 
 <paginate-content id="pagination-el" book-title="Título do livro">
-    <div slot="content">
-        <p>Conteúdo de uma pagina.</p>
-    </div>
+	<div slot="content">
+		<p>Conteúdo de uma pagina.</p>
+	</div>
 </paginate-content>
 
-	<script>
+<script>
 	const settings = {
 		// outras opções
 		cssString: `
