@@ -591,10 +591,6 @@ video {
   right: -0.5rem;
 }
 
-.-left-2 {
-  left: -0.5rem;
-}
-
 .z-20 {
   z-index: 20;
 }
@@ -900,6 +896,11 @@ video {
   text-align: center;
 }
 
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
@@ -913,11 +914,6 @@ video {
 .text-lg {
   font-size: 1.125rem;
   line-height: 1.75rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
 }
 
 .font-light {
@@ -1058,10 +1054,6 @@ video {
 
   .md\:right-16 {
     right: 4rem;
-  }
-
-  .md\:left-16 {
-    left: 4rem;
   }
 
   .md\:flex {
