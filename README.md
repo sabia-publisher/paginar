@@ -4,6 +4,11 @@ Web Component para transformar conteúdos HTML em uma visualização paginada, m
 
 -----
 
+### Exemplo real em uso (com alguma complexidade)
+
+[link](https://sabia.pub/book/okabayashi-uma-perspectiva-decolonial-para-o-design-no-brasil/read/haDxQvbtIIX4Hh5cOyee/content)
+
+
 ## Como usar
 
 Via CDN, basta incluir ao final do html, antes do fechamento da tag body, o script:
