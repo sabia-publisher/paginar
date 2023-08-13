@@ -168,7 +168,7 @@ No exemplo abaixo, na classe `.page-break` criamos uma classe-auxiliar que forç
 
 No entanto, a maneira acima demonstrada não possibilita alterar o estilo da interface em sí do paginador. Isso porque o escopo do CSS do paginador está dentro de um [**web component**](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), que possui escopo isolado do restante da página, aninhados no `shadow dom` daquele componente.
 
-Para possibilitar a alteração do estilo da interface do web component, assim, precisamos inserir o CSS almejado no escopo do web component. Para isso, disponibilizamos uma interface via parametros da configuração do componente, conforme exemplo a seguir:
+Para alterar o estilo da interface do web component, precisamos inserir o CSS almejado no escopo do web component. Para isso, disponibilizamos uma interface via parametros da configuração do componente, conforme exemplo a seguir:
 
 ```html
 
@@ -178,15 +178,16 @@ Para possibilitar a alteração do estilo da interface do web component, assim, 
     </div>
 </paginate-content>
 
-<script>
+	<script>
 	const settings = {
+		// outras opções
 		cssString: `
 			main#rootComponent  {
 				transition: background-color 200ms linear;
 			}
 		`
 	}
-
+	
 	const paginationEl = document.getElementById('pagination-el')
 	if (paginationEl) {
 		paginationEl.setAttribute("reader-settings", JSON.stringify(settings))
