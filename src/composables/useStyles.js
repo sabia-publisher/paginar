@@ -41,9 +41,7 @@ async function stylesheetLoader(stylesheet, ref) {
 
 			applyStylesheet(cssText, ref)
 
-		} catch (err) {
-			console.log({ err })
-		}
+		} catch (_) {}
 	}
 }
 

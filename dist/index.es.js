@@ -9146,9 +9146,7 @@ async function stylesheetLoader(stylesheet, ref) {
 
 			applyStylesheet(cssText, ref);
 
-		} catch (err) {
-			console.log({ err });
-		}
+		} catch (_) {}
 	}
 }
 
@@ -9206,8 +9204,6 @@ async function initSettings(settingsString) {
 	const settings = settingsString
 		? JSON.parse(settingsString)
 		: null;
-
-	console.log(settings);
 
 	if (settings?.baseFont)
 		state$5.baseFont = settings.baseFont;
@@ -10910,7 +10906,6 @@ watch(
 			const readerBlocked = typeof props.readerBlocked === 'boolean'
 				? props.readerBlocked
 				: props.readerBlocked === 'true';
-			console.log(readerBlocked);
 			useReaderSettings.setBlocked(readerBlocked);
 		}
 	}

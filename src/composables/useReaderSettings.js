@@ -42,8 +42,6 @@ async function initSettings(settingsString) {
 		? JSON.parse(settingsString)
 		: null
 
-	console.log(settings)
-
 	if (settings?.baseFont)
 		state.baseFont = settings.baseFont
 

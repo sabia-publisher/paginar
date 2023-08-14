@@ -57,7 +57,6 @@ watch(
 			const readerBlocked = typeof props.readerBlocked === 'boolean'
 				? props.readerBlocked
 				: props.readerBlocked === 'true'
-			console.log(readerBlocked)
 			useReaderSettings.setBlocked(readerBlocked)
 		}
 	}
