@@ -21,9 +21,9 @@ No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o
 
 ```html
 <paginate-content id="pagination-el" book-title="Título do livro">
-    <div slot="content">
-        <p>Conteúdo HTML para paginar</p>
-    </div>
+	<div slot="content">
+		<p>Conteúdo HTML para paginar</p>
+	</div>
 </paginate-content>
 ```
 
@@ -35,9 +35,9 @@ O web component disponibiliza algumas interfaces de customização por via de um
 
 ```html
 <paginate-content id="pagination-el">
-    <div slot="content">
-        <p>Conteúdo de uma pagina.</p>
-    </div>
+	<div slot="content">
+		<p>Conteúdo de uma pagina.</p>
+	</div>
 </paginate-content>
 
 <script>
@@ -148,7 +148,7 @@ No exemplo abaixo, na classe `.page-break` criamos uma classe-auxiliar que forç
 	.page-break {
 		break-before: column;
 	}
-	
+		
 	p {
 		text-indent: 4rem;
 	}
@@ -186,7 +186,7 @@ Para alterar o estilo da interface do web component, precisamos inserir o CSS al
 			}
 		`
 	}
-	
+		
 	const paginationEl = document.getElementById('pagination-el')
 	if (paginationEl) {
 		paginationEl.setAttribute("reader-settings", JSON.stringify(settings))
