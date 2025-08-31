@@ -19,10 +19,9 @@ async function getChapter(item) {
 			<component v-for="item in summary" :is="item.link ? 'a' : 'button'" :key="item.link" :href="item.link"
 				:title="`Navegar para capítulo ${item.title}`"
 				class="w-full text-left block text-black py-2 px-3 hover:bg-gray-100 rounded mb-2"
-				@click="item.file ? getChapter(item) : null"
-			>
-				<span class="item-title">{{ item.title }}</span>
-				<span v-if="item.author">{{ item.author }}</span>
+				@click="item.file ? getChapter(item) : null">
+				<span class="summary-menu-dropdown-item-title">{{ item.title }}</span>
+				<span v-if="item.author" class="summary-menu-dropdown-item-author">{{ item.author }}</span>
 			</component>
 
 			<slot name="summaryBottom" />

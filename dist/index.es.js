@@ -9805,8 +9805,11 @@ const usePagination = {
 };
 
 const _hoisted_1$n = ["role"];
-const _hoisted_2$l = { class: "item-title" };
-const _hoisted_3$d = { key: 0 };
+const _hoisted_2$l = { class: "summary-menu-dropdown-item-title" };
+const _hoisted_3$d = {
+  key: 0,
+  class: "summary-menu-dropdown-item-author"
+};
 
 const _sfc_main$p = {
   __name: 'SummaryDropdown',
