@@ -1,18 +1,18 @@
 
-.width-enter-active[data-v-4f3c3c73],
-.width-leave-active[data-v-4f3c3c73] {
+.width-enter-active[data-v-5391e486],
+.width-leave-active[data-v-5391e486] {
 	transition: width .5s;
 }
-.width-enter-active>*[data-v-4f3c3c73] {
+.width-enter-active>*[data-v-5391e486] {
 	transition-property: opacity;
 	transition-duration: .2s;
 	transition-delay: .3s;
 }
-.width-leave-active>*[data-v-4f3c3c73] {
+.width-leave-active>*[data-v-5391e486] {
 	transition: opacity .25s;
 }
-.width-enter[data-v-4f3c3c73],
-.width-leave-to[data-v-4f3c3c73] {
+.width-enter[data-v-5391e486],
+.width-leave-to[data-v-5391e486] {
 	width: 0;
 }
 /*

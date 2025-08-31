@@ -22,7 +22,7 @@ Esse link acima sempre puxa a última versão disponível para o software, e tam
 Para apontar para uma versão estável, e assim evitar possíveis bugs ou desconfigurações vindas das melhorias, pode ser da seguinte maneira:
 
 ```html
-<script type="module" src="https://unpkg.com/paginar@0.3.0/dist/index.es.js"></script>
+<script type="module" src="https://unpkg.com/paginar@0.3.1/dist/index.es.js"></script>
 ```
 
 No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
