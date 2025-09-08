@@ -14,10 +14,14 @@ const button = ref(null)
 
 const { homeUrl } = useReaderSettings
 
-const toggleSummary = () => show.value = !show.value
+const toggleSummary = () => {
+	show.value = !show.value
+	useReaderSettings.setBlocked(show.value)
+}
 const hide = () => {
 	if (!useReaderSettings.blocked.value) {
 		show.value = false
+		useReaderSettings.setBlocked(false)
 	}
 }
 

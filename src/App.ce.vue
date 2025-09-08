@@ -146,3 +146,21 @@ watchDebounced(content,
 </template>
 
 <style lang="scss" src="./assets/main.css"></style>
+
+<style lang="scss">
+/* In your Vue component's <style> section */
+:host {
+	user-select: text;
+}
+
+::slotted(*) {
+	user-select: text;
+}
+
+/* Ensure paragraphs can be selected across boundaries */
+::slotted(p) {
+	user-select: text;
+	display: block;
+	/* Avoid inline-block which can break selection */
+}
+</style>
