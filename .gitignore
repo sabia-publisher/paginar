@@ -1,4 +1,12 @@
 # Logs
+# Local configuration and release archives (tracked files are unaffected)
+.env
+.env.*
+!.env.example
+.npmrc
+.npm-cache/
+*.tgz
+
 logs
 *.log
 npm-debug.log*

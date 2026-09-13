@@ -4,6 +4,9 @@
 	"description": "A flipping page web component for reading long texts on the brower",
 	"main": "dist/index.es.js",
 	"module": "dist/index.es.js",
+	"files": [
+		"dist/"
+	],
 	"version": "0.3.4",
 	"repository": {
 		"type": "git",

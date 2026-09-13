@@ -1,5 +1,14 @@
 # Paginar
 
+## Manutenção e contribuição
+
+Para trabalhar no projeto, comece pelo [AGENTS.md](AGENTS.md). Consulte também o
+[mapa da arquitetura](docs/architecture.md), o [guia de desenvolvimento e validação](docs/development.md)
+e o [roteiro de publicação no npm](docs/releasing.md). Tarefas pequenas podem seguir
+esse fluxo diretamente; o uso de Specify / Spec Kit é opcional.
+
+Esses documentos estão no [repositório público](https://github.com/sabia-publisher/paginar).
+
 Web Component para transformar conteúdos HTML em uma visualização paginada, melhorando a leitura no browser, navegação, customização etc.
 
 -----
