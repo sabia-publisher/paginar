@@ -43,6 +43,7 @@ Para mudanças de comportamento, selecione os cenários afetados; antes de relea
 - Redimensionamento entre desktop e celular; uma/duas colunas, mudança de fonte e tamanho, número de páginas coerente e ausência de cortes no texto. Gesto em viewport menor que 600 px.
 - Sumário, opções, referências e notas abrem/fecham; bloqueio de navegação durante os estados pertinentes.
 - Tema e preferências persistem ao recarregar. Para comparar os padrões, remova apenas a chave `readerSettings` no armazenamento da origem de teste.
+- Com `readingProgress` configurado, avance, recarregue e confirme retorno com diferença máxima de uma página da posição proporcional. Repita após alterar viewport, fonte e colunas; teste a desativação pelo menu e isole a limpeza à chave `paginar:reading-progress:v1`.
 - Slots de customização e CSS do consumidor continuam funcionando. Teste também o bundle construído antes da publicação.
 - Alterações de layout ou detecção de plataforma: verificar Chromium e, quando disponível, Safari/iOS. Registre navegadores/dispositivos efetivamente usados e qualquer cobertura pendente.
 

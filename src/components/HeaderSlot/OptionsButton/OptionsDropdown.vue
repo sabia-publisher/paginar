@@ -6,8 +6,10 @@ import OptionsColumns from './OptionsColumns.vue';
 import OptionsFontFamily from './OptionsFontFamily.vue';
 import OptionsFontSize from './OptionsFontSize.vue';
 import OptionsColor from './OptionsColor.vue'
+import OptionsReadingProgress from './OptionsReadingProgress.vue'
 
 import useFootnotes from '../../../composables/useFootnotes'
+import useReadingProgress from '../../../composables/useReadingProgress'
 
 </script>
 
@@ -50,6 +52,8 @@ import useFootnotes from '../../../composables/useFootnotes'
 				<OptionsFontSize />
 				<OptionsColor />
 			</div>
+
+			<OptionsReadingProgress v-if="useReadingProgress.available.value" />
 
 			<div class="hidden w-full border-b border-areia my-8"></div>
 
