@@ -28,6 +28,11 @@ Props declaradas na raiz: `bookTitle`, `bookContent`, `readerSettings`, `readerB
 
 Slots expostos pela raiz: `content`, `header`, `summaryTop`, `summaryBottom`, `optionsTop`, `optionsBottom`. Preserve a grafia. Um slot em um componente interno não é automaticamente uma API do custom element: o `footer` interno, por exemplo, não é encaminhado pela raiz.
 
+A API JavaScript pública é instalada na instância do elemento após a montagem:
+`getState()`, `goToPage()`, `nextPage()` e `previousPage()`. Eventos com prefixo
+`paginar:` comunicam prontidão, navegação, preferências e abertura de menus. O
+contrato completo está em [eventos e estado público](events-and-state.md).
+
 A interface vive no Shadow DOM; conteúdo em slot permanece no DOM da página hospedeira. CSS externo pode estilizar o conteúdo fornecido por slot. Para a interface, existem `css-string`, `css-file` e `reader-settings.cssString`. Fontes externas são inseridas no documento. Os seletores de customização também são parte prática da integração pública.
 
 Preferências são persistidas em `localStorage` sob `readerSettings`. Valores salvos podem sobrescrever tamanho, colunas, modo e a escolha de retomada configurados inicialmente. A retomada é opt-in por `reader-settings.readingProgress`; `useReadingProgress.js` guarda percentuais por obra/contexto sob a chave versionada `paginar:reading-progress:v1`, atualiza o registro na navegação e novamente ao ocultar ou sair da página, e restaura somente depois de uma paginação válida. Quando viewport, fonte, tamanho, colunas ou conteúdo provocam repaginação, o percentual anterior é capturado antes do cálculo e convertido para a página mais próxima no novo total. A paginação usa colunas CSS e deslocamento horizontal, não uma árvore de páginas independentes. Abaixo de 1024 px, a raiz muda a opção dupla para simples; o gesto de navegação é condicionado a largura inferior a 600 px.
@@ -43,6 +48,5 @@ Estas observações orientam investigação; não são tarefas obrigatórias par
 - HTML carregado é renderizado com `v-html` e CSS pode ser injetado. Não existe sanitização geral implementada; integrações devem fornecer conteúdo confiável.
 - O sumário é fornecido no JSON. A lista histórica de funcionalidades do README não comprova geração automática a partir de títulos HTML nem parsing de Markdown.
 - `useBrowser.isSafari` usa detecção de dispositivos Apple móveis/iPad por heurística, não uma detecção completa de Safari desktop. Verificar plataformas reais quando alterar esse ramo.
-- `package.json` ainda aponta o repositório/homepage para `educkf/paginar`, enquanto o remoto deste checkout é `sabia-publisher/paginar`. Revisar os metadados numa release, sem confundir URL antiga com destino atual de push.
 
 Veja [desenvolvimento](development.md) e [decisões](decisions.md). Ajuste esta lista quando uma limitação for resolvida.

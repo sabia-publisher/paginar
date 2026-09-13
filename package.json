@@ -7,13 +7,13 @@
 	"files": [
 		"dist/"
 	],
-	"version": "0.3.5",
+	"version": "0.3.6",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/educkf/paginar.git"
+		"url": "git+https://github.com/sabia-publisher/paginar.git"
 	},
 	"license": "Apache-2.0",
-	"homepage": "https://github.com/educkf/paginar",
+	"homepage": "https://github.com/sabia-publisher/paginar",
 	"scripts": {
 		"dev": "concurrently \"npm run start:css\" \"npm run start --host\"",
 		"start": "vite",

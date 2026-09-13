@@ -1,12 +1,16 @@
 <script setup>
+import { inject } from 'vue'
 import useTextContent from '../../../composables/useTextContent'
 import usePagination from '../../../composables/usePagination'
+import { publicEventKey } from '../../../publicApi'
 const { summary } = useTextContent
+const publicEvent = inject(publicEventKey, () => {})
 
 async function getChapter(item) {
 	const text = await useTextContent.getContent(item.file)
 	useTextContent.applyContent(text, item)
-	usePagination.set(1)
+	usePagination.set(1, 'summary')
+	publicEvent('chapter-change', { chapter: { ...item } })
 }
 </script>
 

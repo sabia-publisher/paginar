@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Paginar — eventos e estado</title>
+	<style>
+		body { margin: 0; font-family: system-ui, sans-serif; }
+		.demo-panel { padding: 1rem; background: #f4f4f4; }
+		.demo-panel button { margin: 0 .5rem .5rem 0; }
+		.demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+		pre { max-height: 12rem; overflow: auto; padding: .75rem; background: #222; color: #eee; }
+		.demo-content p { margin-bottom: 1.5rem; }
+		.page-break { break-before: column; }
+		@media (max-width: 700px) { .demo-grid { grid-template-columns: 1fr; } }
+	</style>
+</head>
+<body>
+	<section class="demo-panel">
+		<h1>Eventos e estado público</h1>
+		<p>Use o leitor e acompanhe os eventos e o estado em tempo real.</p>
+		<button id="previous" type="button">Página anterior (API)</button>
+		<button id="next" type="button">Próxima página (API)</button>
+		<button id="state" type="button">Atualizar estado</button>
+		<div class="demo-grid">
+			<div><h2>Estado</h2><pre id="state-output">Aguardando paginar:ready…</pre></div>
+			<div><h2>Últimos eventos</h2><pre id="event-output">Aguardando eventos…</pre></div>
+		</div>
+	</section>
+
+	<paginate-content id="reader" book-title="Demonstração da API pública">
+		<div slot="content" class="demo-content">
+			<h2>Uma pequena leitura demonstrativa</h2>
+			<p>Este conteúdo é longo o bastante para formar páginas em diferentes tamanhos de tela. Use os botões laterais, as setas do teclado, o slider e as opções de leitura.</p>
+			<p>Ao mudar de página, o evento informa a página anterior, a atual e a origem da ação. Isso permite registrar métricas sem depender da estrutura interna.</p>
+			<div class="page-break"></div>
+			<p>Fonte, tamanho, colunas e modo claro ou escuro fazem parte do estado público. Cada mudança produz um evento com os valores anterior e atual.</p>
+			<p>O método getState retorna uma fotografia do paginador. A aplicação pode usá-la para salvar preferências ou atualizar outra interface.</p>
+			<p>Os métodos nextPage, previousPage e goToPage oferecem navegação programática, identificada pela origem api.</p>
+			<div class="page-break"></div>
+			<p>Redimensionar a janela ou mudar a tipografia recalcula as páginas preservando a posição proporcional da leitura.</p>
+		</div>
+	</paginate-content>
+
+	<script>
+		const reader = document.getElementById('reader')
+		const stateOutput = document.getElementById('state-output')
+		const eventOutput = document.getElementById('event-output')
+		const history = []
+		const names = ['ready', 'page-change', 'settings-change', 'summary-toggle', 'options-toggle', 'chapter-change']
+
+		function renderState() {
+			if (reader.getState)
+				stateOutput.textContent = JSON.stringify(reader.getState(), null, 2)
+		}
+
+		names.forEach(name => reader.addEventListener(`paginar:${name}`, event => {
+			history.unshift({ event: event.type, detail: event.detail })
+			history.splice(8)
+			eventOutput.textContent = JSON.stringify(history, null, 2)
+			renderState()
+		}))
+
+		document.getElementById('previous').addEventListener('click', () => reader.previousPage())
+		document.getElementById('next').addEventListener('click', () => reader.nextPage())
+		document.getElementById('state').addEventListener('click', renderState)
+		reader.setAttribute('reader-settings', JSON.stringify({
+			fontSize: 18,
+			fontsOptions: [
+				{ label: 'Georgia', name: 'Georgia, serif', defaultTextFont: true },
+				{ label: 'Arial', name: 'Arial, sans-serif' }
+			]
+		}))
+	</script>
+	<script type="module" src="../../dist/index.es.js"></script>
+</body>
+</html>

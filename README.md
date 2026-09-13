@@ -31,7 +31,7 @@ Esse link acima sempre puxa a última versão disponível para o software, e tam
 Para apontar para uma versão estável, e assim evitar possíveis bugs ou desconfigurações vindas das melhorias, pode ser da seguinte maneira:
 
 ```html
-<script type="module" src="https://unpkg.com/paginar@0.3.1/dist/index.es.js"></script>
+<script type="module" src="https://unpkg.com/paginar@0.3.6/dist/index.es.js"></script>
 ```
 
 No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
@@ -174,6 +174,26 @@ Ao alterar fonte, tamanho, colunas ou dimensões da janela, o leitor preserva o
 percentual anterior e seleciona a página mais próxima no novo total. Quando a
 posição fica exatamente entre duas páginas, a página seguinte é escolhida.
 
+## Eventos, estado e navegação por JavaScript
+
+O componente emite eventos públicos ao mudar de página, usar o slider, abrir o
+sumário ou as opções, trocar capítulo e alterar fonte, tamanho, colunas ou tema.
+Também oferece `getState()`, `goToPage()`, `nextPage()` e `previousPage()` no
+elemento. Todos os detalhes, nomes e formatos estão no guia de
+[eventos e estado público](docs/events-and-state.md).
+
+```js
+const reader = document.querySelector('paginate-content')
+
+reader.addEventListener('paginar:page-change', event => {
+	console.log(event.detail.source, event.detail.state)
+})
+
+reader.addEventListener('paginar:ready', () => {
+	console.log(reader.getState())
+})
+```
+
 
 ### Aplicando estilo no corpo do texto
 
@@ -238,6 +258,8 @@ Para alterar o estilo da interface do web component, precisamos inserir o CSS al
 ### Exemplos didáticos
 
 Para customizações especiais, navegue pelos exemplos abaixo e inspecione o código como ele funciona.
+
+[Eventos e estado público (exemplo neste repositório)](https://sabia-publisher.github.io/paginar/demo/events/)
 
 [Uso básico](https://educkf.github.io/paginar-exemplos/exemplo1/exemplo1.html)
 

@@ -9,12 +9,14 @@ import useReadingProgress from './useReadingProgress'
 
 const state = reactive({
 	currentPage: 1,
+	changeSource: 'initial',
 	nextTry: 0,
 	prevTry: 0,
 	willRedirect: false
 })
 
 const currentPage = computed(() => state.currentPage)
+const changeSource = computed(() => state.changeSource)
 const totalPages = computed(() => useEstimatePages.totalPages.value)
 
 function init(viewport, content, estimate = null) {
@@ -52,10 +54,10 @@ watch(totalPages, () => {
 })
 
 // navigate by increase/decrease value
-function next(usingScroll = false) {
+function next(usingScroll = false, source = 'next') {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
-			set(state.currentPage + 1)
+			set(state.currentPage + 1, source)
 		} else {
 			// prevent going too fast to next chapter on
 			// stronger scroll
@@ -76,21 +78,21 @@ function next(usingScroll = false) {
 }
 onKeyStroke('ArrowRight', (e) => {
 	e.preventDefault()
-	next()
+	next(false, 'keyboard')
 })
 
 function onWheel(event) {
 	if (event.wheelDelta < 0) {
-		next(true)
+		next(true, 'wheel')
 	} else {
-		prev(true)
+		prev(true, 'wheel')
 	}
 };
 
-function prev(usingScroll = false) {
+function prev(usingScroll = false, source = 'previous') {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
-			set(state.currentPage - 1)
+			set(state.currentPage - 1, source)
 		} else {
 			// prevent going too fast to prev chapter on
 			// stronger scroll
@@ -111,12 +113,13 @@ function prev(usingScroll = false) {
 }
 onKeyStroke('ArrowLeft', (e) => {
 	e.preventDefault()
-	prev()
+	prev(false, 'keyboard')
 })
 
 // navigate to specific page
-function set(val) {
+function set(val, source = 'go-to-page') {
 	const page = Math.min(totalPages.value, Math.max(1, Number(val) || 1))
+	state.changeSource = source
 	state.currentPage = page
 	useReadingProgress.save(page, totalPages.value)
 }
@@ -124,6 +127,7 @@ function set(val) {
 export default {
 	currentPage,
 	totalPages,
+	changeSource,
 	next,
 	prev,
 	init,

@@ -15,10 +15,10 @@ const { distanceX } = usePointerSwipe(el, {
 	onSwipeEnd() {
 		if (width.value < 600) {
 			if (distanceX.value > 100) {
-				usePagination.next()
+				usePagination.next(false, 'swipe')
 			}
 			if (distanceX.value < -100) {
-				usePagination.prev()
+				usePagination.prev(false, 'swipe')
 			}
 		}
 	}

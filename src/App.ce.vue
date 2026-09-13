@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, defineProps, nextTick, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, defineProps, nextTick, watch, provide } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
@@ -17,6 +17,7 @@ import useReaderSettings from './composables/useReaderSettings'
 import useStyles from './composables/useStyles'
 import useBrowser from './composables/useBrowser'
 import useReadingProgress from './composables/useReadingProgress'
+import { publicEventKey } from './publicApi'
 
 const props = defineProps({
 	bookTitle: String,
@@ -32,7 +33,7 @@ const props = defineProps({
 })
 
 const { baseFont, bookTitle, chapterTitle, textFont, fontSize, columns, setColumns, mode } = useReaderSettings
-const { currentPage, totalPages } = usePagination
+const { currentPage, totalPages, changeSource } = usePagination
 const { content, listenToClicks } = useTextContent
 const { width, height } = useWindowSize()
 
@@ -40,6 +41,47 @@ const readerComponent = ref(null)
 const contentArea = ref(null)
 const rootComponent = ref(null)
 let paginationRevision = 0
+let hostElement = null
+
+function getState() {
+	const currentChapter = useTextContent.context.value.chapter
+	return {
+		pagination: {
+			currentPage: currentPage.value,
+			totalPages: totalPages.value,
+			progress: totalPages.value > 1
+				? (currentPage.value - 1) / (totalPages.value - 1)
+				: 0
+		},
+		settings: {
+			baseFont: baseFont.value,
+			textFont: textFont.value,
+			fontSize: fontSize.value,
+			columns: columns.value,
+			mode: mode.value,
+			blocked: useReaderSettings.blocked.value,
+			readingProgressEnabled: useReaderSettings.readingProgressEnabled.value
+		},
+		content: {
+			bookTitle: props.bookTitle || bookTitle.value,
+			chapterTitle: chapterTitle.value,
+			chapter: currentChapter ? { ...currentChapter } : null
+		}
+	}
+}
+
+function dispatchPublicEvent(name, detail = {}) {
+	if (!hostElement)
+		return
+
+	hostElement.dispatchEvent(new CustomEvent(`paginar:${name}`, {
+		bubbles: true,
+		composed: true,
+		detail: { ...detail, state: getState() }
+	}))
+}
+
+provide(publicEventKey, dispatchPublicEvent)
 
 function syncReadingProgress(allowRestore = false) {
 	const targetPage = useReadingProgress.sync(
@@ -48,7 +90,7 @@ function syncReadingProgress(allowRestore = false) {
 		allowRestore
 	)
 	if (targetPage)
-		usePagination.set(targetPage)
+		usePagination.set(targetPage, 'reading-progress')
 }
 
 function estimatePagesAndSyncProgress() {
@@ -69,7 +111,7 @@ function estimatePagesAndSyncProgress() {
 		)
 
 		if (targetPage)
-			usePagination.set(targetPage)
+			usePagination.set(targetPage, 'repagination')
 		else
 			syncReadingProgress(true)
 
@@ -88,6 +130,13 @@ function saveReadingProgressWhenHidden() {
 }
 
 onMounted(async () => {
+	hostElement = rootComponent.value?.getRootNode()?.host || null
+	if (hostElement) {
+		hostElement.getState = getState
+		hostElement.goToPage = page => usePagination.set(page, 'api')
+		hostElement.nextPage = () => usePagination.next(false, 'api')
+		hostElement.previousPage = () => usePagination.prev(false, 'api')
+	}
 	useReaderSettings.initSettings(props.readerSettings)
 	useReadingProgress.init(
 		props.readerSettings,
@@ -104,12 +153,20 @@ onMounted(async () => {
 	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
 		useReaderSettings.setBlocked(props.readerBlocked)
 	}
+	nextTick(() => requestAnimationFrame(() => dispatchPublicEvent('ready')))
 
 })
 
 onBeforeUnmount(() => {
 	window.removeEventListener('pagehide', saveCurrentReadingProgress)
 	document.removeEventListener('visibilitychange', saveReadingProgressWhenHidden)
+	if (hostElement) {
+		delete hostElement.getState
+		delete hostElement.goToPage
+		delete hostElement.nextPage
+		delete hostElement.previousPage
+	}
+	hostElement = null
 })
 
 watch(
@@ -140,8 +197,30 @@ watchDebounced(
 
 watch(
 	currentPage,
-	() => syncReadingProgress(),
+	(value, previousValue) => {
+		syncReadingProgress()
+		dispatchPublicEvent('page-change', {
+			page: value,
+			previousPage: previousValue,
+			source: changeSource.value
+		})
+	},
 	{ flush: 'sync' }
+)
+
+watch(
+	[baseFont, textFont, fontSize, columns, mode, useReaderSettings.readingProgressEnabled],
+	(values, previousValues) => {
+		const names = ['baseFont', 'textFont', 'fontSize', 'columns', 'mode', 'readingProgressEnabled']
+		const changes = names.reduce((result, name, index) => {
+			if (values[index] !== previousValues[index])
+				result[name] = { previous: previousValues[index], value: values[index] }
+			return result
+		}, {})
+		if (Object.keys(changes).length)
+			dispatchPublicEvent('settings-change', { changes })
+	},
+	{ flush: 'post' }
 )
 
 watchDebounced(content,

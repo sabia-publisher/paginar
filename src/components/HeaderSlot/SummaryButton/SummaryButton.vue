@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import { onClickOutside, onKeyStroke } from '@vueuse/core'
 
 import useReaderSettings from '../../../composables/useReaderSettings'
@@ -8,20 +8,24 @@ import IconHome from '../../icons/Home.vue'
 import IconClose from '../../icons/Close.vue'
 import IconSummary from '../../icons/Summary.vue'
 import SummaryDropdown from './SummaryDropdown.vue'
+import { publicEventKey } from '../../../publicApi'
 
 const show = ref(false)
 const button = ref(null)
 
 const { homeUrl } = useReaderSettings
+const publicEvent = inject(publicEventKey, () => {})
 
 const toggleSummary = () => {
 	show.value = !show.value
 	useReaderSettings.setBlocked(show.value)
+	publicEvent('summary-toggle', { open: show.value })
 }
 const hide = () => {
-	if (!useReaderSettings.blocked.value) {
+	if (show.value && !useReaderSettings.blocked.value) {
 		show.value = false
 		useReaderSettings.setBlocked(false)
+		publicEvent('summary-toggle', { open: false })
 	}
 }
 

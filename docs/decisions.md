@@ -13,3 +13,11 @@ O projeto publica uma biblioteca ES no npm e mantém `dist/` no Git, com consumo
 ## 2026-09-13 — Limitar os arquivos do pacote npm
 
 A inclusão de documentação e ferramentas para agentes não deve ampliar inadvertidamente o pacote publicado. O campo `files` passa a permitir `dist/`; npm acrescenta metadados obrigatórios, README e licença. Fontes presentes nos source maps continuam públicas. O dry-run de cada release deve verificar essa fronteira. Essa proteção não altera o conteúdo já publicado nem remove arquivos do histórico Git.
+## 2026-09-13 — Eventos DOM e métodos na instância para integração
+
+O paginador expõe snapshots por `getState()` e navegação imperativa na própria
+instância de `<paginate-content>`. Mudanças relevantes são `CustomEvent` com o
+prefixo `paginar:`, `bubbles: true` e `composed: true`. Assim consumidores de
+qualquer framework usam APIs nativas do navegador sem acessar composables Vue,
+o Shadow DOM ou o `localStorage`. Cada evento carrega um snapshot completo para
+evitar consultas adicionais e dados reativos compartilhados.

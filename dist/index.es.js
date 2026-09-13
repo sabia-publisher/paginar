@@ -10692,12 +10692,14 @@ const useReadingProgress = {
 
 const state = reactive({
 	currentPage: 1,
+	changeSource: 'initial',
 	nextTry: 0,
 	prevTry: 0,
 	willRedirect: false
 });
 
 const currentPage = computed(() => state.currentPage);
+const changeSource = computed(() => state.changeSource);
 const totalPages = computed(() => useEstimatePages.totalPages.value);
 
 function init(viewport, content, estimate = null) {
@@ -10735,10 +10737,10 @@ watch(totalPages, () => {
 });
 
 // navigate by increase/decrease value
-function next(usingScroll = false) {
+function next(usingScroll = false, source = 'next') {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
-			set(state.currentPage + 1);
+			set(state.currentPage + 1, source);
 		} else {
 			// prevent going too fast to next chapter on
 			// stronger scroll
@@ -10759,20 +10761,20 @@ function next(usingScroll = false) {
 }
 onKeyStroke('ArrowRight', (e) => {
 	e.preventDefault();
-	next();
+	next(false, 'keyboard');
 });
 
 function onWheel(event) {
 	if (event.wheelDelta < 0) {
-		next(true);
+		next(true, 'wheel');
 	} else {
-		prev(true);
+		prev(true, 'wheel');
 	}
 }
-function prev(usingScroll = false) {
+function prev(usingScroll = false, source = 'previous') {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
-			set(state.currentPage - 1);
+			set(state.currentPage - 1, source);
 		} else {
 			// prevent going too fast to prev chapter on
 			// stronger scroll
@@ -10793,12 +10795,13 @@ function prev(usingScroll = false) {
 }
 onKeyStroke('ArrowLeft', (e) => {
 	e.preventDefault();
-	prev();
+	prev(false, 'keyboard');
 });
 
 // navigate to specific page
-function set(val) {
+function set(val, source = 'go-to-page') {
 	const page = Math.min(totalPages.value, Math.max(1, Number(val) || 1));
+	state.changeSource = source;
 	state.currentPage = page;
 	useReadingProgress.save(page, totalPages.value);
 }
@@ -10806,11 +10809,14 @@ function set(val) {
 const usePagination = {
 	currentPage,
 	totalPages,
+	changeSource,
 	next,
 	prev,
 	init,
 	set
 };
+
+const publicEventKey = Symbol('paginarPublicEvent');
 
 const _hoisted_1$o = ["role"];
 const _hoisted_2$c = { class: "summary-menu-dropdown-item-title" };
@@ -10824,11 +10830,13 @@ const _sfc_main$q = {
   setup(__props) {
 
 const { summary } = useTextContent;
+const publicEvent = inject(publicEventKey, () => {});
 
 async function getChapter(item) {
 	const text = await useTextContent.getContent(item.file);
 	useTextContent.applyContent(text, item);
-	usePagination.set(1);
+	usePagination.set(1, 'summary');
+	publicEvent('chapter-change', { chapter: { ...item } });
 }
 
 return (_ctx, _cache) => {
@@ -10880,15 +10888,18 @@ const show = ref(false);
 const button = ref(null);
 
 const { homeUrl } = useReaderSettings;
+const publicEvent = inject(publicEventKey, () => {});
 
 const toggleSummary = () => {
 	show.value = !show.value;
 	useReaderSettings.setBlocked(show.value);
+	publicEvent('summary-toggle', { open: show.value });
 };
 const hide = () => {
-	if (!useReaderSettings.blocked.value) {
+	if (show.value && !useReaderSettings.blocked.value) {
 		show.value = false;
 		useReaderSettings.setBlocked(false);
+		publicEvent('summary-toggle', { open: false });
 	}
 };
 
@@ -11374,10 +11385,15 @@ const _sfc_main$a = {
 const show = ref(false);
 const button = ref(null);
 
-const toggleSummary = () => show.value = !show.value;
+const publicEvent = inject(publicEventKey, () => {});
+const toggleSummary = () => {
+	show.value = !show.value;
+	publicEvent('options-toggle', { open: show.value });
+};
 const hide = () => {
-	if (!useReaderSettings.blocked.value) {
+	if (show.value && !useReaderSettings.blocked.value) {
 		show.value = false;
+		publicEvent('options-toggle', { open: false });
 	}
 };
 
@@ -11596,12 +11612,12 @@ return (_ctx, _cache) => {
     createBaseVNode("div", _hoisted_2$3, [
       createVNode(NavigationButton, {
         target: "prev",
-        onClicked: _cache[0] || (_cache[0] = $event => (unref(prev)()))
+        onClicked: _cache[0] || (_cache[0] = $event => (unref(prev)(false, 'previous-button')))
       }),
       renderSlot(_ctx.$slots, "default"),
       createVNode(NavigationButton, {
         target: "next",
-        onClicked: _cache[1] || (_cache[1] = $event => (unref(next)()))
+        onClicked: _cache[1] || (_cache[1] = $event => (unref(next)(false, 'next-button')))
       })
     ])
   ]))
@@ -11625,10 +11641,10 @@ const { distanceX } = usePointerSwipe(el, {
 	onSwipeEnd() {
 		if (width.value < 600) {
 			if (distanceX.value > 100) {
-				usePagination.next();
+				usePagination.next(false, 'swipe');
 			}
 			if (distanceX.value < -100) {
-				usePagination.prev();
+				usePagination.prev(false, 'swipe');
 			}
 		}
 	}
@@ -11731,7 +11747,7 @@ return (_ctx, _cache) => {
     ]),
     createVNode(unref(m), {
       modelValue: unref(currentPage),
-      "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => (unref(set)(Math.round($event)))),
+      "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => (unref(set)(Math.round($event), 'slider'))),
       min: 1,
       max: unref(totalPages),
       step: -1,
@@ -11910,7 +11926,7 @@ const _sfc_main = {
 const props = __props;
 
 const { baseFont, bookTitle, chapterTitle, textFont, fontSize, columns, setColumns, mode } = useReaderSettings;
-const { currentPage, totalPages } = usePagination;
+const { currentPage, totalPages, changeSource } = usePagination;
 const { content, listenToClicks } = useTextContent;
 const { width, height } = useWindowSize();
 
@@ -11918,6 +11934,47 @@ const readerComponent = ref(null);
 const contentArea = ref(null);
 const rootComponent = ref(null);
 let paginationRevision = 0;
+let hostElement = null;
+
+function getState() {
+	const currentChapter = useTextContent.context.value.chapter;
+	return {
+		pagination: {
+			currentPage: currentPage.value,
+			totalPages: totalPages.value,
+			progress: totalPages.value > 1
+				? (currentPage.value - 1) / (totalPages.value - 1)
+				: 0
+		},
+		settings: {
+			baseFont: baseFont.value,
+			textFont: textFont.value,
+			fontSize: fontSize.value,
+			columns: columns.value,
+			mode: mode.value,
+			blocked: useReaderSettings.blocked.value,
+			readingProgressEnabled: useReaderSettings.readingProgressEnabled.value
+		},
+		content: {
+			bookTitle: props.bookTitle || bookTitle.value,
+			chapterTitle: chapterTitle.value,
+			chapter: currentChapter ? { ...currentChapter } : null
+		}
+	}
+}
+
+function dispatchPublicEvent(name, detail = {}) {
+	if (!hostElement)
+		return
+
+	hostElement.dispatchEvent(new CustomEvent(`paginar:${name}`, {
+		bubbles: true,
+		composed: true,
+		detail: { ...detail, state: getState() }
+	}));
+}
+
+provide(publicEventKey, dispatchPublicEvent);
 
 function syncReadingProgress(allowRestore = false) {
 	const targetPage = useReadingProgress.sync(
@@ -11926,7 +11983,7 @@ function syncReadingProgress(allowRestore = false) {
 		allowRestore
 	);
 	if (targetPage)
-		usePagination.set(targetPage);
+		usePagination.set(targetPage, 'reading-progress');
 }
 
 function estimatePagesAndSyncProgress() {
@@ -11947,7 +12004,7 @@ function estimatePagesAndSyncProgress() {
 		);
 
 		if (targetPage)
-			usePagination.set(targetPage);
+			usePagination.set(targetPage, 'repagination');
 		else
 			syncReadingProgress(true);
 
@@ -11966,6 +12023,13 @@ function saveReadingProgressWhenHidden() {
 }
 
 onMounted(async () => {
+	hostElement = rootComponent.value?.getRootNode()?.host || null;
+	if (hostElement) {
+		hostElement.getState = getState;
+		hostElement.goToPage = page => usePagination.set(page, 'api');
+		hostElement.nextPage = () => usePagination.next(false, 'api');
+		hostElement.previousPage = () => usePagination.prev(false, 'api');
+	}
 	useReaderSettings.initSettings(props.readerSettings);
 	useReadingProgress.init(
 		props.readerSettings,
@@ -11982,12 +12046,20 @@ onMounted(async () => {
 	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
 		useReaderSettings.setBlocked(props.readerBlocked);
 	}
+	nextTick(() => requestAnimationFrame(() => dispatchPublicEvent('ready')));
 
 });
 
 onBeforeUnmount(() => {
 	window.removeEventListener('pagehide', saveCurrentReadingProgress);
 	document.removeEventListener('visibilitychange', saveReadingProgressWhenHidden);
+	if (hostElement) {
+		delete hostElement.getState;
+		delete hostElement.goToPage;
+		delete hostElement.nextPage;
+		delete hostElement.previousPage;
+	}
+	hostElement = null;
 });
 
 watch(
@@ -12018,8 +12090,30 @@ watchDebounced(
 
 watch(
 	currentPage,
-	() => syncReadingProgress(),
+	(value, previousValue) => {
+		syncReadingProgress();
+		dispatchPublicEvent('page-change', {
+			page: value,
+			previousPage: previousValue,
+			source: changeSource.value
+		});
+	},
 	{ flush: 'sync' }
+);
+
+watch(
+	[baseFont, textFont, fontSize, columns, mode, useReaderSettings.readingProgressEnabled],
+	(values, previousValues) => {
+		const names = ['baseFont', 'textFont', 'fontSize', 'columns', 'mode', 'readingProgressEnabled'];
+		const changes = names.reduce((result, name, index) => {
+			if (values[index] !== previousValues[index])
+				result[name] = { previous: previousValues[index], value: values[index] };
+			return result
+		}, {});
+		if (Object.keys(changes).length)
+			dispatchPublicEvent('settings-change', { changes });
+	},
+	{ flush: 'post' }
 );
 
 watchDebounced(content,

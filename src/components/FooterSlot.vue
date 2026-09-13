@@ -19,7 +19,7 @@ function format() {
 
 		<Slider
 			:modelValue="currentPage"
-			@update:modelValue="set(Math.round($event))"
+			@update:modelValue="set(Math.round($event), 'slider')"
 			:min="1"
 			:max="totalPages"
 			:step="-1"

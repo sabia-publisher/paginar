@@ -34,7 +34,7 @@ O build primeiro gera `src/tailwind.css`, depois `dist/index.es.js`, seu source 
 
 ## Verificação manual proporcional
 
-Abra `/demo/slot/slot-chapter1.html` para conteúdo em slot e `/demo/summary/index.html` para conteúdo buscado via HTTP. Ambas importam `/src/main.js`. A página `/` contém atalhos para as demos.
+Abra `/demo/slot/slot-chapter1.html` para conteúdo em slot, `/demo/summary/index.html` para conteúdo buscado via HTTP e `/demo/events/index.html` para a API pública. As demos importam `dist/index.es.js`, como consumidores reais e como o GitHub Pages; execute `npm run build` antes de validá-las. A página `/` contém atalhos para as demos.
 
 Para mudanças de comportamento, selecione os cenários afetados; antes de release, percorra todos:
 
@@ -43,6 +43,7 @@ Para mudanças de comportamento, selecione os cenários afetados; antes de relea
 - Redimensionamento entre desktop e celular; uma/duas colunas, mudança de fonte e tamanho, número de páginas coerente e ausência de cortes no texto. Gesto em viewport menor que 600 px.
 - Sumário, opções, referências e notas abrem/fecham; bloqueio de navegação durante os estados pertinentes.
 - Tema e preferências persistem ao recarregar. Para comparar os padrões, remova apenas a chave `readerSettings` no armazenamento da origem de teste.
+- Na demo `/demo/events/`, confirme que ações por botão, teclado, roda, gesto, slider e API atualizam o estado e emitem a origem esperada; confira também eventos de sumário, opções e preferências.
 - Com `readingProgress` configurado, avance, recarregue e confirme retorno com diferença máxima de uma página da posição proporcional. Repita após alterar viewport, fonte e colunas; teste a desativação pelo menu e isole a limpeza à chave `paginar:reading-progress:v1`.
 - Slots de customização e CSS do consumidor continuam funcionando. Teste também o bundle construído antes da publicação.
 - Alterações de layout ou detecção de plataforma: verificar Chromium e, quando disponível, Safari/iOS. Registre navegadores/dispositivos efetivamente usados e qualquer cobertura pendente.

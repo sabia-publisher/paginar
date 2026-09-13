@@ -2,11 +2,11 @@
 
 ## Estado confirmado e alcance deste roteiro
 
-O pacote público é [paginar](https://www.npmjs.com/package/paginar). Em 2026-09-13, `npm view paginar version dist-tags repository.url --json --registry=https://registry.npmjs.org/` retornou versão e tag `latest` iguais a `0.3.4`, também presente no `package.json` local. Consulte novamente a cada release; esta informação não é uma versão fixa a publicar.
+O pacote público é [paginar](https://www.npmjs.com/package/paginar). Em 2026-09-13, `npm view paginar version dist-tags repository.url --json --registry=https://registry.npmjs.org/` retornou versão e tag `latest` iguais a `0.3.5`. Consulte novamente a cada release; esta informação não é uma versão fixa a publicar.
 
-O repositório deste checkout usa https://github.com/sabia-publisher/paginar. Os metadados npm ainda apontam para `educkf/paginar`. O README oferece tanto CDN do GitHub quanto URL npm via unpkg. Atualizar arquivos no GitHub e publicar no npm são operações independentes.
+O repositório e os metadados npm usam https://github.com/sabia-publisher/paginar. O README oferece tanto CDN do GitHub quanto URL npm via unpkg. Atualizar arquivos no GitHub e publicar no npm são operações independentes.
 
-Não há `.github/workflows`, script de release, `prepack` ou `prepublishOnly` versionados. Não foi possível inferir o procedimento histórico de autenticação/publicação só pelo código. O roteiro abaixo estabelece um procedimento manual para futuras releases, sem presumir automação externa ou acesso a uma conta mantenedora.
+O workflow de GitHub Pages publica somente as demos; não há automação de npm, script de release, `prepack` ou `prepublishOnly` versionados. O roteiro abaixo estabelece o procedimento manual, sem presumir automação externa ou acesso a uma conta mantenedora.
 
 ## Preparar uma versão revisável
 
