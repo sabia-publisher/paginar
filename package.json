@@ -7,7 +7,7 @@
 	"files": [
 		"dist/"
 	],
-	"version": "0.3.4",
+	"version": "0.3.5",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/educkf/paginar.git"
