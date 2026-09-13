@@ -30,7 +30,7 @@ Slots expostos pela raiz: `content`, `header`, `summaryTop`, `summaryBottom`, `o
 
 A interface vive no Shadow DOM; conteúdo em slot permanece no DOM da página hospedeira. CSS externo pode estilizar o conteúdo fornecido por slot. Para a interface, existem `css-string`, `css-file` e `reader-settings.cssString`. Fontes externas são inseridas no documento. Os seletores de customização também são parte prática da integração pública.
 
-Preferências são persistidas em `localStorage` sob `readerSettings`. Valores salvos podem sobrescrever tamanho, colunas e modo configurados inicialmente. A paginação usa colunas CSS e deslocamento horizontal, não uma árvore de páginas independentes. Abaixo de 1024 px, a raiz muda a opção dupla para simples; o gesto de navegação é condicionado a largura inferior a 600 px.
+Preferências são persistidas em `localStorage` sob `readerSettings`. Valores salvos podem sobrescrever tamanho, colunas, modo e a escolha de retomada configurados inicialmente. A retomada é opt-in por `reader-settings.readingProgress`; `useReadingProgress.js` guarda percentuais por obra/contexto sob a chave versionada `paginar:reading-progress:v1`, atualiza o registro na navegação e novamente ao ocultar ou sair da página, e restaura somente depois de uma paginação válida. Quando viewport, fonte, tamanho, colunas ou conteúdo provocam repaginação, o percentual anterior é capturado antes do cálculo e convertido para a página mais próxima no novo total. A paginação usa colunas CSS e deslocamento horizontal, não uma árvore de páginas independentes. Abaixo de 1024 px, a raiz muda a opção dupla para simples; o gesto de navegação é condicionado a largura inferior a 600 px.
 
 ## Limitações observadas no código
 

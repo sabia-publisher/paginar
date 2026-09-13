@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, defineProps, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, defineProps, nextTick, watch } from 'vue'
 import { useWindowSize, watchDebounced } from '@vueuse/core'
 
 import HeaderSlot from './components/HeaderSlot/HeaderSlot.vue'
@@ -16,6 +16,7 @@ import useTextContent from './composables/useTextContent'
 import useReaderSettings from './composables/useReaderSettings'
 import useStyles from './composables/useStyles'
 import useBrowser from './composables/useBrowser'
+import useReadingProgress from './composables/useReadingProgress'
 
 const props = defineProps({
 	bookTitle: String,
@@ -38,16 +39,77 @@ const { width, height } = useWindowSize()
 const readerComponent = ref(null)
 const contentArea = ref(null)
 const rootComponent = ref(null)
+let paginationRevision = 0
+
+function syncReadingProgress(allowRestore = false) {
+	const targetPage = useReadingProgress.sync(
+		currentPage.value,
+		totalPages.value,
+		allowRestore
+	)
+	if (targetPage)
+		usePagination.set(targetPage)
+}
+
+function estimatePagesAndSyncProgress() {
+	const revision = ++paginationRevision
+	const previousPage = currentPage.value
+	const previousTotal = totalPages.value
+	useReadingProgress.suspend()
+	const nextTotal = useEstimatePages.estimate(readerComponent, contentArea)
+
+	nextTick(() => requestAnimationFrame(() => {
+		if (revision !== paginationRevision)
+			return
+
+		const targetPage = useReadingProgress.repaginate(
+			previousPage,
+			previousTotal,
+			nextTotal
+		)
+
+		if (targetPage)
+			usePagination.set(targetPage)
+		else
+			syncReadingProgress(true)
+
+		useReadingProgress.resume()
+		useReadingProgress.save(currentPage.value, nextTotal)
+	}))
+}
+
+function saveCurrentReadingProgress() {
+	useReadingProgress.save(currentPage.value, totalPages.value)
+}
+
+function saveReadingProgressWhenHidden() {
+	if (document.visibilityState === 'hidden')
+		saveCurrentReadingProgress()
+}
 
 onMounted(async () => {
-	usePagination.init(readerComponent, contentArea)
 	useReaderSettings.initSettings(props.readerSettings)
+	useReadingProgress.init(
+		props.readerSettings,
+		props.bookTitle || bookTitle.value
+	)
+	usePagination.init(readerComponent, contentArea, estimatePagesAndSyncProgress)
+	requestAnimationFrame(() => {
+		estimatePagesAndSyncProgress()
+	})
 	useStyles.initStyles(props, rootComponent)
+	window.addEventListener('pagehide', saveCurrentReadingProgress)
+	document.addEventListener('visibilitychange', saveReadingProgressWhenHidden)
 
 	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
 		useReaderSettings.setBlocked(props.readerBlocked)
 	}
 
+})
+
+onBeforeUnmount(() => {
+	window.removeEventListener('pagehide', saveCurrentReadingProgress)
+	document.removeEventListener('visibilitychange', saveReadingProgressWhenHidden)
 })
 
 watch(
@@ -67,10 +129,19 @@ watchDebounced(
 	() => {
 		if (width.value < 1024 && columns.value === 'double')
 			setColumns('single')
-		else
-			useEstimatePages.estimate(readerComponent, contentArea)
+		else {
+			requestAnimationFrame(() => {
+				estimatePagesAndSyncProgress()
+			})
+		}
 	},
 	{ debounce: 125, maxWait: 250 }
+)
+
+watch(
+	currentPage,
+	() => syncReadingProgress(),
+	{ flush: 'sync' }
 )
 
 watchDebounced(content,

@@ -6,26 +6,33 @@ import useFootnotes from './useFootnotes'
 
 const state = reactive({
 	summary: null,
-	content: null
+	content: null,
+	activeChapter: 0
 })
 
 const content = computed(() => state.content)
 const summary = computed(() => state.summary)
 const context = computed(() => {
-	const current = state.summary.findIndex(
+	const chapters = state.summary || []
+	const linkedChapter = chapters.findIndex(
 		chapter => window.location.href.includes(chapter.link)
 	)
+	const current = linkedChapter >= 0 ? linkedChapter : state.activeChapter
 	return {
-		chapter: state.summary[current],
+		chapter: chapters[current],
 		surround: {
 			before: current - 1 >= 0
-				? state.summary[current - 1]
+				? chapters[current - 1]
 				: null,
-			after: current + 1 <= state.summary.length
-				? state.summary[current + 1]
+			after: current + 1 < chapters.length
+				? chapters[current + 1]
 				: null,
 		}
 	}
+})
+const contextId = computed(() => {
+	const chapter = context.value.chapter
+	return chapter?.file || chapter?.link || chapter?.title || window.location.pathname
 })
 
 async function initContent(contentString, contentWrapper) {
@@ -80,9 +87,11 @@ async function getContent(location) {
 	}
 }
 
-function applyContent(text) {
+function applyContent(text, chapter = null) {
 	const { applyReferences } = useReferences
 	const newContent = applyReferences(text)
+	if (chapter)
+		state.activeChapter = state.summary.findIndex(item => item === chapter)
 	state.content = newContent
 }
 
@@ -109,5 +118,6 @@ export default {
 	getContent,
 	applyContent,
 	listenToClicks,
-	context
+	context,
+	contextId
 }

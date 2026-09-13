@@ -5,6 +5,7 @@ import useReaderSettings from './useReaderSettings'
 import useEstimatePages from './useEstimatePages'
 import useTextContent from './useTextContent'
 import useBrowser from './useBrowser'
+import useReadingProgress from './useReadingProgress'
 
 const state = reactive({
 	currentPage: 1,
@@ -16,7 +17,10 @@ const state = reactive({
 const currentPage = computed(() => state.currentPage)
 const totalPages = computed(() => useEstimatePages.totalPages.value)
 
-function init(viewport, content) {
+function init(viewport, content, estimate = null) {
+	const updatePages = estimate || (() => useEstimatePages.estimate(viewport, content))
+	// Measure immediately, but let the parent restore progress only after child
+	// controls (notably the page slider) have finished their mount cycle.
 	useEstimatePages.estimate(viewport, content)
 
 	// check if there is a query string for oring, and
@@ -26,7 +30,7 @@ function init(viewport, content) {
 	const origin = urlParams.get('origin')
 	if (origin && origin === 'next') {
 		setTimeout(() => {
-			state.currentPage = totalPages.value
+			set(totalPages.value)
 		}, 200)
 	}
 
@@ -35,7 +39,7 @@ function init(viewport, content) {
 	}
 
 	setInterval(() => {
-		useEstimatePages.estimate(viewport, content)
+		updatePages()
 	}, 5000)
 }
 
@@ -51,7 +55,7 @@ watch(totalPages, () => {
 function next(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
-			state.currentPage = state.currentPage + 1
+			set(state.currentPage + 1)
 		} else {
 			// prevent going too fast to next chapter on
 			// stronger scroll
@@ -86,7 +90,7 @@ function onWheel(event) {
 function prev(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
-			state.currentPage = state.currentPage - 1
+			set(state.currentPage - 1)
 		} else {
 			// prevent going too fast to prev chapter on
 			// stronger scroll
@@ -112,7 +116,9 @@ onKeyStroke('ArrowLeft', (e) => {
 
 // navigate to specific page
 function set(val) {
-	state.currentPage = val
+	const page = Math.min(totalPages.value, Math.max(1, Number(val) || 1))
+	state.currentPage = page
+	useReadingProgress.save(page, totalPages.value)
 }
 
 export default {

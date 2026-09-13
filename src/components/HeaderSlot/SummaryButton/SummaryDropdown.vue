@@ -5,7 +5,7 @@ const { summary } = useTextContent
 
 async function getChapter(item) {
 	const text = await useTextContent.getContent(item.file)
-	useTextContent.applyContent(text)
+	useTextContent.applyContent(text, item)
 	usePagination.set(1)
 }
 </script>

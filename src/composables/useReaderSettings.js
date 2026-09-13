@@ -14,6 +14,8 @@ const state = reactive({
 	columns: 'double',
 	mode: 'light',
 	blocked: false,
+	readingProgressAvailable: false,
+	readingProgressEnabled: false,
 
 	bookTitle: null,
 	chapterTitle: null,
@@ -27,13 +29,15 @@ const fontsOptions = computed(() => state.fontsOptions)
 const columns = computed(() => state.columns)
 const mode = computed(() => state.mode)
 const blocked = computed(() => state.blocked)
+const readingProgressAvailable = computed(() => state.readingProgressAvailable)
+const readingProgressEnabled = computed(() => state.readingProgressEnabled)
 
 const bookTitle = computed(() => state.bookTitle)
 const chapterTitle = computed(() => state.chapterTitle)
 const homeUrl = computed(() => state.homeUrl)
 
 watch(
-	[baseFont, textFont, fontSize, columns, mode],
+	[baseFont, textFont, fontSize, columns, mode, readingProgressEnabled],
 	() => saveSettings()
 )
 
@@ -41,6 +45,8 @@ async function initSettings(settingsString) {
 	const settings = settingsString
 		? JSON.parse(settingsString)
 		: null
+	state.readingProgressAvailable = false
+	state.readingProgressEnabled = false
 
 	if (settings?.baseFont)
 		state.baseFont = settings.baseFont
@@ -79,14 +85,32 @@ async function initSettings(settingsString) {
 	if (settings?.homeUrl)
 		state.homeUrl = settings.homeUrl
 
+	if (settings?.readingProgress &&
+		typeof settings.readingProgress === 'object' &&
+		!Array.isArray(settings.readingProgress)
+	) {
+		state.readingProgressAvailable = true
+		state.readingProgressEnabled = settings.readingProgress.enabled !== false
+	}
+
 	loadSavedSettings(settings)
 }
 
 function loadSavedSettings(settings) {
-	const hasSettings = localStorage.getItem('readerSettings')
+	let hasSettings = null
+	try {
+		hasSettings = localStorage.getItem('readerSettings')
+	} catch (error) {
+		return
+	}
 
 	if (hasSettings) {
-		const savedSettings = JSON.parse(hasSettings)
+		let savedSettings = null
+		try {
+			savedSettings = JSON.parse(hasSettings)
+		} catch (error) {
+			return
+		}
 
 		state.fontSize = savedSettings.fontSize
 		state.columns = savedSettings.columns
@@ -96,6 +120,12 @@ function loadSavedSettings(settings) {
 			settings?.fontsOptions?.find(item => item.name === savedSettings.textFont)
 		) {
 			state.textFont = savedSettings.textFont
+		}
+
+		if (state.readingProgressAvailable &&
+			typeof savedSettings.readingProgressEnabled === 'boolean'
+		) {
+			state.readingProgressEnabled = savedSettings.readingProgressEnabled
 		}
 
 		if (savedSettings.mode === 'dark') {
@@ -124,6 +154,11 @@ function setBlocked(value) {
 	state.blocked = value
 }
 
+function setReadingProgressEnabled(value) {
+	if (state.readingProgressAvailable)
+		state.readingProgressEnabled = Boolean(value)
+}
+
 function setMode(value) {
 	state.mode = value
 
@@ -141,15 +176,22 @@ function setMode(value) {
 }
 
 function saveSettings() {
-	localStorage.setItem(
-		'readerSettings',
-		JSON.stringify({
+	try {
+		localStorage.setItem(
+			'readerSettings',
+			JSON.stringify({
 			textFont: textFont.value,
 			fontSize: fontSize.value,
 			columns: columns.value,
-			mode: mode.value
-		})
-	)
+			mode: mode.value,
+			...(readingProgressAvailable.value
+				? { readingProgressEnabled: readingProgressEnabled.value }
+				: {})
+			})
+		)
+	} catch (error) {
+		// Settings remain available for the current session.
+	}
 }
 
 export default {
@@ -165,7 +207,10 @@ export default {
 	setBlocked,
 	mode,
 	blocked,
+	readingProgressAvailable,
+	readingProgressEnabled,
 	setMode,
+	setReadingProgressEnabled,
 	saveSettings,
 
 	bookTitle,
