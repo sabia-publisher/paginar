@@ -19,7 +19,7 @@ const isOn = (key) => key.charCodeAt(0) === 111 && key.charCodeAt(1) === 110 && 
 (key.charCodeAt(2) > 122 || key.charCodeAt(2) < 97);
 const isModelListener = (key) => key.startsWith("onUpdate:");
 const extend = Object.assign;
-const remove = (arr, el) => {
+const remove$1 = (arr, el) => {
   const i = arr.indexOf(el);
   if (i > -1) {
     arr.splice(i, 1);
@@ -1863,7 +1863,7 @@ function watch$1(source, cb, options = EMPTY_OBJ) {
   const watchHandle = () => {
     effect.stop();
     if (scope && scope.active) {
-      remove(scope.effects, effect);
+      remove$1(scope.effects, effect);
     }
   };
   if (once && cb) {
@@ -3157,7 +3157,7 @@ function setRef(rawRef, oldRawRef, parentSuspense, vnode, isUnmount = false) {
         if (rawRef.f) {
           const existing = _isString ? canSetSetupRef(ref) ? setupState[ref] : refs[ref] : canSetRef(ref) || !rawRef.k ? ref.value : refs[rawRef.k];
           if (isUnmount) {
-            isArray(existing) && remove(existing, refValue);
+            isArray(existing) && remove$1(existing, refValue);
           } else {
             if (!isArray(existing)) {
               if (_isString) {
@@ -3258,7 +3258,7 @@ function injectToKeepAliveRoot(hook, type, target, keepAliveRoot) {
     /* prepend */
   );
   onUnmounted(() => {
-    remove(keepAliveRoot[type], injected);
+    remove$1(keepAliveRoot[type], injected);
   }, target);
 }
 
@@ -9945,7 +9945,7 @@ const useStyles = {
 	applyStylesheet
 };
 
-const state$5 = reactive({
+const state$6 = reactive({
 	baseFont: 'Arial, sans-serif',
 	textFont: 'Times New Roman, serif',
 	fontsOptions: [
@@ -9958,26 +9958,30 @@ const state$5 = reactive({
 	columns: 'double',
 	mode: 'light',
 	blocked: false,
+	readingProgressAvailable: false,
+	readingProgressEnabled: false,
 
 	bookTitle: null,
 	chapterTitle: null,
 	homeUrl: null,
 });
 
-const baseFont = computed(() => state$5.baseFont);
-const textFont = computed(() => state$5.textFont);
-const fontSize = computed(() => state$5.fontSize);
-const fontsOptions = computed(() => state$5.fontsOptions);
-const columns = computed(() => state$5.columns);
-const mode = computed(() => state$5.mode);
-const blocked = computed(() => state$5.blocked);
+const baseFont = computed(() => state$6.baseFont);
+const textFont = computed(() => state$6.textFont);
+const fontSize = computed(() => state$6.fontSize);
+const fontsOptions = computed(() => state$6.fontsOptions);
+const columns = computed(() => state$6.columns);
+const mode = computed(() => state$6.mode);
+const blocked = computed(() => state$6.blocked);
+const readingProgressAvailable = computed(() => state$6.readingProgressAvailable);
+const readingProgressEnabled = computed(() => state$6.readingProgressEnabled);
 
-const bookTitle = computed(() => state$5.bookTitle);
-const chapterTitle = computed(() => state$5.chapterTitle);
-const homeUrl = computed(() => state$5.homeUrl);
+const bookTitle = computed(() => state$6.bookTitle);
+const chapterTitle = computed(() => state$6.chapterTitle);
+const homeUrl = computed(() => state$6.homeUrl);
 
 watch(
-	[baseFont, textFont, fontSize, columns, mode],
+	[baseFont, textFont, fontSize, columns, mode, readingProgressEnabled],
 	() => saveSettings()
 );
 
@@ -9985,18 +9989,20 @@ async function initSettings(settingsString) {
 	const settings = settingsString
 		? JSON.parse(settingsString)
 		: null;
+	state$6.readingProgressAvailable = false;
+	state$6.readingProgressEnabled = false;
 
 	if (settings?.baseFont)
-		state$5.baseFont = settings.baseFont;
+		state$6.baseFont = settings.baseFont;
 
 	if (settings?.textFont)
-		state$5.textFont = settings.textFont;
+		state$6.textFont = settings.textFont;
 
 	if (settings?.fontSize)
-		state$5.fontSize = Number(settings.fontSize);
+		state$6.fontSize = Number(settings.fontSize);
 
 	if (settings?.fontsOptions) {
-		state$5.fontsOptions = settings.fontsOptions;
+		state$6.fontsOptions = settings.fontsOptions;
 		useStyles.fontLoader(settings.fontsOptions);
 
 		// baseFont
@@ -10004,42 +10010,66 @@ async function initSettings(settingsString) {
 			item => item.defaultBaseFont
 		);
 		if (defaultBaseFont)
-			state$5.baseFont = defaultBaseFont.name;
+			state$6.baseFont = defaultBaseFont.name;
 
 		// textFont
 		const defaultTextFont = settings.fontsOptions.find(
 			item => item.defaultTextFont
 		);
 		if (defaultTextFont)
-			state$5.textFont = defaultTextFont.name;
+			state$6.textFont = defaultTextFont.name;
 	}
 
 	if (settings?.bookTitle)
-		state$5.bookTitle = settings.bookTitle;
+		state$6.bookTitle = settings.bookTitle;
 
 	if (settings?.chapterTitle)
-		state$5.chapterTitle = settings.chapterTitle;
+		state$6.chapterTitle = settings.chapterTitle;
 
 	if (settings?.homeUrl)
-		state$5.homeUrl = settings.homeUrl;
+		state$6.homeUrl = settings.homeUrl;
+
+	if (settings?.readingProgress &&
+		typeof settings.readingProgress === 'object' &&
+		!Array.isArray(settings.readingProgress)
+	) {
+		state$6.readingProgressAvailable = true;
+		state$6.readingProgressEnabled = settings.readingProgress.enabled !== false;
+	}
 
 	loadSavedSettings(settings);
 }
 
 function loadSavedSettings(settings) {
-	const hasSettings = localStorage.getItem('readerSettings');
+	let hasSettings = null;
+	try {
+		hasSettings = localStorage.getItem('readerSettings');
+	} catch (error) {
+		return
+	}
 
 	if (hasSettings) {
-		const savedSettings = JSON.parse(hasSettings);
+		let savedSettings = null;
+		try {
+			savedSettings = JSON.parse(hasSettings);
+		} catch (error) {
+			return
+		}
 
-		state$5.fontSize = savedSettings.fontSize;
-		state$5.columns = savedSettings.columns;
-		state$5.mode = savedSettings.mode;
+		state$6.fontSize = savedSettings.fontSize;
+		state$6.columns = savedSettings.columns;
+		state$6.mode = savedSettings.mode;
 
 		if (settings?.fontsOptions &&
 			settings?.fontsOptions?.find(item => item.name === savedSettings.textFont)
 		) {
-			state$5.textFont = savedSettings.textFont;
+			state$6.textFont = savedSettings.textFont;
+		}
+
+		if (state$6.readingProgressAvailable &&
+			typeof savedSettings.readingProgressEnabled === 'boolean'
+		) {
+			state$6.readingProgressEnabled = savedSettings.readingProgressEnabled;
 		}
 
 		if (savedSettings.mode === 'dark') {
@@ -10053,23 +10083,28 @@ function loadSavedSettings(settings) {
 }
 
 function setColumns(value) {
-	state$5.columns = value;
+	state$6.columns = value;
 }
 
 function setTextFont(value) {
-	state$5.textFont = value;
+	state$6.textFont = value;
 }
 
 function setFontSize(value) {
-	state$5.fontSize = value;
+	state$6.fontSize = value;
 }
 
 function setBlocked(value) {
-	state$5.blocked = value;
+	state$6.blocked = value;
+}
+
+function setReadingProgressEnabled(value) {
+	if (state$6.readingProgressAvailable)
+		state$6.readingProgressEnabled = Boolean(value);
 }
 
 function setMode(value) {
-	state$5.mode = value;
+	state$6.mode = value;
 
 	const htmlRoot = document.querySelector('html');
 	if (htmlRoot) {
@@ -10085,15 +10120,22 @@ function setMode(value) {
 }
 
 function saveSettings() {
-	localStorage.setItem(
-		'readerSettings',
-		JSON.stringify({
+	try {
+		localStorage.setItem(
+			'readerSettings',
+			JSON.stringify({
 			textFont: textFont.value,
 			fontSize: fontSize.value,
 			columns: columns.value,
-			mode: mode.value
-		})
-	);
+			mode: mode.value,
+			...(readingProgressAvailable.value
+				? { readingProgressEnabled: readingProgressEnabled.value }
+				: {})
+			})
+		);
+	} catch (error) {
+		// Settings remain available for the current session.
+	}
 }
 
 const useReaderSettings = {
@@ -10109,7 +10151,10 @@ const useReaderSettings = {
 	setBlocked,
 	mode,
 	blocked,
+	readingProgressAvailable,
+	readingProgressEnabled,
 	setMode,
+	setReadingProgressEnabled,
 	saveSettings,
 
 	bookTitle,
@@ -10125,9 +10170,9 @@ const _export_sfc = (sfc, props) => {
   return target;
 };
 
-const _sfc_main$s = {};
+const _sfc_main$t = {};
 
-const _hoisted_1$q = {
+const _hoisted_1$r = {
   fill: "none",
   stroke: "currentColor",
   viewBox: "0 0 20 22",
@@ -10135,7 +10180,7 @@ const _hoisted_1$q = {
 };
 
 function _sfc_render$c(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$q, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$r, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       d: "M1 8L10 1L19 8V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8Z",
       "stroke-width": "2",
@@ -10150,11 +10195,11 @@ function _sfc_render$c(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconHome = /*#__PURE__*/_export_sfc(_sfc_main$s, [['render',_sfc_render$c]]);
+const IconHome = /*#__PURE__*/_export_sfc(_sfc_main$t, [['render',_sfc_render$c]]);
 
-const _sfc_main$r = {};
+const _sfc_main$s = {};
 
-const _hoisted_1$p = {
+const _hoisted_1$q = {
   fill: "none",
   stroke: "currentColor",
   viewBox: "0 0 24 24",
@@ -10162,7 +10207,7 @@ const _hoisted_1$p = {
 };
 
 function _sfc_render$b(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$p, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$q, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -10171,11 +10216,11 @@ function _sfc_render$b(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconClose = /*#__PURE__*/_export_sfc(_sfc_main$r, [['render',_sfc_render$b]]);
+const IconClose = /*#__PURE__*/_export_sfc(_sfc_main$s, [['render',_sfc_render$b]]);
 
-const _sfc_main$q = {};
+const _sfc_main$r = {};
 
-const _hoisted_1$o = {
+const _hoisted_1$p = {
   width: "24",
   height: "19",
   viewBox: "0 0 24 19",
@@ -10185,34 +10230,34 @@ const _hoisted_1$o = {
 };
 
 function _sfc_render$a(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$o, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$p, [...(_cache[0] || (_cache[0] = [
     createStaticVNode("<line x1=\"5\" y1=\"1.08447\" x2=\"1\" y2=\"1.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"1.04248\" x2=\"11\" y2=\"1.04248\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"9.08447\" x2=\"14\" y2=\"9.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"8\" y1=\"9.14905\" x2=\"4\" y2=\"9.14905\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"17.149\" x2=\"10.9993\" y2=\"17.149\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"5\" y1=\"17.2429\" x2=\"1\" y2=\"17.2429\" stroke-width=\"2\" stroke-linecap=\"round\"></line>", 6)
   ]))]))
 }
-const IconSummary = /*#__PURE__*/_export_sfc(_sfc_main$q, [['render',_sfc_render$a]]);
+const IconSummary = /*#__PURE__*/_export_sfc(_sfc_main$r, [['render',_sfc_render$a]]);
 
-const state$4 = reactive({
+const state$5 = reactive({
 	references: [],
 	reference: null
 });
 
-const references = computed(() => state$4.references);
+const references = computed(() => state$5.references);
 
 function setReferences(references) {
-	state$4.references = references;
+	state$5.references = references;
 }
 
-const reference = computed(() => state$4.reference);
+const reference = computed(() => state$5.reference);
 
 function setHighlightedReference(reference) {
-	state$4.reference = reference;
+	state$5.reference = reference;
 }
 
 function applyReferences(contentRaw) {
-	if (state$4.references.length === 0 || !contentRaw)
+	if (state$5.references.length === 0 || !contentRaw)
 		return contentRaw
 
-	return state$4.references.reduce((content, reference) => {
+	return state$5.references.reduce((content, reference) => {
 		if (!content) return content
 
 		if (content.includes(reference.cit)) {
@@ -10238,11 +10283,11 @@ function applyReference(event) {
 	const target = classList.find(item => item.startsWith('reference-'));
 
 	if (target) {
-		const ref = state$4.references.find(
+		const ref = state$5.references.find(
 			item => target && item.cit.replaceAll(' ', '') === target.replace('reference-', '')
 		);
 		if (ref) {
-			state$4.reference = ref;
+			state$5.reference = ref;
 		}
 	}
 
@@ -10257,25 +10302,25 @@ const useReferences = {
 	applyReferences,
 };
 
-const state$3 = reactive({
+const state$4 = reactive({
 	footnotes: [],
 	showFootnotes: false,
 	footnote: null
 });
 
-const footnotes = computed(() => state$3.footnotes);
+const footnotes = computed(() => state$4.footnotes);
 function setFootnotes(footnotes) {
-	state$3.footnotes = footnotes;
+	state$4.footnotes = footnotes;
 }
 
-const showFootnotes = computed(() => state$3.showFootnotes);
+const showFootnotes = computed(() => state$4.showFootnotes);
 function setShowFootnotes(value) {
-	state$3.showFootnotes = value;
+	state$4.showFootnotes = value;
 }
 
-const footnote = computed(() => state$3.footnote);
+const footnote = computed(() => state$4.footnote);
 function setHighlightedFootnote(footnote) {
-	state$3.footnote = footnote;
+	state$4.footnote = footnote;
 }
 
 function applyFootnote(event) {
@@ -10289,9 +10334,9 @@ function applyFootnote(event) {
 	);
 
 	if (footnoteTarget) {
-		const ref = state$3.footnotes.find(item => item.id === footnoteTarget);
+		const ref = state$4.footnotes.find(item => item.id === footnoteTarget);
 		if (ref) {
-			state$3.footnote = ref;
+			state$4.footnote = ref;
 		}
 	}
 }
@@ -10306,28 +10351,35 @@ const useFootnotes = {
 	showFootnotes
 };
 
-const state$2 = reactive({
+const state$3 = reactive({
 	summary: null,
-	content: null
+	content: null,
+	activeChapter: 0
 });
 
-const content = computed(() => state$2.content);
-const summary = computed(() => state$2.summary);
+const content = computed(() => state$3.content);
+const summary = computed(() => state$3.summary);
 const context = computed(() => {
-	const current = state$2.summary.findIndex(
+	const chapters = state$3.summary || [];
+	const linkedChapter = chapters.findIndex(
 		chapter => window.location.href.includes(chapter.link)
 	);
+	const current = linkedChapter >= 0 ? linkedChapter : state$3.activeChapter;
 	return {
-		chapter: state$2.summary[current],
+		chapter: chapters[current],
 		surround: {
 			before: current - 1 >= 0
-				? state$2.summary[current - 1]
+				? chapters[current - 1]
 				: null,
-			after: current + 1 <= state$2.summary.length
-				? state$2.summary[current + 1]
+			after: current + 1 < chapters.length
+				? chapters[current + 1]
 				: null,
 		}
 	}
+});
+const contextId = computed(() => {
+	const chapter = context.value.chapter;
+	return chapter?.file || chapter?.link || chapter?.title || window.location.pathname
 });
 
 async function initContent(contentString, contentWrapper) {
@@ -10339,7 +10391,7 @@ async function initContent(contentString, contentWrapper) {
 		: null;
 
 	if (content?.summary)
-		state$2.summary = content.summary;
+		state$3.summary = content.summary;
 
 	if (content?.references)
 		setReferences(content.references);
@@ -10353,7 +10405,7 @@ async function initContent(contentString, contentWrapper) {
 		const newContent = content.applyReferences
 			? applyReferences(text)
 			: text;
-		state$2.content = newContent;
+		state$3.content = newContent;
 
 	// else if content comes from slot, apply references to slot
 	} else {
@@ -10378,14 +10430,16 @@ async function getContent(location) {
 		return text
 	} catch (err) {
 		console.log({ err });
-		state$2.content = 'Ops, não foi possível carregar o arquivo solicitado.';
+		state$3.content = 'Ops, não foi possível carregar o arquivo solicitado.';
 	}
 }
 
-function applyContent(text) {
+function applyContent(text, chapter = null) {
 	const { applyReferences } = useReferences;
 	const newContent = applyReferences(text);
-	state$2.content = newContent;
+	if (chapter)
+		state$3.activeChapter = state$3.summary.findIndex(item => item === chapter);
+	state$3.content = newContent;
 }
 
 function listenToClicks(contentWrapper) {
@@ -10411,10 +10465,11 @@ const useTextContent = {
 	getContent,
 	applyContent,
 	listenToClicks,
-	context
+	context,
+	contextId
 };
 
-const state$1 = reactive({
+const state$2 = reactive({
 	totalPages: 1
 });
 
@@ -10424,20 +10479,20 @@ function estimate(viewport, content) {
 		const { width: contentWidth } = content.value.getBoundingClientRect();
 
 		if (contentWidth > viewportWidth) {
-			state$1.totalPages = Math.ceil(contentWidth / viewportWidth);
+			state$2.totalPages = Math.ceil(contentWidth / viewportWidth);
 			return Math.ceil(contentWidth / viewportWidth)
 
 		} else {
-			state$1.totalPages = 1;
+			state$2.totalPages = 1;
 			return 1
 		}
 	} else {
-		state$1.totalPages = 1;
+		state$2.totalPages = 1;
 		return 1
 	}
 }
 
-const totalPages$1 = computed(() => state$1.totalPages);
+const totalPages$1 = computed(() => state$2.totalPages);
 
 const useEstimatePages = {
 	totalPages: totalPages$1,
@@ -10461,6 +10516,180 @@ const useBrowser = {
 	isApple
 };
 
+const STORAGE_KEY = 'paginar:reading-progress:v1';
+
+const state$1 = reactive({
+	bookId: null,
+	contextKey: null,
+	restored: false,
+	suspended: false,
+	currentPage: 1,
+	totalPages: 1
+});
+
+const available = computed(() => useReaderSettings.readingProgressAvailable.value);
+const enabled = computed(() => useReaderSettings.readingProgressEnabled.value);
+
+function init$1(settingsString, fallbackTitle) {
+	let settings = null;
+	state$1.bookId = null;
+	state$1.contextKey = null;
+	state$1.restored = false;
+
+	try {
+		settings = settingsString ? JSON.parse(settingsString) : null;
+	} catch (error) {
+		return
+	}
+
+	if (!settings?.readingProgress ||
+		typeof settings.readingProgress !== 'object' ||
+		Array.isArray(settings.readingProgress)
+	)
+		return
+
+	const configuredId = settings.readingProgress.id;
+	state$1.bookId = typeof configuredId === 'string' && configuredId.trim()
+		? configuredId.trim()
+		: fallbackTitle || window.location.pathname;
+}
+
+function getContextKey() {
+	if (!state$1.bookId)
+		return null
+
+	const chapter = useTextContent.contextId.value || window.location.pathname;
+	return `${state$1.bookId}::${chapter}`
+}
+
+function readStore() {
+	try {
+		const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+		return saved?.version === 1 && saved.entries && typeof saved.entries === 'object'
+			? saved
+			: { version: 1, entries: {} }
+	} catch (error) {
+		return { version: 1, entries: {} }
+	}
+}
+
+function writeStore(store) {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+	} catch (error) {
+		// Reading continues normally when storage is unavailable.
+	}
+}
+
+function percentageFor(page, total) {
+	if (total <= 1)
+		return 0
+
+	return Math.min(1, Math.max(0, (page - 1) / (total - 1)))
+}
+
+function pageFor(percentage, total) {
+	return Math.min(total, Math.max(1, Math.round(percentage * (total - 1)) + 1))
+}
+
+function repaginate(page, previousTotal, nextTotal) {
+	const key = getContextKey();
+	if (!available.value || !enabled.value || !state$1.restored ||
+		!key || key !== state$1.contextKey || previousTotal < 1 || nextTotal < 1
+	)
+		return null
+
+	const percentage = percentageFor(page, previousTotal);
+	return pageFor(percentage, nextTotal)
+}
+
+function save(page, total) {
+	const key = getContextKey();
+	if (!available.value || !enabled.value || !state$1.restored || state$1.suspended ||
+		!key || key !== state$1.contextKey || total < 1
+	)
+		return
+
+	const store = readStore();
+	store.entries[key] = percentageFor(page, total);
+	writeStore(store);
+}
+
+function suspend() {
+	state$1.suspended = true;
+}
+
+function resume() {
+	state$1.suspended = false;
+}
+
+function remove() {
+	const key = getContextKey();
+	if (!key)
+		return
+
+	const store = readStore();
+	delete store.entries[key];
+	writeStore(store);
+}
+
+function sync(page, total, allowRestore = false) {
+	state$1.currentPage = page;
+	state$1.totalPages = total;
+	const key = getContextKey();
+	if (!available.value || !enabled.value || !key)
+		return
+
+	if (state$1.contextKey !== key) {
+		state$1.contextKey = key;
+		state$1.restored = false;
+	}
+
+	if (!state$1.restored) {
+		if (!allowRestore)
+			return
+
+		const percentage = readStore().entries[key];
+		if (Number.isFinite(percentage) && percentage >= 0 && percentage <= 1) {
+			if (total <= 1 && percentage > 0)
+				return
+
+			state$1.restored = true;
+			const targetPage = pageFor(percentage, total);
+			if (targetPage !== page)
+				return targetPage
+			return
+		}
+
+		state$1.restored = true;
+	}
+
+	save(page, total);
+}
+
+function setEnabled(value) {
+	useReaderSettings.setReadingProgressEnabled(value);
+	state$1.restored = true;
+
+	if (value)
+		save(state$1.currentPage, state$1.totalPages);
+	else
+		remove();
+}
+
+const useReadingProgress = {
+	available,
+	enabled,
+	init: init$1,
+	remove,
+	repaginate,
+	resume,
+	save,
+	setEnabled,
+	suspend,
+	sync
+};
+
 const state = reactive({
 	currentPage: 1,
 	nextTry: 0,
@@ -10471,7 +10700,10 @@ const state = reactive({
 const currentPage = computed(() => state.currentPage);
 const totalPages = computed(() => useEstimatePages.totalPages.value);
 
-function init(viewport, content) {
+function init(viewport, content, estimate = null) {
+	const updatePages = estimate || (() => useEstimatePages.estimate(viewport, content));
+	// Measure immediately, but let the parent restore progress only after child
+	// controls (notably the page slider) have finished their mount cycle.
 	useEstimatePages.estimate(viewport, content);
 
 	// check if there is a query string for oring, and
@@ -10481,7 +10713,7 @@ function init(viewport, content) {
 	const origin = urlParams.get('origin');
 	if (origin && origin === 'next') {
 		setTimeout(() => {
-			state.currentPage = totalPages.value;
+			set(totalPages.value);
 		}, 200);
 	}
 
@@ -10490,7 +10722,7 @@ function init(viewport, content) {
 	}
 
 	setInterval(() => {
-		useEstimatePages.estimate(viewport, content);
+		updatePages();
 	}, 5000);
 }
 
@@ -10506,7 +10738,7 @@ watch(totalPages, () => {
 function next(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage + 1) <= totalPages.value) {
-			state.currentPage = state.currentPage + 1;
+			set(state.currentPage + 1);
 		} else {
 			// prevent going too fast to next chapter on
 			// stronger scroll
@@ -10540,7 +10772,7 @@ function onWheel(event) {
 function prev(usingScroll = false) {
 	if (!useReaderSettings.blocked.value) {
 		if ((state.currentPage - 1) > 0) {
-			state.currentPage = state.currentPage - 1;
+			set(state.currentPage - 1);
 		} else {
 			// prevent going too fast to prev chapter on
 			// stronger scroll
@@ -10566,7 +10798,9 @@ onKeyStroke('ArrowLeft', (e) => {
 
 // navigate to specific page
 function set(val) {
-	state.currentPage = val;
+	const page = Math.min(totalPages.value, Math.max(1, Number(val) || 1));
+	state.currentPage = page;
+	useReadingProgress.save(page, totalPages.value);
 }
 
 const usePagination = {
@@ -10578,14 +10812,14 @@ const usePagination = {
 	set
 };
 
-const _hoisted_1$n = ["role"];
-const _hoisted_2$b = { class: "summary-menu-dropdown-item-title" };
+const _hoisted_1$o = ["role"];
+const _hoisted_2$c = { class: "summary-menu-dropdown-item-title" };
 const _hoisted_3$4 = {
   key: 0,
   class: "summary-menu-dropdown-item-author"
 };
 
-const _sfc_main$p = {
+const _sfc_main$q = {
   __name: 'SummaryDropdown',
   setup(__props) {
 
@@ -10593,7 +10827,7 @@ const { summary } = useTextContent;
 
 async function getChapter(item) {
 	const text = await useTextContent.getContent(item.file);
-	useTextContent.applyContent(text);
+	useTextContent.applyContent(text, item);
 	usePagination.set(1);
 }
 
@@ -10616,7 +10850,7 @@ return (_ctx, _cache) => {
           onClick: $event => (item.file ? getChapter(item) : null)
         }, {
           default: withCtx(() => [
-            createBaseVNode("span", _hoisted_2$b, toDisplayString(item.title), 1),
+            createBaseVNode("span", _hoisted_2$c, toDisplayString(item.title), 1),
             (item.author)
               ? (openBlock(), createElementBlock("span", _hoisted_3$4, toDisplayString(item.author), 1))
               : createCommentVNode("", true)
@@ -10626,19 +10860,19 @@ return (_ctx, _cache) => {
       }), 128)),
       renderSlot(_ctx.$slots, "summaryBottom")
     ])
-  ], 8, _hoisted_1$n))
+  ], 8, _hoisted_1$o))
 }
 }
 
 };
 
-const _hoisted_1$m = { class: "flex" };
-const _hoisted_2$a = ["href"];
+const _hoisted_1$n = { class: "flex" };
+const _hoisted_2$b = ["href"];
 const _hoisted_3$3 = { class: "position-relative" };
 const _hoisted_4$2 = ["aria-expanded"];
 
 
-const _sfc_main$o = {
+const _sfc_main$p = {
   __name: 'SummaryButton',
   setup(__props) {
 
@@ -10668,7 +10902,7 @@ return (_ctx, _cache) => {
     ref: button,
     class: "relative"
   }, [
-    createBaseVNode("div", _hoisted_1$m, [
+    createBaseVNode("div", _hoisted_1$n, [
       (unref(homeUrl))
         ? (openBlock(), createElementBlock("a", {
             key: 0,
@@ -10678,7 +10912,7 @@ return (_ctx, _cache) => {
             class: "hidden md:flex items-center border p-3 shadow mr-3 border-white text-white"
           }, [
             createVNode(IconHome, { class: "w-6 h-6" })
-          ], 8, _hoisted_2$a))
+          ], 8, _hoisted_2$b))
         : createCommentVNode("", true),
       createBaseVNode("div", _hoisted_3$3, [
         createBaseVNode("button", {
@@ -10706,7 +10940,7 @@ return (_ctx, _cache) => {
         }, {
           default: withCtx(() => [
             (show.value)
-              ? (openBlock(), createBlock(_sfc_main$p, { key: 0 }, {
+              ? (openBlock(), createBlock(_sfc_main$q, { key: 0 }, {
                   summaryTop: withCtx(() => [
                     renderSlot(_ctx.$slots, "summaryTop")
                   ]),
@@ -10727,6 +10961,27 @@ return (_ctx, _cache) => {
 
 };
 
+const _sfc_main$o = {};
+
+const _hoisted_1$m = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$9(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$m, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "2",
+      d: "M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+    }, null, -1)
+  ]))]))
+}
+const IconThreeDots = /*#__PURE__*/_export_sfc(_sfc_main$o, [['render',_sfc_render$9]]);
+
 const _sfc_main$n = {};
 
 const _hoisted_1$l = {
@@ -10736,17 +10991,17 @@ const _hoisted_1$l = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$9(_ctx, _cache) {
+function _sfc_render$8(_ctx, _cache) {
   return (openBlock(), createElementBlock("svg", _hoisted_1$l, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
       "stroke-width": "2",
-      d: "M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+      d: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
     }, null, -1)
   ]))]))
 }
-const IconThreeDots = /*#__PURE__*/_export_sfc(_sfc_main$n, [['render',_sfc_render$9]]);
+const IconExpand = /*#__PURE__*/_export_sfc(_sfc_main$n, [['render',_sfc_render$8]]);
 
 const _sfc_main$m = {};
 
@@ -10757,29 +11012,8 @@ const _hoisted_1$k = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$8(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$k, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "2",
-      d: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-    }, null, -1)
-  ]))]))
-}
-const IconExpand = /*#__PURE__*/_export_sfc(_sfc_main$m, [['render',_sfc_render$8]]);
-
-const _sfc_main$l = {};
-
-const _hoisted_1$j = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
 function _sfc_render$7(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$j, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$k, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -10794,11 +11028,11 @@ function _sfc_render$7(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconEye = /*#__PURE__*/_export_sfc(_sfc_main$l, [['render',_sfc_render$7]]);
+const IconEye = /*#__PURE__*/_export_sfc(_sfc_main$m, [['render',_sfc_render$7]]);
 
-const _sfc_main$k = {};
+const _sfc_main$l = {};
 
-const _hoisted_1$i = {
+const _hoisted_1$j = {
   fill: "none",
   stroke: "currentColor",
   viewBox: "0 0 24 24",
@@ -10806,7 +11040,7 @@ const _hoisted_1$i = {
 };
 
 function _sfc_render$6(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$i, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$j, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -10815,43 +11049,43 @@ function _sfc_render$6(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconFootnote = /*#__PURE__*/_export_sfc(_sfc_main$k, [['render',_sfc_render$6]]);
+const IconFootnote = /*#__PURE__*/_export_sfc(_sfc_main$l, [['render',_sfc_render$6]]);
 
-const _sfc_main$j = {};
+const _sfc_main$k = {};
 
-const _hoisted_1$h = {
+const _hoisted_1$i = {
   viewBox: "0 0 341.5 441.2",
   fill: "currentColor"
 };
 
 function _sfc_render$5(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$h, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$i, [...(_cache[0] || (_cache[0] = [
     createStaticVNode("<rect data-v-acadaaca=\"\" x=\"73.2\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"319\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"0\" y=\"-0.6\" width=\"332.3\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"0\" y=\"426.2\" width=\"332.3\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"-209.4\" y=\"216.2\" transform=\"matrix(6.123234e-17 -1 1 6.123234e-17 -216.2339 231.2339)\" width=\"433.7\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"108\" y=\"211.9\" transform=\"matrix(6.123234e-17 -1 1 6.123234e-17 105.4808 544.1859)\" width=\"433.7\" height=\"15\"></rect>", 9)
   ]))]))
 }
-const SingleColumn = /*#__PURE__*/_export_sfc(_sfc_main$j, [['render',_sfc_render$5]]);
+const SingleColumn = /*#__PURE__*/_export_sfc(_sfc_main$k, [['render',_sfc_render$5]]);
 
-const _sfc_main$i = {};
+const _sfc_main$j = {};
 
-const _hoisted_1$g = {
+const _hoisted_1$h = {
   viewBox: "0 0 653 441.2",
   fill: "currentColor"
 };
 
 function _sfc_render$4(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$g, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$h, [...(_cache[0] || (_cache[0] = [
     createStaticVNode("<rect x=\"73.2\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"319\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"319\" width=\"195.2\" height=\"20\"></rect><path d=\"M0-0.6v7.5v7.5v411.8v14.4v0.6h653v-5v-10V14.4V2.5v-3.1H0z M638,426.2H15V14.4h623V426.2z\"></path>", 11)
   ]))]))
 }
-const DoubleColumn = /*#__PURE__*/_export_sfc(_sfc_main$i, [['render',_sfc_render$4]]);
+const DoubleColumn = /*#__PURE__*/_export_sfc(_sfc_main$j, [['render',_sfc_render$4]]);
 
-const _hoisted_1$f = {
+const _hoisted_1$g = {
   id: "columns-menu",
   class: "w-full hidden md:grid grid-cols-3 gap-2 mt-3"
 };
-const _hoisted_2$9 = ["title"];
+const _hoisted_2$a = ["title"];
 
-const _sfc_main$h = {
+const _sfc_main$i = {
   __name: 'OptionsColumns',
   setup(__props) {
 
@@ -10865,7 +11099,7 @@ const isSafari = computed(() => {
 
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$f, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$g, [
     createBaseVNode("button", {
       id: "single-column-button",
       class: normalizeClass(["col-span-1 text-primary text-center cursor-pointer py-3 rounded-sm border", {
@@ -10878,7 +11112,7 @@ return (_ctx, _cache) => {
       title: isSafari.value ? 'O navegador Safari não aceita visualização de coluna única.' : 'Coluna única'
     }, [
       createVNode(SingleColumn, { class: "mx-auto h-10 opacity-75" })
-    ], 10, _hoisted_2$9),
+    ], 10, _hoisted_2$a),
     createBaseVNode("button", {
       id: "double-column-button",
       class: normalizeClass(["col-span-2 text-primary text-center cursor-pointer py-3 rounded-sm border", {
@@ -10901,13 +11135,13 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$e = {
+const _hoisted_1$f = {
   id: "font-family-menu",
   class: "w-full grid grid-cols-4 gap-2 my-3"
 };
-const _hoisted_2$8 = ["onClick", "title"];
+const _hoisted_2$9 = ["onClick", "title"];
 
-const _sfc_main$g = {
+const _sfc_main$h = {
   __name: 'OptionsFontFamily',
   setup(__props) {
 
@@ -10915,7 +11149,7 @@ const { textFont, fontsOptions, setTextFont } = useReaderSettings;
 
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$e, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$f, [
     (openBlock(true), createElementBlock(Fragment, null, renderList(unref(fontsOptions), (font) => {
       return (openBlock(), createElementBlock("button", {
         key: font.name,
@@ -10925,7 +11159,7 @@ return (_ctx, _cache) => {
 			}]),
         style: normalizeStyle(`font-family: ${font.name}`),
         title: font.label ?? font.name
-      }, " Ff ", 14, _hoisted_2$8))
+      }, " Ff ", 14, _hoisted_2$9))
     }), 128))
   ]))
 }
@@ -10933,7 +11167,7 @@ return (_ctx, _cache) => {
 
 };
 
-const _sfc_main$f = {
+const _sfc_main$g = {
   __name: 'OptionsFontSize',
   setup(__props) {
 
@@ -10958,6 +11192,27 @@ return (_ctx, _cache) => {
 
 };
 
+const _sfc_main$f = {};
+
+const _hoisted_1$e = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$3(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$e, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "2",
+      d: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+    }, null, -1)
+  ]))]))
+}
+const IconSun = /*#__PURE__*/_export_sfc(_sfc_main$f, [['render',_sfc_render$3]]);
+
 const _sfc_main$e = {};
 
 const _hoisted_1$d = {
@@ -10967,29 +11222,8 @@ const _hoisted_1$d = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$3(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$d, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "2",
-      d: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-    }, null, -1)
-  ]))]))
-}
-const IconSun = /*#__PURE__*/_export_sfc(_sfc_main$e, [['render',_sfc_render$3]]);
-
-const _sfc_main$d = {};
-
-const _hoisted_1$c = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
 function _sfc_render$2(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$c, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$d, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -10998,9 +11232,9 @@ function _sfc_render$2(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconMoon = /*#__PURE__*/_export_sfc(_sfc_main$d, [['render',_sfc_render$2]]);
+const IconMoon = /*#__PURE__*/_export_sfc(_sfc_main$e, [['render',_sfc_render$2]]);
 
-const _sfc_main$c = {
+const _sfc_main$d = {
   __name: 'OptionsColor',
   setup(__props) {
 
@@ -11030,6 +11264,45 @@ return (_ctx, _cache) => {
       createVNode(IconMoon, { class: "w-5 h-5" })
     ], 2)
   ], 64))
+}
+}
+
+};
+
+const _hoisted_1$c = { class: "w-full border-t border-areia mt-5 pt-5" };
+const _hoisted_2$8 = ["aria-checked"];
+
+
+const _sfc_main$c = {
+  __name: 'OptionsReadingProgress',
+  setup(__props) {
+
+const { enabled, setEnabled } = useReadingProgress;
+
+return (_ctx, _cache) => {
+  return (openBlock(), createElementBlock("div", _hoisted_1$c, [
+    createBaseVNode("button", {
+      id: "reading-progress-button",
+      class: "w-full flex items-center justify-between py-2 px-1 text-left",
+      type: "button",
+      role: "switch",
+      "aria-checked": unref(enabled),
+      onClick: _cache[0] || (_cache[0] = withModifiers($event => (unref(setEnabled)(!unref(enabled))), ["prevent"]))
+    }, [
+      _cache[1] || (_cache[1] = createBaseVNode("span", null, [
+        createBaseVNode("span", { class: "block text-primary lowercase" }, "Retomar leitura"),
+        createBaseVNode("span", { class: "block text-xs text-gray-500 mt-1" }, "Continuar de onde parou")
+      ], -1)),
+      createBaseVNode("span", {
+        class: normalizeClass(["relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors", unref(enabled) ? 'bg-primary' : 'bg-gray-300']),
+        "aria-hidden": "true"
+      }, [
+        createBaseVNode("span", {
+          class: normalizeClass(["inline-block h-5 w-5 rounded-full bg-white shadow transition-transform", unref(enabled) ? 'translate-x-5' : 'translate-x-0'])
+        }, null, 2)
+      ], 2)
+    ], 8, _hoisted_2$8)
+  ]))
 }
 }
 
@@ -11072,12 +11345,15 @@ return (_ctx, _cache) => {
         createVNode(IconEye, { class: "w-6 h-6" }),
         _cache[3] || (_cache[3] = createBaseVNode("span", { class: "ml-4" }, "Visualização", -1))
       ]),
+      createVNode(_sfc_main$i),
       createVNode(_sfc_main$h),
-      createVNode(_sfc_main$g),
       createBaseVNode("div", _hoisted_4$1, [
-        createVNode(_sfc_main$f),
-        createVNode(_sfc_main$c)
+        createVNode(_sfc_main$g),
+        createVNode(_sfc_main$d)
       ]),
+      (unref(useReadingProgress).available.value)
+        ? (openBlock(), createBlock(_sfc_main$c, { key: 0 }))
+        : createCommentVNode("", true),
       _cache[4] || (_cache[4] = createBaseVNode("div", { class: "hidden w-full border-b border-areia my-8" }, null, -1)),
       renderSlot(_ctx.$slots, "optionsBottom")
     ])
@@ -11185,7 +11461,7 @@ const _sfc_main$9 = {
 
 return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("header", _hoisted_1$9, [
-    createVNode(_sfc_main$o, null, {
+    createVNode(_sfc_main$p, null, {
       summaryTop: withCtx(() => [
         renderSlot(_ctx.$slots, "summaryTop")
       ]),
@@ -11641,16 +11917,77 @@ const { width, height } = useWindowSize();
 const readerComponent = ref(null);
 const contentArea = ref(null);
 const rootComponent = ref(null);
+let paginationRevision = 0;
+
+function syncReadingProgress(allowRestore = false) {
+	const targetPage = useReadingProgress.sync(
+		currentPage.value,
+		totalPages.value,
+		allowRestore
+	);
+	if (targetPage)
+		usePagination.set(targetPage);
+}
+
+function estimatePagesAndSyncProgress() {
+	const revision = ++paginationRevision;
+	const previousPage = currentPage.value;
+	const previousTotal = totalPages.value;
+	useReadingProgress.suspend();
+	const nextTotal = useEstimatePages.estimate(readerComponent, contentArea);
+
+	nextTick(() => requestAnimationFrame(() => {
+		if (revision !== paginationRevision)
+			return
+
+		const targetPage = useReadingProgress.repaginate(
+			previousPage,
+			previousTotal,
+			nextTotal
+		);
+
+		if (targetPage)
+			usePagination.set(targetPage);
+		else
+			syncReadingProgress(true);
+
+		useReadingProgress.resume();
+		useReadingProgress.save(currentPage.value, nextTotal);
+	}));
+}
+
+function saveCurrentReadingProgress() {
+	useReadingProgress.save(currentPage.value, totalPages.value);
+}
+
+function saveReadingProgressWhenHidden() {
+	if (document.visibilityState === 'hidden')
+		saveCurrentReadingProgress();
+}
 
 onMounted(async () => {
-	usePagination.init(readerComponent, contentArea);
 	useReaderSettings.initSettings(props.readerSettings);
+	useReadingProgress.init(
+		props.readerSettings,
+		props.bookTitle || bookTitle.value
+	);
+	usePagination.init(readerComponent, contentArea, estimatePagesAndSyncProgress);
+	requestAnimationFrame(() => {
+		estimatePagesAndSyncProgress();
+	});
 	useStyles.initStyles(props, rootComponent);
+	window.addEventListener('pagehide', saveCurrentReadingProgress);
+	document.addEventListener('visibilitychange', saveReadingProgressWhenHidden);
 
 	if (['string', 'boolean'].includes(typeof props.readerBlocked)) {
 		useReaderSettings.setBlocked(props.readerBlocked);
 	}
 
+});
+
+onBeforeUnmount(() => {
+	window.removeEventListener('pagehide', saveCurrentReadingProgress);
+	document.removeEventListener('visibilitychange', saveReadingProgressWhenHidden);
 });
 
 watch(
@@ -11670,10 +12007,19 @@ watchDebounced(
 	() => {
 		if (width.value < 1024 && columns.value === 'double')
 			setColumns('single');
-		else
-			useEstimatePages.estimate(readerComponent, contentArea);
+		else {
+			requestAnimationFrame(() => {
+				estimatePagesAndSyncProgress();
+			});
+		}
 	},
 	{ debounce: 125, maxWait: 250 }
+);
+
+watch(
+	currentPage,
+	() => syncReadingProgress(),
+	{ flush: 'sync' }
 );
 
 watchDebounced(content,
@@ -11762,7 +12108,7 @@ return (_ctx, _cache) => {
 };
 const App = /*#__PURE__*/_export_sfc(_sfc_main, [['styles',[_style_0,_style_1]]]);
 
-const tailwindStyles = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*/\n\n/*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box;\n  /* 1 */\n  border-width: 0;\n  /* 2 */\n  border-style: solid;\n  /* 2 */\n  border-color: #e5e7eb;\n  /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5;\n  /* 1 */\n  -webkit-text-size-adjust: 100%;\n  /* 2 */\n  -moz-tab-size: 4;\n  /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4;\n  /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n  /* 4 */\n  font-feature-settings: normal;\n  /* 5 */\n  font-variation-settings: normal;\n  /* 6 */\n  -webkit-tap-highlight-color: transparent;\n  /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0;\n  /* 1 */\n  line-height: inherit;\n  /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0;\n  /* 1 */\n  color: inherit;\n  /* 2 */\n  border-top-width: 1px;\n  /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  /* 1 */\n  font-feature-settings: normal;\n  /* 2 */\n  font-variation-settings: normal;\n  /* 3 */\n  font-size: 1em;\n  /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0;\n  /* 1 */\n  border-color: inherit;\n  /* 2 */\n  border-collapse: collapse;\n  /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit;\n  /* 1 */\n  font-feature-settings: inherit;\n  /* 1 */\n  font-variation-settings: inherit;\n  /* 1 */\n  font-size: 100%;\n  /* 1 */\n  font-weight: inherit;\n  /* 1 */\n  line-height: inherit;\n  /* 1 */\n  letter-spacing: inherit;\n  /* 1 */\n  color: inherit;\n  /* 1 */\n  margin: 0;\n  /* 2 */\n  padding: 0;\n  /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button;\n  /* 1 */\n  background-color: transparent;\n  /* 2 */\n  background-image: none;\n  /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield;\n  /* 1 */\n  outline-offset: -2px;\n  /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button;\n  /* 1 */\n  font: inherit;\n  /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\n\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block;\n  /* 1 */\n  vertical-align: middle;\n  /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n\n.fixed {\n  position: fixed;\n}\n\n.absolute {\n  position: absolute;\n}\n\n.relative {\n  position: relative;\n}\n\n.-right-2 {\n  right: -0.5rem;\n}\n\n.bottom-0 {\n  bottom: 0px;\n}\n\n.right-0 {\n  right: 0px;\n}\n\n.right-8 {\n  right: 2rem;\n}\n\n.top-0 {\n  top: 0px;\n}\n\n.top-14 {\n  top: 3.5rem;\n}\n\n.top-4 {\n  top: 1rem;\n}\n\n.z-10 {\n  z-index: 10;\n}\n\n.z-20 {\n  z-index: 20;\n}\n\n.z-40 {\n  z-index: 40;\n}\n\n.col-span-1 {\n  grid-column: span 1 / span 1;\n}\n\n.col-span-2 {\n  grid-column: span 2 / span 2;\n}\n\n.mx-auto {\n  margin-left: auto;\n  margin-right: auto;\n}\n\n.my-3 {\n  margin-top: 0.75rem;\n  margin-bottom: 0.75rem;\n}\n\n.my-8 {\n  margin-top: 2rem;\n  margin-bottom: 2rem;\n}\n\n.mb-2 {\n  margin-bottom: 0.5rem;\n}\n\n.mb-6 {\n  margin-bottom: 1.5rem;\n}\n\n.ml-10 {\n  margin-left: 2.5rem;\n}\n\n.ml-3 {\n  margin-left: 0.75rem;\n}\n\n.ml-4 {\n  margin-left: 1rem;\n}\n\n.mr-3 {\n  margin-right: 0.75rem;\n}\n\n.mt-3 {\n  margin-top: 0.75rem;\n}\n\n.block {\n  display: block;\n}\n\n.inline-block {\n  display: inline-block;\n}\n\n.flex {\n  display: flex;\n}\n\n.grid {\n  display: grid;\n}\n\n.hidden {\n  display: none;\n}\n\n.h-10 {\n  height: 2.5rem;\n}\n\n.h-5 {\n  height: 1.25rem;\n}\n\n.h-6 {\n  height: 1.5rem;\n}\n\n.h-8 {\n  height: 2rem;\n}\n\n.h-full {\n  height: 100%;\n}\n\n.h-screen {\n  height: 100vh;\n}\n\n.w-4\\/5 {\n  width: 80%;\n}\n\n.w-5 {\n  width: 1.25rem;\n}\n\n.w-6 {\n  width: 1.5rem;\n}\n\n.w-60 {\n  width: 15rem;\n}\n\n.w-8 {\n  width: 2rem;\n}\n\n.w-96 {\n  width: 24rem;\n}\n\n.w-full {\n  width: 100%;\n}\n\n.flex-shrink-0 {\n  flex-shrink: 0;\n}\n\n.scale-100 {\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-95 {\n  --tw-scale-x: .95;\n  --tw-scale-y: .95;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.cursor-default {\n  cursor: default;\n}\n\n.cursor-pointer {\n  cursor: pointer;\n}\n\n.grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n.grid-cols-4 {\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n}\n\n.items-center {\n  align-items: center;\n}\n\n.justify-center {\n  justify-content: center;\n}\n\n.justify-between {\n  justify-content: space-between;\n}\n\n.gap-2 {\n  gap: 0.5rem;\n}\n\n.divide-opacity-75 > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 0.75;\n}\n\n.self-end {\n  align-self: flex-end;\n}\n\n.overflow-auto {\n  overflow: auto;\n}\n\n.overflow-hidden {\n  overflow: hidden;\n}\n\n.overflow-x-hidden {\n  overflow-x: hidden;\n}\n\n.rounded {\n  border-radius: 0.25rem;\n}\n\n.rounded-sm {\n  border-radius: 0.125rem;\n}\n\n.border {\n  border-width: 1px;\n}\n\n.border-2 {\n  border-width: 2px;\n}\n\n.border-b {\n  border-bottom-width: 1px;\n}\n\n.border-gray-300 {\n  --tw-border-opacity: 1;\n  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));\n}\n\n.border-white {\n  --tw-border-opacity: 1;\n  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));\n}\n\n.border-b-white\\/25 {\n  border-bottom-color: rgb(255 255 255 / 0.25);\n}\n\n.bg-gray-800 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));\n}\n\n.bg-white {\n  --tw-bg-opacity: 1;\n  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));\n}\n\n.p-10 {\n  padding: 2.5rem;\n}\n\n.p-3 {\n  padding: 0.75rem;\n}\n\n.p-4 {\n  padding: 1rem;\n}\n\n.px-10 {\n  padding-left: 2.5rem;\n  padding-right: 2.5rem;\n}\n\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n\n.py-4 {\n  padding-top: 1rem;\n  padding-bottom: 1rem;\n}\n\n.pl-4 {\n  padding-left: 1rem;\n}\n\n.pt-10 {\n  padding-top: 2.5rem;\n}\n\n.text-left {\n  text-align: left;\n}\n\n.text-center {\n  text-align: center;\n}\n\n.text-base {\n  font-size: 1rem;\n  line-height: 1.5rem;\n}\n\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\n\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n\n.font-light {\n  font-weight: 300;\n}\n\n.lowercase {\n  text-transform: lowercase;\n}\n\n.tracking-wide {\n  letter-spacing: 0.025em;\n}\n\n.text-black {\n  --tw-text-opacity: 1;\n  color: rgb(0 0 0 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-700 {\n  --tw-text-opacity: 1;\n  color: rgb(55 65 81 / var(--tw-text-opacity, 1));\n}\n\n.text-white {\n  --tw-text-opacity: 1;\n  color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n}\n\n.opacity-0 {\n  opacity: 0;\n}\n\n.opacity-100 {\n  opacity: 1;\n}\n\n.opacity-30 {\n  opacity: 0.3;\n}\n\n.opacity-50 {\n  opacity: 0.5;\n}\n\n.opacity-75 {\n  opacity: 0.75;\n}\n\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-lg {\n  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-opacity {\n  transition-property: opacity;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.duration-100 {\n  transition-duration: 100ms;\n}\n\n.duration-200 {\n  transition-duration: 200ms;\n}\n\n.duration-75 {\n  transition-duration: 75ms;\n}\n\n.ease-in {\n  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);\n}\n\n.ease-out {\n  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);\n}\n\n.last\\:border-transparent:last-child {\n  border-color: transparent;\n}\n\n.hover\\:bg-gray-100:hover {\n  --tw-bg-opacity: 1;\n  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));\n}\n\n@media (min-width: 768px) {\n  .md\\:bottom-14 {\n    bottom: 3.5rem;\n  }\n\n  .md\\:right-16 {\n    right: 4rem;\n  }\n\n  .md\\:right-3 {\n    right: 0.75rem;\n  }\n\n  .md\\:flex {\n    display: flex;\n  }\n\n  .md\\:grid {\n    display: grid;\n  }\n\n  .md\\:w-2\\/5 {\n    width: 40%;\n  }\n\n  .md\\:w-\\[40em\\] {\n    width: 40em;\n  }\n\n  .md\\:px-24 {\n    padding-left: 6rem;\n    padding-right: 6rem;\n  }\n}\n\n@media (prefers-color-scheme: dark) {\n  .dark\\:text-white {\n    --tw-text-opacity: 1;\n    color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n  }\n}";
+const tailwindStyles = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*/\n\n/*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box;\n  /* 1 */\n  border-width: 0;\n  /* 2 */\n  border-style: solid;\n  /* 2 */\n  border-color: #e5e7eb;\n  /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5;\n  /* 1 */\n  -webkit-text-size-adjust: 100%;\n  /* 2 */\n  -moz-tab-size: 4;\n  /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4;\n  /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n  /* 4 */\n  font-feature-settings: normal;\n  /* 5 */\n  font-variation-settings: normal;\n  /* 6 */\n  -webkit-tap-highlight-color: transparent;\n  /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0;\n  /* 1 */\n  line-height: inherit;\n  /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0;\n  /* 1 */\n  color: inherit;\n  /* 2 */\n  border-top-width: 1px;\n  /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  /* 1 */\n  font-feature-settings: normal;\n  /* 2 */\n  font-variation-settings: normal;\n  /* 3 */\n  font-size: 1em;\n  /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0;\n  /* 1 */\n  border-color: inherit;\n  /* 2 */\n  border-collapse: collapse;\n  /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit;\n  /* 1 */\n  font-feature-settings: inherit;\n  /* 1 */\n  font-variation-settings: inherit;\n  /* 1 */\n  font-size: 100%;\n  /* 1 */\n  font-weight: inherit;\n  /* 1 */\n  line-height: inherit;\n  /* 1 */\n  letter-spacing: inherit;\n  /* 1 */\n  color: inherit;\n  /* 1 */\n  margin: 0;\n  /* 2 */\n  padding: 0;\n  /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button;\n  /* 1 */\n  background-color: transparent;\n  /* 2 */\n  background-image: none;\n  /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield;\n  /* 1 */\n  outline-offset: -2px;\n  /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button;\n  /* 1 */\n  font: inherit;\n  /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\n\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block;\n  /* 1 */\n  vertical-align: middle;\n  /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n\n.fixed {\n  position: fixed;\n}\n\n.absolute {\n  position: absolute;\n}\n\n.relative {\n  position: relative;\n}\n\n.-right-2 {\n  right: -0.5rem;\n}\n\n.bottom-0 {\n  bottom: 0px;\n}\n\n.right-0 {\n  right: 0px;\n}\n\n.right-8 {\n  right: 2rem;\n}\n\n.top-0 {\n  top: 0px;\n}\n\n.top-14 {\n  top: 3.5rem;\n}\n\n.top-4 {\n  top: 1rem;\n}\n\n.z-10 {\n  z-index: 10;\n}\n\n.z-20 {\n  z-index: 20;\n}\n\n.z-40 {\n  z-index: 40;\n}\n\n.col-span-1 {\n  grid-column: span 1 / span 1;\n}\n\n.col-span-2 {\n  grid-column: span 2 / span 2;\n}\n\n.mx-auto {\n  margin-left: auto;\n  margin-right: auto;\n}\n\n.my-3 {\n  margin-top: 0.75rem;\n  margin-bottom: 0.75rem;\n}\n\n.my-8 {\n  margin-top: 2rem;\n  margin-bottom: 2rem;\n}\n\n.mb-2 {\n  margin-bottom: 0.5rem;\n}\n\n.mb-6 {\n  margin-bottom: 1.5rem;\n}\n\n.ml-10 {\n  margin-left: 2.5rem;\n}\n\n.ml-3 {\n  margin-left: 0.75rem;\n}\n\n.ml-4 {\n  margin-left: 1rem;\n}\n\n.mr-3 {\n  margin-right: 0.75rem;\n}\n\n.mt-1 {\n  margin-top: 0.25rem;\n}\n\n.mt-3 {\n  margin-top: 0.75rem;\n}\n\n.mt-5 {\n  margin-top: 1.25rem;\n}\n\n.block {\n  display: block;\n}\n\n.inline-block {\n  display: inline-block;\n}\n\n.flex {\n  display: flex;\n}\n\n.inline-flex {\n  display: inline-flex;\n}\n\n.grid {\n  display: grid;\n}\n\n.hidden {\n  display: none;\n}\n\n.h-10 {\n  height: 2.5rem;\n}\n\n.h-5 {\n  height: 1.25rem;\n}\n\n.h-6 {\n  height: 1.5rem;\n}\n\n.h-8 {\n  height: 2rem;\n}\n\n.h-full {\n  height: 100%;\n}\n\n.h-screen {\n  height: 100vh;\n}\n\n.w-11 {\n  width: 2.75rem;\n}\n\n.w-4\\/5 {\n  width: 80%;\n}\n\n.w-5 {\n  width: 1.25rem;\n}\n\n.w-6 {\n  width: 1.5rem;\n}\n\n.w-60 {\n  width: 15rem;\n}\n\n.w-8 {\n  width: 2rem;\n}\n\n.w-96 {\n  width: 24rem;\n}\n\n.w-full {\n  width: 100%;\n}\n\n.flex-shrink-0 {\n  flex-shrink: 0;\n}\n\n.translate-x-0 {\n  --tw-translate-x: 0px;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.translate-x-5 {\n  --tw-translate-x: 1.25rem;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-100 {\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-95 {\n  --tw-scale-x: .95;\n  --tw-scale-y: .95;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.cursor-default {\n  cursor: default;\n}\n\n.cursor-pointer {\n  cursor: pointer;\n}\n\n.grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n.grid-cols-4 {\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n}\n\n.items-center {\n  align-items: center;\n}\n\n.justify-center {\n  justify-content: center;\n}\n\n.justify-between {\n  justify-content: space-between;\n}\n\n.gap-2 {\n  gap: 0.5rem;\n}\n\n.divide-opacity-75 > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 0.75;\n}\n\n.self-end {\n  align-self: flex-end;\n}\n\n.overflow-auto {\n  overflow: auto;\n}\n\n.overflow-hidden {\n  overflow: hidden;\n}\n\n.overflow-x-hidden {\n  overflow-x: hidden;\n}\n\n.rounded {\n  border-radius: 0.25rem;\n}\n\n.rounded-full {\n  border-radius: 9999px;\n}\n\n.rounded-sm {\n  border-radius: 0.125rem;\n}\n\n.border {\n  border-width: 1px;\n}\n\n.border-2 {\n  border-width: 2px;\n}\n\n.border-b {\n  border-bottom-width: 1px;\n}\n\n.border-t {\n  border-top-width: 1px;\n}\n\n.border-gray-300 {\n  --tw-border-opacity: 1;\n  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));\n}\n\n.border-transparent {\n  border-color: transparent;\n}\n\n.border-white {\n  --tw-border-opacity: 1;\n  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));\n}\n\n.border-b-white\\/25 {\n  border-bottom-color: rgb(255 255 255 / 0.25);\n}\n\n.bg-gray-300 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));\n}\n\n.bg-gray-800 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));\n}\n\n.bg-white {\n  --tw-bg-opacity: 1;\n  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));\n}\n\n.p-10 {\n  padding: 2.5rem;\n}\n\n.p-3 {\n  padding: 0.75rem;\n}\n\n.p-4 {\n  padding: 1rem;\n}\n\n.px-1 {\n  padding-left: 0.25rem;\n  padding-right: 0.25rem;\n}\n\n.px-10 {\n  padding-left: 2.5rem;\n  padding-right: 2.5rem;\n}\n\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n\n.py-4 {\n  padding-top: 1rem;\n  padding-bottom: 1rem;\n}\n\n.pl-4 {\n  padding-left: 1rem;\n}\n\n.pt-10 {\n  padding-top: 2.5rem;\n}\n\n.pt-5 {\n  padding-top: 1.25rem;\n}\n\n.text-left {\n  text-align: left;\n}\n\n.text-center {\n  text-align: center;\n}\n\n.text-base {\n  font-size: 1rem;\n  line-height: 1.5rem;\n}\n\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\n\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n\n.font-light {\n  font-weight: 300;\n}\n\n.lowercase {\n  text-transform: lowercase;\n}\n\n.tracking-wide {\n  letter-spacing: 0.025em;\n}\n\n.text-black {\n  --tw-text-opacity: 1;\n  color: rgb(0 0 0 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-500 {\n  --tw-text-opacity: 1;\n  color: rgb(107 114 128 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-700 {\n  --tw-text-opacity: 1;\n  color: rgb(55 65 81 / var(--tw-text-opacity, 1));\n}\n\n.text-white {\n  --tw-text-opacity: 1;\n  color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n}\n\n.opacity-0 {\n  opacity: 0;\n}\n\n.opacity-100 {\n  opacity: 1;\n}\n\n.opacity-30 {\n  opacity: 0.3;\n}\n\n.opacity-50 {\n  opacity: 0.5;\n}\n\n.opacity-75 {\n  opacity: 0.75;\n}\n\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-lg {\n  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-opacity {\n  transition-property: opacity;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-transform {\n  transition-property: transform;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.duration-100 {\n  transition-duration: 100ms;\n}\n\n.duration-200 {\n  transition-duration: 200ms;\n}\n\n.duration-75 {\n  transition-duration: 75ms;\n}\n\n.ease-in {\n  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);\n}\n\n.ease-out {\n  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);\n}\n\n.last\\:border-transparent:last-child {\n  border-color: transparent;\n}\n\n.hover\\:bg-gray-100:hover {\n  --tw-bg-opacity: 1;\n  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));\n}\n\n@media (min-width: 768px) {\n  .md\\:bottom-14 {\n    bottom: 3.5rem;\n  }\n\n  .md\\:right-16 {\n    right: 4rem;\n  }\n\n  .md\\:right-3 {\n    right: 0.75rem;\n  }\n\n  .md\\:flex {\n    display: flex;\n  }\n\n  .md\\:grid {\n    display: grid;\n  }\n\n  .md\\:w-2\\/5 {\n    width: 40%;\n  }\n\n  .md\\:w-\\[40em\\] {\n    width: 40em;\n  }\n\n  .md\\:px-24 {\n    padding-left: 6rem;\n    padding-right: 6rem;\n  }\n}\n\n@media (prefers-color-scheme: dark) {\n  .dark\\:text-white {\n    --tw-text-opacity: 1;\n    color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n  }\n}";
 
 // https://maximomussini.com/posts/vue-custom-elements
 

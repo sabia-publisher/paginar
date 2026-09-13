@@ -99,6 +99,15 @@ const settings = {
     // titulo do capítulo, a ser mostrado no cabeçalho do paginador
     chapterTitle: 'Chapter One - The Period',
 
+	// readingProgress
+	// disponibiliza no menu a retomada da leitura e salva a posição por percentual.
+	// use um id estável e exclusivo para evitar misturar o progresso entre obras.
+	// enabled define o estado inicial; a escolha posterior do leitor prevalece.
+	readingProgress: {
+		id: 'a-tale-of-two-cities',
+		enabled: true
+	},
+
     // fontsOptions
     // customização da lista de fontes disponíveis para o usuário customizar
     // a tela de leitura. Deve ser uma lista de até 4 opções, com o nome
@@ -152,6 +161,18 @@ const settings = {
 
 }
 ```
+
+`readingProgress` é opcional. Quando ausente ou `false`, o componente não salva
+nem restaura posições e não mostra o controle **Retomar leitura**. Quando o objeto
+é informado, `enabled` assume `true` se omitido. O progresso fica somente no
+`localStorage` da origem atual, não é sincronizado entre dispositivos e é isolado
+por obra e contexto de capítulo. Sem `id`, o componente usa o título e o caminho
+da página como alternativa; para publicações duradouras, prefira sempre um `id`
+explícito e estável.
+
+Ao alterar fonte, tamanho, colunas ou dimensões da janela, o leitor preserva o
+percentual anterior e seleciona a página mais próxima no novo total. Quando a
+posição fica exatamente entre duas páginas, a página seguinte é escolhida.
 
 
 ### Aplicando estilo no corpo do texto
