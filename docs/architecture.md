@@ -11,6 +11,7 @@
 | `src/composables/useEstimatePages.js` | Estima páginas pela razão entre largura do conteúdo e viewport. |
 | `src/composables/useTextContent.js` | JSON de conteúdo, carregamento HTML, sumário e contexto de capítulo. |
 | `src/composables/useReaderSettings.js` | Preferências reativas, bloqueio e persistência. |
+| `src/composables/useSearch.js`, `src/search.js` | Busca opt-in, índice de texto normalizado com offsets DOM, fuzzy match e navegação por ocorrência. |
 | `src/composables/useStyles.js` | CSS fornecido pelo consumidor e carregamento de fontes. |
 | `src/composables/useReferences.js`, `useFootnotes.js` | Referências e notas, com interfaces em `ReferencePopup.vue` e `FootnotesAside.vue`. |
 | `src/components/HeaderSlot/` | Cabeçalho, sumário e opções de leitura. |
@@ -36,6 +37,28 @@ contrato completo está em [eventos e estado público](events-and-state.md).
 A interface vive no Shadow DOM; conteúdo em slot permanece no DOM da página hospedeira. CSS externo pode estilizar o conteúdo fornecido por slot. Para a interface, existem `css-string`, `css-file` e `reader-settings.cssString`. Fontes externas são inseridas no documento. Os seletores de customização também são parte prática da integração pública.
 
 Preferências são persistidas em `localStorage` sob `readerSettings`. Valores salvos podem sobrescrever tamanho, colunas, modo e a escolha de retomada configurados inicialmente. A retomada é opt-in por `reader-settings.readingProgress`; `useReadingProgress.js` guarda percentuais por obra/contexto sob a chave versionada `paginar:reading-progress:v1`, atualiza o registro na navegação e novamente ao ocultar ou sair da página, e restaura somente depois de uma paginação válida. Quando viewport, fonte, tamanho, colunas ou conteúdo provocam repaginação, o percentual anterior é capturado antes do cálculo e convertido para a página mais próxima no novo total. A paginação usa colunas CSS e deslocamento horizontal, não uma árvore de páginas independentes. Abaixo de 1024 px, a raiz muda a opção dupla para simples; o gesto de navegação é condicionado a largura inferior a 600 px.
+
+## Busca e paginação
+
+`reader-settings.search: true` ativa a busca apenas nesta montagem; a opção não
+é salva em `localStorage`. `useSearch` cria estado por instância e o fornece aos
+controles do cabeçalho via `provide/inject`. O índice percorre texto renderizado,
+incluindo nós atribuídos ao slot, e preserva offsets para criar `Range`s sem
+envolver o texto em elementos. Conteúdo oculto, scripts e estilos são ignorados.
+Uma consulta normaliza caixa, diacríticos, espaços e pontuação; termos com cinco
+ou mais caracteres aceitam uma edição ou transposição adjacente por palavra.
+
+Cada resultado é mapeado para uma página pela posição do `Range` relativa à
+origem das colunas e pela largura do viewport. A navegação usa
+`usePagination.set(page, 'search')`, sincronizando slider, eventos e retomada.
+Os destaques ficam em uma camada absoluta fora do fluxo de colunas: as ocorrências
+visíveis têm fundo suave e a atual tem fundo mais forte e contorno. A geometria é
+medida na consulta e na repaginação; apenas as páginas atual e adjacentes geram
+elementos de destaque, atualizados também na navegação pelo slider. O deslocamento
+tem animação curta, respeitando `prefers-reduced-motion`. A repaginação atualiza
+a geometria do destaque. Um observador invalida o índice quando o texto muda,
+inclusive ao trocar de capítulo; a pesquisa abrange somente o conteúdo carregado.
+Listeners, observador e debounce da busca são removidos na desmontagem.
 
 ## Limitações observadas no código
 

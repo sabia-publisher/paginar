@@ -1583,6 +1583,9 @@ function isRef(r) {
 function ref(value) {
   return createRef(value, false);
 }
+function shallowRef(value) {
+  return createRef(value, true);
+}
 function createRef(rawValue, shallow) {
   if (isRef(rawValue)) {
     return rawValue;
@@ -9165,6 +9168,71 @@ class VueElement extends BaseClass {
   }
 }
 
+const getModelAssigner = (vnode) => {
+  const fn = vnode.props["onUpdate:modelValue"] || false;
+  return isArray(fn) ? (value) => invokeArrayFns(fn, value) : fn;
+};
+function onCompositionStart(e) {
+  e.target.composing = true;
+}
+function onCompositionEnd(e) {
+  const target = e.target;
+  if (target.composing) {
+    target.composing = false;
+    target.dispatchEvent(new Event("input"));
+  }
+}
+const assignKey = Symbol("_assign");
+const vModelText = {
+  created(el, { modifiers: { lazy, trim, number } }, vnode) {
+    el[assignKey] = getModelAssigner(vnode);
+    const castToNumber = number || vnode.props && vnode.props.type === "number";
+    addEventListener$1(el, lazy ? "change" : "input", (e) => {
+      if (e.target.composing) return;
+      let domValue = el.value;
+      if (trim) {
+        domValue = domValue.trim();
+      }
+      if (castToNumber) {
+        domValue = looseToNumber(domValue);
+      }
+      el[assignKey](domValue);
+    });
+    if (trim) {
+      addEventListener$1(el, "change", () => {
+        el.value = el.value.trim();
+      });
+    }
+    if (!lazy) {
+      addEventListener$1(el, "compositionstart", onCompositionStart);
+      addEventListener$1(el, "compositionend", onCompositionEnd);
+      addEventListener$1(el, "change", onCompositionEnd);
+    }
+  },
+  // set value on mounted so it's after min/max for type="range"
+  mounted(el, { value }) {
+    el.value = value == null ? "" : value;
+  },
+  beforeUpdate(el, { value, oldValue, modifiers: { lazy, trim, number } }, vnode) {
+    el[assignKey] = getModelAssigner(vnode);
+    if (el.composing) return;
+    const elValue = (number || el.type === "number") && !/^0\d/.test(el.value) ? looseToNumber(el.value) : el.value;
+    const newValue = value == null ? "" : value;
+    if (elValue === newValue) {
+      return;
+    }
+    if (document.activeElement === el && el.type !== "range") {
+      if (lazy && value === oldValue) {
+        return;
+      }
+      if (trim && el.value.trim() === newValue) {
+        return;
+      }
+    }
+    el.value = newValue;
+  }
+};
+
 const systemModifiers = ["ctrl", "shift", "alt", "meta"];
 const modifierGuards = {
   stop: (e) => e.stopPropagation(),
@@ -9188,6 +9256,30 @@ const withModifiers = (fn, modifiers) => {
       if (guard && guard(event, modifiers)) return;
     }
     return fn(event, ...args);
+  }));
+};
+const keyNames = {
+  esc: "escape",
+  space: " ",
+  up: "arrow-up",
+  left: "arrow-left",
+  right: "arrow-right",
+  down: "arrow-down",
+  delete: "backspace"
+};
+const withKeys = (fn, modifiers) => {
+  const cache = fn._withKeys || (fn._withKeys = {});
+  const cacheKey = modifiers.join(".");
+  return cache[cacheKey] || (cache[cacheKey] = ((event) => {
+    if (!("key" in event)) {
+      return;
+    }
+    const eventKey = hyphenate(event.key);
+    if (modifiers.some(
+      (k) => k === eventKey || keyNames[k] === eventKey
+    )) {
+      return fn(event);
+    }
   }));
 };
 
@@ -10162,102 +10254,58 @@ const useReaderSettings = {
 	homeUrl
 };
 
-const _export_sfc = (sfc, props) => {
-  const target = sfc.__vccOpts || sfc;
-  for (const [key, val] of props) {
-    target[key] = val;
-  }
-  return target;
-};
-
-const _sfc_main$t = {};
-
-const _hoisted_1$r = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 20 22",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
-function _sfc_render$c(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$r, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      d: "M1 8L10 1L19 8V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8Z",
-      "stroke-width": "2",
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round"
-    }, null, -1),
-    createBaseVNode("path", {
-      d: "M7 21V11H13V21",
-      "stroke-width": "2",
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round"
-    }, null, -1)
-  ]))]))
-}
-const IconHome = /*#__PURE__*/_export_sfc(_sfc_main$t, [['render',_sfc_render$c]]);
-
-const _sfc_main$s = {};
-
-const _hoisted_1$q = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
-function _sfc_render$b(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$q, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "2",
-      d: "M6 18L18 6M6 6l12 12"
-    }, null, -1)
-  ]))]))
-}
-const IconClose = /*#__PURE__*/_export_sfc(_sfc_main$s, [['render',_sfc_render$b]]);
-
-const _sfc_main$r = {};
-
-const _hoisted_1$p = {
-  width: "24",
-  height: "19",
-  viewBox: "0 0 24 19",
-  fill: "none",
-  stroke: "currentColor",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
-function _sfc_render$a(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$p, [...(_cache[0] || (_cache[0] = [
-    createStaticVNode("<line x1=\"5\" y1=\"1.08447\" x2=\"1\" y2=\"1.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"1.04248\" x2=\"11\" y2=\"1.04248\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"9.08447\" x2=\"14\" y2=\"9.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"8\" y1=\"9.14905\" x2=\"4\" y2=\"9.14905\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"17.149\" x2=\"10.9993\" y2=\"17.149\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"5\" y1=\"17.2429\" x2=\"1\" y2=\"17.2429\" stroke-width=\"2\" stroke-linecap=\"round\"></line>", 6)
-  ]))]))
-}
-const IconSummary = /*#__PURE__*/_export_sfc(_sfc_main$r, [['render',_sfc_render$a]]);
-
 const state$5 = reactive({
+	totalPages: 1
+});
+
+function estimate(viewport, content) {
+	if (viewport && content) {
+		const { width: viewportWidth } = viewport.value.getBoundingClientRect();
+		const { width: contentWidth } = content.value.getBoundingClientRect();
+
+		if (contentWidth > viewportWidth) {
+			state$5.totalPages = Math.ceil(contentWidth / viewportWidth);
+			return Math.ceil(contentWidth / viewportWidth)
+
+		} else {
+			state$5.totalPages = 1;
+			return 1
+		}
+	} else {
+		state$5.totalPages = 1;
+		return 1
+	}
+}
+
+const totalPages$1 = computed(() => state$5.totalPages);
+
+const useEstimatePages = {
+	totalPages: totalPages$1,
+	estimate
+};
+
+const state$4 = reactive({
 	references: [],
 	reference: null
 });
 
-const references = computed(() => state$5.references);
+const references = computed(() => state$4.references);
 
 function setReferences(references) {
-	state$5.references = references;
+	state$4.references = references;
 }
 
-const reference = computed(() => state$5.reference);
+const reference = computed(() => state$4.reference);
 
 function setHighlightedReference(reference) {
-	state$5.reference = reference;
+	state$4.reference = reference;
 }
 
 function applyReferences(contentRaw) {
-	if (state$5.references.length === 0 || !contentRaw)
+	if (state$4.references.length === 0 || !contentRaw)
 		return contentRaw
 
-	return state$5.references.reduce((content, reference) => {
+	return state$4.references.reduce((content, reference) => {
 		if (!content) return content
 
 		if (content.includes(reference.cit)) {
@@ -10283,11 +10331,11 @@ function applyReference(event) {
 	const target = classList.find(item => item.startsWith('reference-'));
 
 	if (target) {
-		const ref = state$5.references.find(
+		const ref = state$4.references.find(
 			item => target && item.cit.replaceAll(' ', '') === target.replace('reference-', '')
 		);
 		if (ref) {
-			state$5.reference = ref;
+			state$4.reference = ref;
 		}
 	}
 
@@ -10302,25 +10350,25 @@ const useReferences = {
 	applyReferences,
 };
 
-const state$4 = reactive({
+const state$3 = reactive({
 	footnotes: [],
 	showFootnotes: false,
 	footnote: null
 });
 
-const footnotes = computed(() => state$4.footnotes);
+const footnotes = computed(() => state$3.footnotes);
 function setFootnotes(footnotes) {
-	state$4.footnotes = footnotes;
+	state$3.footnotes = footnotes;
 }
 
-const showFootnotes = computed(() => state$4.showFootnotes);
+const showFootnotes = computed(() => state$3.showFootnotes);
 function setShowFootnotes(value) {
-	state$4.showFootnotes = value;
+	state$3.showFootnotes = value;
 }
 
-const footnote = computed(() => state$4.footnote);
+const footnote = computed(() => state$3.footnote);
 function setHighlightedFootnote(footnote) {
-	state$4.footnote = footnote;
+	state$3.footnote = footnote;
 }
 
 function applyFootnote(event) {
@@ -10334,9 +10382,9 @@ function applyFootnote(event) {
 	);
 
 	if (footnoteTarget) {
-		const ref = state$4.footnotes.find(item => item.id === footnoteTarget);
+		const ref = state$3.footnotes.find(item => item.id === footnoteTarget);
 		if (ref) {
-			state$4.footnote = ref;
+			state$3.footnote = ref;
 		}
 	}
 }
@@ -10351,20 +10399,20 @@ const useFootnotes = {
 	showFootnotes
 };
 
-const state$3 = reactive({
+const state$2 = reactive({
 	summary: null,
 	content: null,
 	activeChapter: 0
 });
 
-const content = computed(() => state$3.content);
-const summary = computed(() => state$3.summary);
+const content = computed(() => state$2.content);
+const summary = computed(() => state$2.summary);
 const context = computed(() => {
-	const chapters = state$3.summary || [];
+	const chapters = state$2.summary || [];
 	const linkedChapter = chapters.findIndex(
 		chapter => window.location.href.includes(chapter.link)
 	);
-	const current = linkedChapter >= 0 ? linkedChapter : state$3.activeChapter;
+	const current = linkedChapter >= 0 ? linkedChapter : state$2.activeChapter;
 	return {
 		chapter: chapters[current],
 		surround: {
@@ -10391,7 +10439,7 @@ async function initContent(contentString, contentWrapper) {
 		: null;
 
 	if (content?.summary)
-		state$3.summary = content.summary;
+		state$2.summary = content.summary;
 
 	if (content?.references)
 		setReferences(content.references);
@@ -10405,7 +10453,7 @@ async function initContent(contentString, contentWrapper) {
 		const newContent = content.applyReferences
 			? applyReferences(text)
 			: text;
-		state$3.content = newContent;
+		state$2.content = newContent;
 
 	// else if content comes from slot, apply references to slot
 	} else {
@@ -10430,7 +10478,7 @@ async function getContent(location) {
 		return text
 	} catch (err) {
 		console.log({ err });
-		state$3.content = 'Ops, não foi possível carregar o arquivo solicitado.';
+		state$2.content = 'Ops, não foi possível carregar o arquivo solicitado.';
 	}
 }
 
@@ -10438,8 +10486,8 @@ function applyContent(text, chapter = null) {
 	const { applyReferences } = useReferences;
 	const newContent = applyReferences(text);
 	if (chapter)
-		state$3.activeChapter = state$3.summary.findIndex(item => item === chapter);
-	state$3.content = newContent;
+		state$2.activeChapter = state$2.summary.findIndex(item => item === chapter);
+	state$2.content = newContent;
 }
 
 function listenToClicks(contentWrapper) {
@@ -10467,36 +10515,6 @@ const useTextContent = {
 	listenToClicks,
 	context,
 	contextId
-};
-
-const state$2 = reactive({
-	totalPages: 1
-});
-
-function estimate(viewport, content) {
-	if (viewport && content) {
-		const { width: viewportWidth } = viewport.value.getBoundingClientRect();
-		const { width: contentWidth } = content.value.getBoundingClientRect();
-
-		if (contentWidth > viewportWidth) {
-			state$2.totalPages = Math.ceil(contentWidth / viewportWidth);
-			return Math.ceil(contentWidth / viewportWidth)
-
-		} else {
-			state$2.totalPages = 1;
-			return 1
-		}
-	} else {
-		state$2.totalPages = 1;
-		return 1
-	}
-}
-
-const totalPages$1 = computed(() => state$2.totalPages);
-
-const useEstimatePages = {
-	totalPages: totalPages$1,
-	estimate
 };
 
 const isSafari = [
@@ -10816,16 +10834,392 @@ const usePagination = {
 	set
 };
 
+// Keep offsets into the original UTF-16 text so matches can become DOM Ranges.
+function normalizeSearchText(value) {
+	let text = '';
+	const starts = [];
+	const ends = [];
+	let offset = 0;
+	for (const character of value) {
+		const end = offset + character.length;
+		const normalized = character.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
+		if (!normalized && ends.length)
+			ends[ends.length - 1] = end;
+		for (const part of normalized) {
+			const next = /[\p{L}\p{N}]/u.test(part) ? part : ' ';
+			if (next === ' ' && text.endsWith(' ')) {
+				ends[ends.length - 1] = end;
+				continue
+			}
+			text += next;
+			for (let index = 0; index < next.length; index++) {
+				starts.push(offset);
+				ends.push(end);
+			}
+		}
+		offset = end;
+	}
+	return { text, starts, ends }
+}
+
+// At most one insertion, deletion, substitution or adjacent transposition.
+function nearWord(left, right) {
+	if (left === right)
+		return true
+	if (left.length < 5 || Math.abs(left.length - right.length) > 1)
+		return false
+	let index = 0;
+	while (index < Math.min(left.length, right.length) && left[index] === right[index])
+		index++;
+	if (left.length === right.length) {
+		return left.slice(index + 1) === right.slice(index + 1) || (
+			left[index] === right[index + 1] && left[index + 1] === right[index] &&
+			left.slice(index + 2) === right.slice(index + 2)
+		)
+	}
+	return left.length > right.length
+		? left.slice(index + 1) === right.slice(index)
+		: left.slice(index) === right.slice(index + 1)
+}
+
+function findSearchMatches(index, query) {
+	const needle = normalizeSearchText(query).text.trim();
+	if (!needle)
+		return []
+	const hits = [];
+	let position = index.text.indexOf(needle);
+	while (position !== -1) {
+		hits.push({ start: position, end: position + needle.length });
+		position = index.text.indexOf(needle, position + needle.length);
+	}
+	const words = needle.split(' ');
+	const tokens = Array.from(index.text.matchAll(/[\p{L}\p{N}]+/gu));
+	const exactCount = hits.length;
+	let exactIndex = 0;
+	for (let offset = 0; offset <= tokens.length - words.length; offset++) {
+		const start = tokens[offset].index;
+		const last = tokens[offset + words.length - 1];
+		const end = last.index + last[0].length;
+		while (exactIndex < exactCount && hits[exactIndex].end <= start)
+			exactIndex++;
+		if (exactIndex < exactCount && hits[exactIndex].start < end)
+			continue
+		if (words.every((word, part) => nearWord(word, tokens[offset + part][0])))
+			hits.push({ start, end, approximate: true });
+	}
+	return hits.sort((left, right) => left.start - right.start)
+		.map(hit => ({ start: index.starts[hit.start], end: index.ends[hit.end - 1] }))
+}
+
+const searchKey = Symbol('paginarSearch');
+
+// Walk the rendered slot tree as well as HTML loaded inside the shadow root.
+function indexContent(root) {
+	let text = '';
+	const nodes = [];
+	function visit(node) {
+		if (node.nodeType === Node.TEXT_NODE) {
+			nodes.push({ node, start: text.length, end: text.length + node.length });
+			text += node.data;
+			return
+		}
+		if (node.nodeType !== Node.ELEMENT_NODE)
+			return
+		if (node.matches('script, style, template, noscript, [hidden], [aria-hidden="true"]'))
+			return
+		const style = getComputedStyle(node);
+		if (style.display === 'none' || style.visibility === 'hidden')
+			return
+		const separator = node.tagName === 'BR' || !['inline', 'contents'].includes(style.display);
+		if (separator) text += ' ';
+		const children = node.tagName === 'SLOT'
+			? node.assignedNodes({ flatten: true })
+			: node.childNodes;
+		for (const child of children.length ? children : node.childNodes)
+			visit(child);
+		if (separator) text += ' ';
+	}
+	visit(root);
+	return { ...normalizeSearchText(text), nodes }
+}
+
+function rangeForMatch(index, match) {
+	// Binary search keeps mapping a common word in a long chapter inexpensive.
+	function findNode(offset) {
+		let low = 0;
+		let high = index.nodes.length - 1;
+		while (low <= high) {
+			const middle = (low + high) >> 1;
+			const item = index.nodes[middle];
+			if (offset < item.start) high = middle - 1;
+			else if (offset >= item.end) low = middle + 1;
+			else return item
+		}
+	}
+	const first = findNode(match.start);
+	const last = findNode(match.end - 1);
+	if (!first || !last || first.node.getRootNode() !== last.node.getRootNode())
+		return null
+	const range = document.createRange();
+	range.setStart(first.node, match.start - first.start);
+	range.setEnd(last.node, match.end - last.start);
+	return range
+}
+
+function useSearch(root, viewport, content) {
+	const enabled = ref(false);
+	const open = ref(false);
+	const query = ref('');
+	const input = ref(null);
+	const button = ref(null);
+	const active = ref(-1);
+	const total = ref(0);
+	const geometry = shallowRef([]);
+	const pageWidth = ref(0);
+	const rectangles = computed(() => {
+		if (!open.value) return []
+		// Include adjacent pages so highlights accompany the sliding text.
+		const left = (usePagination.currentPage.value - 2) * pageWidth.value;
+		const right = (usePagination.currentPage.value + 1) * pageWidth.value;
+		return geometry.value.filter(rect => rect.left < right && rect.right > left)
+			.map(rect => ({ ...rect, active: rect.match === active.value }))
+	});
+	const pending = ref(false);
+	let ranges = [];
+	let index = null;
+	let timer = null;
+	let observer = null;
+	let host = null;
+
+	function init(settingsString) {
+		enabled.value = settingsString ? JSON.parse(settingsString).search === true : false;
+	}
+
+	function measure() {
+		const columns = viewport.value?.querySelector('.columnsArea');
+		if (!open.value || !ranges.length || !columns) {
+			geometry.value = [];
+			return
+		}
+		const origin = columns.getBoundingClientRect();
+		pageWidth.value = viewport.value.getBoundingClientRect().width;
+		const measured = [];
+		ranges.forEach((range, match) => {
+			if (!range.startContainer.isConnected) return
+			const seen = new Set();
+			for (const rect of range.getClientRects()) {
+				if (!rect.width || !rect.height) continue
+				const key = `${rect.left},${rect.top},${rect.width},${rect.height}`;
+				// Inline elements can yield the same rectangle as their text node.
+				if (seen.has(key)) continue
+				seen.add(key);
+				measured.push({
+					key: `${match}:${key}`, match,
+					left: rect.left - origin.left, right: rect.right - origin.left,
+					style: {
+						left: `${rect.left - origin.left}px`, top: `${rect.top - origin.top}px`,
+						width: `${rect.width}px`, height: `${rect.height}px`
+					}
+				});
+			}
+		});
+		geometry.value = measured;
+	}
+
+	function navigate(position) {
+		if (!ranges.length || useReaderSettings.blocked.value)
+			return
+		active.value = (position + ranges.length) % ranges.length;
+		const rect = geometry.value.find(rect => rect.match === active.value);
+		if (rect && pageWidth.value)
+			usePagination.set(Math.floor(Math.max(0, rect.left) / pageWidth.value) + 1, 'search');
+	}
+
+	function run() {
+		clearTimeout(timer);
+		pending.value = false;
+		if (!enabled.value || !open.value || !content.value)
+			return
+		index ||= indexContent(content.value);
+		ranges = findSearchMatches(index, query.value)
+			.map(match => rangeForMatch(index, match)).filter(Boolean);
+		total.value = ranges.length;
+		active.value = -1;
+		measure();
+		navigate(0);
+	}
+
+	function schedule(invalidate = false) {
+		if (invalidate) index = null;
+		clearTimeout(timer);
+		ranges = [];
+		total.value = 0;
+		active.value = -1;
+		geometry.value = [];
+		pending.value = open.value && Boolean(query.value.trim());
+		if (pending.value) timer = setTimeout(run, 180);
+	}
+
+	async function show() {
+		if (!enabled.value || useReaderSettings.blocked.value)
+			return
+		open.value = true;
+		run();
+		await nextTick();
+		input.value?.focus({ preventScroll: true });
+		input.value?.select();
+	}
+
+	function close() {
+		open.value = false;
+		clearTimeout(timer);
+		pending.value = false;
+		geometry.value = [];
+		button.value?.focus({ preventScroll: true });
+	}
+
+	function step(direction) {
+		if (pending.value) run();
+		else navigate(active.value + direction);
+	}
+
+	function onKeydown(event) {
+		if (!enabled.value || event.defaultPrevented)
+			return
+		const path = event.composedPath();
+		const otherReader = path.find(node => node?.tagName === 'PAGINATE-CONTENT');
+		if (otherReader && otherReader !== host)
+			return
+		if (event.key === 'Escape' && open.value) {
+			event.preventDefault();
+			close();
+		} else if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
+			// Keep browser find available in unrelated editing fields on the host page.
+			if (!path.includes(host) && path.some(node =>
+				node?.matches?.('input, textarea, select, [contenteditable="true"]')))
+				return
+			if (useReaderSettings.blocked.value || !host?.getClientRects().length)
+				return
+			event.preventDefault();
+			show();
+		}
+	}
+
+	onMounted(() => {
+		host = root.value.getRootNode().host;
+		window.addEventListener('keydown', onKeydown, true);
+		observer = new MutationObserver(() => schedule(true));
+		observer.observe(content.value, { subtree: true, childList: true, characterData: true });
+		if (host) observer.observe(host, { subtree: true, childList: true, characterData: true });
+		content.value.addEventListener('slotchange', invalidate);
+	});
+	function invalidate() { schedule(true); }
+	onBeforeUnmount(() => {
+		clearTimeout(timer);
+		observer?.disconnect();
+		window.removeEventListener('keydown', onKeydown, true);
+		content.value?.removeEventListener('slotchange', invalidate);
+		ranges = [];
+		index = null;
+	});
+	watch(query, () => schedule());
+	watch(useReaderSettings.blocked, blocked => {
+		if (!blocked && open.value && active.value < 0)
+			navigate(0);
+	});
+	return {
+		enabled, open, query, input, button, active, total, rectangles, pending,
+		init, show, close, step, measure,
+		status: computed(() => pending.value ? 'Buscando…' : total.value
+			? `${active.value >= 0 ? `${active.value + 1} de ` : ''}${total.value} ${total.value === 1 ? 'ocorrência' : 'ocorrências'}`
+			: query.value.trim() ? 'Nenhuma ocorrência' : 'Digite para buscar')
+	}
+}
+
+const _export_sfc = (sfc, props) => {
+  const target = sfc.__vccOpts || sfc;
+  for (const [key, val] of props) {
+    target[key] = val;
+  }
+  return target;
+};
+
+const _sfc_main$u = {};
+
+const _hoisted_1$s = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 20 22",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$c(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$s, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      d: "M1 8L10 1L19 8V19C19 19.5304 18.7893 20.0391 18.4142 20.4142C18.0391 20.7893 17.5304 21 17 21H3C2.46957 21 1.96086 20.7893 1.58579 20.4142C1.21071 20.0391 1 19.5304 1 19V8Z",
+      "stroke-width": "2",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round"
+    }, null, -1),
+    createBaseVNode("path", {
+      d: "M7 21V11H13V21",
+      "stroke-width": "2",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round"
+    }, null, -1)
+  ]))]))
+}
+const IconHome = /*#__PURE__*/_export_sfc(_sfc_main$u, [['render',_sfc_render$c]]);
+
+const _sfc_main$t = {};
+
+const _hoisted_1$r = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$b(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$r, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "2",
+      d: "M6 18L18 6M6 6l12 12"
+    }, null, -1)
+  ]))]))
+}
+const IconClose = /*#__PURE__*/_export_sfc(_sfc_main$t, [['render',_sfc_render$b]]);
+
+const _sfc_main$s = {};
+
+const _hoisted_1$q = {
+  width: "24",
+  height: "19",
+  viewBox: "0 0 24 19",
+  fill: "none",
+  stroke: "currentColor",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$a(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$q, [...(_cache[0] || (_cache[0] = [
+    createStaticVNode("<line x1=\"5\" y1=\"1.08447\" x2=\"1\" y2=\"1.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"1.04248\" x2=\"11\" y2=\"1.04248\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"9.08447\" x2=\"14\" y2=\"9.08447\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"8\" y1=\"9.14905\" x2=\"4\" y2=\"9.14905\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"23\" y1=\"17.149\" x2=\"10.9993\" y2=\"17.149\" stroke-width=\"2\" stroke-linecap=\"round\"></line><line x1=\"5\" y1=\"17.2429\" x2=\"1\" y2=\"17.2429\" stroke-width=\"2\" stroke-linecap=\"round\"></line>", 6)
+  ]))]))
+}
+const IconSummary = /*#__PURE__*/_export_sfc(_sfc_main$s, [['render',_sfc_render$a]]);
+
 const publicEventKey = Symbol('paginarPublicEvent');
 
-const _hoisted_1$o = ["role"];
-const _hoisted_2$c = { class: "summary-menu-dropdown-item-title" };
-const _hoisted_3$4 = {
+const _hoisted_1$p = ["role"];
+const _hoisted_2$d = { class: "summary-menu-dropdown-item-title" };
+const _hoisted_3$6 = {
   key: 0,
   class: "summary-menu-dropdown-item-author"
 };
 
-const _sfc_main$q = {
+const _sfc_main$r = {
   __name: 'SummaryDropdown',
   setup(__props) {
 
@@ -10858,9 +11252,9 @@ return (_ctx, _cache) => {
           onClick: $event => (item.file ? getChapter(item) : null)
         }, {
           default: withCtx(() => [
-            createBaseVNode("span", _hoisted_2$c, toDisplayString(item.title), 1),
+            createBaseVNode("span", _hoisted_2$d, toDisplayString(item.title), 1),
             (item.author)
-              ? (openBlock(), createElementBlock("span", _hoisted_3$4, toDisplayString(item.author), 1))
+              ? (openBlock(), createElementBlock("span", _hoisted_3$6, toDisplayString(item.author), 1))
               : createCommentVNode("", true)
           ]),
           _: 2
@@ -10868,19 +11262,19 @@ return (_ctx, _cache) => {
       }), 128)),
       renderSlot(_ctx.$slots, "summaryBottom")
     ])
-  ], 8, _hoisted_1$o))
+  ], 8, _hoisted_1$p))
 }
 }
 
 };
 
-const _hoisted_1$n = { class: "flex" };
-const _hoisted_2$b = ["href"];
-const _hoisted_3$3 = { class: "position-relative" };
-const _hoisted_4$2 = ["aria-expanded"];
+const _hoisted_1$o = { class: "flex" };
+const _hoisted_2$c = ["href"];
+const _hoisted_3$5 = { class: "position-relative" };
+const _hoisted_4$3 = ["aria-expanded"];
 
 
-const _sfc_main$p = {
+const _sfc_main$q = {
   __name: 'SummaryButton',
   setup(__props) {
 
@@ -10913,7 +11307,7 @@ return (_ctx, _cache) => {
     ref: button,
     class: "relative"
   }, [
-    createBaseVNode("div", _hoisted_1$n, [
+    createBaseVNode("div", _hoisted_1$o, [
       (unref(homeUrl))
         ? (openBlock(), createElementBlock("a", {
             key: 0,
@@ -10923,9 +11317,9 @@ return (_ctx, _cache) => {
             class: "hidden md:flex items-center border p-3 shadow mr-3 border-white text-white"
           }, [
             createVNode(IconHome, { class: "w-6 h-6" })
-          ], 8, _hoisted_2$b))
+          ], 8, _hoisted_2$c))
         : createCommentVNode("", true),
-      createBaseVNode("div", _hoisted_3$3, [
+      createBaseVNode("div", _hoisted_3$5, [
         createBaseVNode("button", {
           onClick: _cache[0] || (_cache[0] = withModifiers($event => (toggleSummary()), ["prevent"])),
           class: "border p-3 shadow flex items-center border-white text-white",
@@ -10940,7 +11334,7 @@ return (_ctx, _cache) => {
                 class: "w-6 h-6"
               })),
           _cache[1] || (_cache[1] = createBaseVNode("span", { class: "block ml-3" }, " Sumário ", -1))
-        ], 8, _hoisted_4$2),
+        ], 8, _hoisted_4$3),
         createVNode(Transition, {
           "enter-active-class": "transition ease-out duration-100 transform",
           "enter-class": "opacity-0 scale-95",
@@ -10951,7 +11345,7 @@ return (_ctx, _cache) => {
         }, {
           default: withCtx(() => [
             (show.value)
-              ? (openBlock(), createBlock(_sfc_main$q, { key: 0 }, {
+              ? (openBlock(), createBlock(_sfc_main$r, { key: 0 }, {
                   summaryTop: withCtx(() => [
                     renderSlot(_ctx.$slots, "summaryTop")
                   ]),
@@ -10972,6 +11366,27 @@ return (_ctx, _cache) => {
 
 };
 
+const _sfc_main$p = {};
+
+const _hoisted_1$n = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$9(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$n, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "2",
+      d: "M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+    }, null, -1)
+  ]))]))
+}
+const IconThreeDots = /*#__PURE__*/_export_sfc(_sfc_main$p, [['render',_sfc_render$9]]);
+
 const _sfc_main$o = {};
 
 const _hoisted_1$m = {
@@ -10981,17 +11396,17 @@ const _hoisted_1$m = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$9(_ctx, _cache) {
+function _sfc_render$8(_ctx, _cache) {
   return (openBlock(), createElementBlock("svg", _hoisted_1$m, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
       "stroke-width": "2",
-      d: "M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+      d: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
     }, null, -1)
   ]))]))
 }
-const IconThreeDots = /*#__PURE__*/_export_sfc(_sfc_main$o, [['render',_sfc_render$9]]);
+const IconExpand = /*#__PURE__*/_export_sfc(_sfc_main$o, [['render',_sfc_render$8]]);
 
 const _sfc_main$n = {};
 
@@ -11002,29 +11417,8 @@ const _hoisted_1$l = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$8(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$l, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "2",
-      d: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-    }, null, -1)
-  ]))]))
-}
-const IconExpand = /*#__PURE__*/_export_sfc(_sfc_main$n, [['render',_sfc_render$8]]);
-
-const _sfc_main$m = {};
-
-const _hoisted_1$k = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
 function _sfc_render$7(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$k, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$l, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -11039,11 +11433,11 @@ function _sfc_render$7(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconEye = /*#__PURE__*/_export_sfc(_sfc_main$m, [['render',_sfc_render$7]]);
+const IconEye = /*#__PURE__*/_export_sfc(_sfc_main$n, [['render',_sfc_render$7]]);
 
-const _sfc_main$l = {};
+const _sfc_main$m = {};
 
-const _hoisted_1$j = {
+const _hoisted_1$k = {
   fill: "none",
   stroke: "currentColor",
   viewBox: "0 0 24 24",
@@ -11051,7 +11445,7 @@ const _hoisted_1$j = {
 };
 
 function _sfc_render$6(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$j, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$k, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -11060,43 +11454,43 @@ function _sfc_render$6(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconFootnote = /*#__PURE__*/_export_sfc(_sfc_main$l, [['render',_sfc_render$6]]);
+const IconFootnote = /*#__PURE__*/_export_sfc(_sfc_main$m, [['render',_sfc_render$6]]);
 
-const _sfc_main$k = {};
+const _sfc_main$l = {};
 
-const _hoisted_1$i = {
+const _hoisted_1$j = {
   viewBox: "0 0 341.5 441.2",
   fill: "currentColor"
 };
 
 function _sfc_render$5(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$i, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$j, [...(_cache[0] || (_cache[0] = [
     createStaticVNode("<rect data-v-acadaaca=\"\" x=\"73.2\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"73.2\" y=\"319\" width=\"195.2\" height=\"20\"></rect><rect data-v-acadaaca=\"\" x=\"0\" y=\"-0.6\" width=\"332.3\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"0\" y=\"426.2\" width=\"332.3\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"-209.4\" y=\"216.2\" transform=\"matrix(6.123234e-17 -1 1 6.123234e-17 -216.2339 231.2339)\" width=\"433.7\" height=\"15\"></rect><rect data-v-acadaaca=\"\" x=\"108\" y=\"211.9\" transform=\"matrix(6.123234e-17 -1 1 6.123234e-17 105.4808 544.1859)\" width=\"433.7\" height=\"15\"></rect>", 9)
   ]))]))
 }
-const SingleColumn = /*#__PURE__*/_export_sfc(_sfc_main$k, [['render',_sfc_render$5]]);
+const SingleColumn = /*#__PURE__*/_export_sfc(_sfc_main$l, [['render',_sfc_render$5]]);
 
-const _sfc_main$j = {};
+const _sfc_main$k = {};
 
-const _hoisted_1$h = {
+const _hoisted_1$i = {
   viewBox: "0 0 653 441.2",
   fill: "currentColor"
 };
 
 function _sfc_render$4(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$h, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$i, [...(_cache[0] || (_cache[0] = [
     createStaticVNode("<rect x=\"73.2\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"73.2\" y=\"319\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"143.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"82.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"203.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"263.7\" width=\"195.2\" height=\"20\"></rect><rect x=\"384.7\" y=\"319\" width=\"195.2\" height=\"20\"></rect><path d=\"M0-0.6v7.5v7.5v411.8v14.4v0.6h653v-5v-10V14.4V2.5v-3.1H0z M638,426.2H15V14.4h623V426.2z\"></path>", 11)
   ]))]))
 }
-const DoubleColumn = /*#__PURE__*/_export_sfc(_sfc_main$j, [['render',_sfc_render$4]]);
+const DoubleColumn = /*#__PURE__*/_export_sfc(_sfc_main$k, [['render',_sfc_render$4]]);
 
-const _hoisted_1$g = {
+const _hoisted_1$h = {
   id: "columns-menu",
   class: "w-full hidden md:grid grid-cols-3 gap-2 mt-3"
 };
-const _hoisted_2$a = ["title"];
+const _hoisted_2$b = ["title"];
 
-const _sfc_main$i = {
+const _sfc_main$j = {
   __name: 'OptionsColumns',
   setup(__props) {
 
@@ -11110,7 +11504,7 @@ const isSafari = computed(() => {
 
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$g, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$h, [
     createBaseVNode("button", {
       id: "single-column-button",
       class: normalizeClass(["col-span-1 text-primary text-center cursor-pointer py-3 rounded-sm border", {
@@ -11123,7 +11517,7 @@ return (_ctx, _cache) => {
       title: isSafari.value ? 'O navegador Safari não aceita visualização de coluna única.' : 'Coluna única'
     }, [
       createVNode(SingleColumn, { class: "mx-auto h-10 opacity-75" })
-    ], 10, _hoisted_2$a),
+    ], 10, _hoisted_2$b),
     createBaseVNode("button", {
       id: "double-column-button",
       class: normalizeClass(["col-span-2 text-primary text-center cursor-pointer py-3 rounded-sm border", {
@@ -11146,13 +11540,13 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$f = {
+const _hoisted_1$g = {
   id: "font-family-menu",
   class: "w-full grid grid-cols-4 gap-2 my-3"
 };
-const _hoisted_2$9 = ["onClick", "title"];
+const _hoisted_2$a = ["onClick", "title"];
 
-const _sfc_main$h = {
+const _sfc_main$i = {
   __name: 'OptionsFontFamily',
   setup(__props) {
 
@@ -11160,7 +11554,7 @@ const { textFont, fontsOptions, setTextFont } = useReaderSettings;
 
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$f, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$g, [
     (openBlock(true), createElementBlock(Fragment, null, renderList(unref(fontsOptions), (font) => {
       return (openBlock(), createElementBlock("button", {
         key: font.name,
@@ -11170,7 +11564,7 @@ return (_ctx, _cache) => {
 			}]),
         style: normalizeStyle(`font-family: ${font.name}`),
         title: font.label ?? font.name
-      }, " Ff ", 14, _hoisted_2$9))
+      }, " Ff ", 14, _hoisted_2$a))
     }), 128))
   ]))
 }
@@ -11178,7 +11572,7 @@ return (_ctx, _cache) => {
 
 };
 
-const _sfc_main$g = {
+const _sfc_main$h = {
   __name: 'OptionsFontSize',
   setup(__props) {
 
@@ -11203,6 +11597,27 @@ return (_ctx, _cache) => {
 
 };
 
+const _sfc_main$g = {};
+
+const _hoisted_1$f = {
+  fill: "none",
+  stroke: "currentColor",
+  viewBox: "0 0 24 24",
+  xmlns: "http://www.w3.org/2000/svg"
+};
+
+function _sfc_render$3(_ctx, _cache) {
+  return (openBlock(), createElementBlock("svg", _hoisted_1$f, [...(_cache[0] || (_cache[0] = [
+    createBaseVNode("path", {
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      "stroke-width": "2",
+      d: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+    }, null, -1)
+  ]))]))
+}
+const IconSun = /*#__PURE__*/_export_sfc(_sfc_main$g, [['render',_sfc_render$3]]);
+
 const _sfc_main$f = {};
 
 const _hoisted_1$e = {
@@ -11212,29 +11627,8 @@ const _hoisted_1$e = {
   xmlns: "http://www.w3.org/2000/svg"
 };
 
-function _sfc_render$3(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$e, [...(_cache[0] || (_cache[0] = [
-    createBaseVNode("path", {
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "stroke-width": "2",
-      d: "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-    }, null, -1)
-  ]))]))
-}
-const IconSun = /*#__PURE__*/_export_sfc(_sfc_main$f, [['render',_sfc_render$3]]);
-
-const _sfc_main$e = {};
-
-const _hoisted_1$d = {
-  fill: "none",
-  stroke: "currentColor",
-  viewBox: "0 0 24 24",
-  xmlns: "http://www.w3.org/2000/svg"
-};
-
 function _sfc_render$2(_ctx, _cache) {
-  return (openBlock(), createElementBlock("svg", _hoisted_1$d, [...(_cache[0] || (_cache[0] = [
+  return (openBlock(), createElementBlock("svg", _hoisted_1$e, [...(_cache[0] || (_cache[0] = [
     createBaseVNode("path", {
       "stroke-linecap": "round",
       "stroke-linejoin": "round",
@@ -11243,9 +11637,9 @@ function _sfc_render$2(_ctx, _cache) {
     }, null, -1)
   ]))]))
 }
-const IconMoon = /*#__PURE__*/_export_sfc(_sfc_main$e, [['render',_sfc_render$2]]);
+const IconMoon = /*#__PURE__*/_export_sfc(_sfc_main$f, [['render',_sfc_render$2]]);
 
-const _sfc_main$d = {
+const _sfc_main$e = {
   __name: 'OptionsColor',
   setup(__props) {
 
@@ -11280,18 +11674,18 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$c = { class: "w-full border-t border-areia mt-5 pt-5" };
-const _hoisted_2$8 = ["aria-checked"];
+const _hoisted_1$d = { class: "w-full border-t border-areia mt-5 pt-5" };
+const _hoisted_2$9 = ["aria-checked"];
 
 
-const _sfc_main$c = {
+const _sfc_main$d = {
   __name: 'OptionsReadingProgress',
   setup(__props) {
 
 const { enabled, setEnabled } = useReadingProgress;
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$c, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$d, [
     createBaseVNode("button", {
       id: "reading-progress-button",
       class: "w-full flex items-center justify-between py-2 px-1 text-left",
@@ -11312,37 +11706,37 @@ return (_ctx, _cache) => {
           class: normalizeClass(["inline-block h-5 w-5 rounded-full bg-white shadow transition-transform", unref(enabled) ? 'translate-x-5' : 'translate-x-0'])
         }, null, 2)
       ], 2)
-    ], 8, _hoisted_2$8)
+    ], 8, _hoisted_2$9)
   ]))
 }
 }
 
 };
 
-const _hoisted_1$b = {
+const _hoisted_1$c = {
   class: "absolute top-14 py-4 px-3 shadow-lg w-60 md:w-104 text-areia -right-2 md:right-16 z-10 bg-white",
   role: "Opções",
   "aria-orientation": "vertical",
   "aria-labelledby": "options-menu"
 };
-const _hoisted_2$7 = { id: "footnotes-button" };
-const _hoisted_3$2 = {
+const _hoisted_2$8 = { id: "footnotes-button" };
+const _hoisted_3$4 = {
   class: "w-full flex justify-center items-center py-3 lowercase",
   id: "visualize-title"
 };
-const _hoisted_4$1 = { class: "w-full grid grid-cols-4 gap-2 my-3" };
+const _hoisted_4$2 = { class: "w-full grid grid-cols-4 gap-2 my-3" };
 
 
-const _sfc_main$b = {
+const _sfc_main$c = {
   __name: 'OptionsDropdown',
   setup(__props) {
 
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("div", _hoisted_1$b, [
+  return (openBlock(), createElementBlock("div", _hoisted_1$c, [
     createBaseVNode("div", null, [
       renderSlot(_ctx.$slots, "optionsTop"),
-      createBaseVNode("div", _hoisted_2$7, [
+      createBaseVNode("div", _hoisted_2$8, [
         createBaseVNode("button", {
           onClick: _cache[0] || (_cache[0] = withModifiers($event => (unref(useFootnotes).setShowFootnotes(true)), ["prevent"])),
           class: "w-full flex justify-center items-center py-3 lowercase"
@@ -11352,18 +11746,18 @@ return (_ctx, _cache) => {
         ]),
         _cache[2] || (_cache[2] = createBaseVNode("div", { class: "w-full border-b border-areia my-3" }, null, -1))
       ]),
-      createBaseVNode("div", _hoisted_3$2, [
+      createBaseVNode("div", _hoisted_3$4, [
         createVNode(IconEye, { class: "w-6 h-6" }),
         _cache[3] || (_cache[3] = createBaseVNode("span", { class: "ml-4" }, "Visualização", -1))
       ]),
+      createVNode(_sfc_main$j),
       createVNode(_sfc_main$i),
-      createVNode(_sfc_main$h),
-      createBaseVNode("div", _hoisted_4$1, [
-        createVNode(_sfc_main$g),
-        createVNode(_sfc_main$d)
+      createBaseVNode("div", _hoisted_4$2, [
+        createVNode(_sfc_main$h),
+        createVNode(_sfc_main$e)
       ]),
       (unref(useReadingProgress).available.value)
-        ? (openBlock(), createBlock(_sfc_main$c, { key: 0 }))
+        ? (openBlock(), createBlock(_sfc_main$d, { key: 0 }))
         : createCommentVNode("", true),
       _cache[4] || (_cache[4] = createBaseVNode("div", { class: "hidden w-full border-b border-areia my-8" }, null, -1)),
       renderSlot(_ctx.$slots, "optionsBottom")
@@ -11374,11 +11768,11 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$a = { class: "flex" };
-const _hoisted_2$6 = ["aria-expanded"];
+const _hoisted_1$b = { class: "flex" };
+const _hoisted_2$7 = ["aria-expanded"];
 
 
-const _sfc_main$a = {
+const _sfc_main$b = {
   __name: 'OptionsButton',
   setup(__props) {
 
@@ -11409,11 +11803,12 @@ return (_ctx, _cache) => {
     ref: button,
     class: "relative"
   }, [
-    createBaseVNode("div", _hoisted_1$a, [
+    createBaseVNode("div", _hoisted_1$b, [
       createBaseVNode("button", {
         onClick: _cache[0] || (_cache[0] = withModifiers($event => (toggleSummary()), ["prevent"])),
         class: "border p-3 shadow flex items-center border-white text-white",
         id: "options-button",
+        "aria-label": "Opções",
         "aria-haspopup": "true",
         "aria-expanded": show.value
       }, [
@@ -11427,7 +11822,7 @@ return (_ctx, _cache) => {
               key: 1,
               class: "w-6 h-6"
             }))
-      ], 8, _hoisted_2$6),
+      ], 8, _hoisted_2$7),
       createBaseVNode("button", {
         onClick: _cache[1] || (_cache[1] = withModifiers($event => (unref(toggleFullScreen)()), ["prevent"])),
         class: "hidden md:flex items-center border p-3 shadow ml-3 border-white text-white"
@@ -11444,7 +11839,7 @@ return (_ctx, _cache) => {
       "leave-to-class": "opacity-0 scale-95"
     }, {
       default: withCtx(() => [
-        withDirectives(createVNode(_sfc_main$b, null, {
+        withDirectives(createVNode(_sfc_main$c, null, {
           optionsTop: withCtx(() => [
             renderSlot(_ctx.$slots, "optionsTop")
           ]),
@@ -11464,20 +11859,194 @@ return (_ctx, _cache) => {
 
 };
 
-const _hoisted_1$9 = {
-  id: "component-header",
-  class: "bg-primary flex justify-between items-center p-4"
+const _hoisted_1$a = {
+  key: 0,
+  id: "search-menu"
 };
-const _hoisted_2$5 = { id: "header-titles" };
+const _hoisted_2$6 = ["aria-expanded"];
+const _hoisted_3$3 = { class: "search-input-row" };
+const _hoisted_4$1 = { class: "search-input-control" };
+const _hoisted_5$1 = { class: "search-results-row" };
+const _hoisted_6$1 = {
+  id: "search-status",
+  role: "status",
+  "aria-live": "polite"
+};
+const _hoisted_7$1 = ["disabled"];
+const _hoisted_8 = ["disabled"];
+
+
+const _sfc_main$a = {
+  __name: 'SearchButton',
+  setup(__props) {
+
+const search = inject(searchKey);
+const { enabled, open, query, input, button, total, status, pending } = search;
+
+function clearQuery() {
+	query.value = '';
+	input.value?.focus({ preventScroll: true });
+}
+
+return (_ctx, _cache) => {
+  return (unref(enabled))
+    ? (openBlock(), createElementBlock("div", _hoisted_1$a, [
+        createBaseVNode("button", {
+          ref_key: "button",
+          ref: button,
+          id: "search-button",
+          type: "button",
+          class: "search-icon-button border p-3 shadow flex items-center border-white text-white",
+          "aria-label": "Buscar no texto",
+          title: "Buscar no texto (Ctrl+F)",
+          "aria-controls": "search-dropdown",
+          "aria-expanded": unref(open),
+          onClick: _cache[0] || (_cache[0] = $event => (unref(open) ? unref(search).close() : unref(search).show()))
+        }, [...(_cache[10] || (_cache[10] = [
+          createBaseVNode("svg", {
+            class: "w-6 h-6",
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            "stroke-width": "2",
+            "aria-hidden": "true"
+          }, [
+            createBaseVNode("circle", {
+              cx: "10.5",
+              cy: "10.5",
+              r: "6.5"
+            }),
+            createBaseVNode("path", { d: "m16 16 5 5" })
+          ], -1)
+        ]))], 8, _hoisted_2$6),
+        withDirectives(createBaseVNode("form", {
+          id: "search-dropdown",
+          role: "search",
+          "aria-label": "Buscar no texto",
+          onSubmit: _cache[6] || (_cache[6] = withModifiers($event => (unref(search).step(1)), ["prevent"])),
+          onWheel: _cache[7] || (_cache[7] = withModifiers(() => {}, ["stop"])),
+          onKeydown: [
+            _cache[8] || (_cache[8] = withModifiers(() => {}, ["stop"])),
+            _cache[9] || (_cache[9] = withKeys(withModifiers($event => (unref(search).close()), ["prevent"]), ["esc"]))
+          ]
+        }, [
+          createBaseVNode("div", _hoisted_3$3, [
+            createBaseVNode("div", _hoisted_4$1, [
+              withDirectives(createBaseVNode("input", {
+                id: "search-input",
+                ref_key: "input",
+                ref: input,
+                "onUpdate:modelValue": _cache[1] || (_cache[1] = $event => (isRef(query) ? (query).value = $event : null)),
+                type: "search",
+                placeholder: "Palavra ou expressão",
+                autocomplete: "off",
+                spellcheck: "false",
+                "aria-label": "Buscar no texto",
+                "aria-describedby": "search-status",
+                onKeydown: _cache[2] || (_cache[2] = withKeys(withModifiers($event => (!$event.isComposing && unref(search).step($event.shiftKey ? -1 : 1)), ["prevent"]), ["enter"]))
+              }, null, 544), [
+                [vModelText, unref(query)]
+              ]),
+              (unref(query))
+                ? (openBlock(), createElementBlock("button", {
+                    key: 0,
+                    id: "search-clear-button",
+                    class: "search-icon-button",
+                    type: "button",
+                    "aria-label": "Limpar busca",
+                    title: "Limpar busca",
+                    onClick: clearQuery
+                  }, [
+                    createVNode(IconClose, {
+                      class: "w-4 h-4",
+                      "aria-hidden": "true"
+                    })
+                  ]))
+                : createCommentVNode("", true)
+            ]),
+            createBaseVNode("button", {
+              class: "search-icon-button",
+              type: "button",
+              "aria-label": "Fechar busca",
+              title: "Fechar (Esc)",
+              onClick: _cache[3] || (_cache[3] = $event => (unref(search).close()))
+            }, [
+              createVNode(IconClose, {
+                class: "w-6 h-6",
+                "aria-hidden": "true"
+              })
+            ])
+          ]),
+          createBaseVNode("div", _hoisted_5$1, [
+            createBaseVNode("span", _hoisted_6$1, toDisplayString(unref(status)), 1),
+            createBaseVNode("button", {
+              class: "search-icon-button",
+              type: "button",
+              "aria-label": "Ocorrência anterior",
+              title: "Anterior (Shift+Enter)",
+              disabled: !unref(total) || unref(pending),
+              onClick: _cache[4] || (_cache[4] = $event => (unref(search).step(-1)))
+            }, [...(_cache[11] || (_cache[11] = [
+              createBaseVNode("svg", {
+                class: "w-5 h-5",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                "stroke-width": "2",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "aria-hidden": "true"
+              }, [
+                createBaseVNode("path", { d: "m6 14 6-6 6 6" })
+              ], -1)
+            ]))], 8, _hoisted_7$1),
+            createBaseVNode("button", {
+              class: "search-icon-button",
+              type: "button",
+              "aria-label": "Próxima ocorrência",
+              title: "Próxima (Enter)",
+              disabled: !unref(total) || unref(pending),
+              onClick: _cache[5] || (_cache[5] = $event => (unref(search).step(1)))
+            }, [...(_cache[12] || (_cache[12] = [
+              createBaseVNode("svg", {
+                class: "w-5 h-5",
+                viewBox: "0 0 24 24",
+                fill: "none",
+                stroke: "currentColor",
+                "stroke-width": "2",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "aria-hidden": "true"
+              }, [
+                createBaseVNode("path", { d: "m6 10 6 6 6-6" })
+              ], -1)
+            ]))], 8, _hoisted_8)
+          ])
+        ], 544), [
+          [vShow, unref(open)]
+        ])
+      ]))
+    : createCommentVNode("", true)
+}
+}
+
+};
+
+const _hoisted_1$9 = { id: "header-titles" };
+const _hoisted_2$5 = { class: "header-actions" };
 
 const _sfc_main$9 = {
   __name: 'HeaderSlot',
   setup(__props) {
 
+const search = inject(searchKey);
 
 return (_ctx, _cache) => {
-  return (openBlock(), createElementBlock("header", _hoisted_1$9, [
-    createVNode(_sfc_main$p, null, {
+  return (openBlock(), createElementBlock("header", {
+    id: "component-header",
+    class: normalizeClass(["bg-primary flex justify-between items-center p-4", { 'search-enabled': unref(search).enabled.value }])
+  }, [
+    createVNode(_sfc_main$q, null, {
       summaryTop: withCtx(() => [
         renderSlot(_ctx.$slots, "summaryTop")
       ]),
@@ -11486,19 +12055,22 @@ return (_ctx, _cache) => {
       ]),
       _: 3
     }),
-    createBaseVNode("div", _hoisted_2$5, [
+    createBaseVNode("div", _hoisted_1$9, [
       renderSlot(_ctx.$slots, "header")
     ]),
-    createVNode(_sfc_main$a, null, {
-      optionsTop: withCtx(() => [
-        renderSlot(_ctx.$slots, "optionsTop")
-      ]),
-      optionsBottom: withCtx(() => [
-        renderSlot(_ctx.$slots, "optionsBottom")
-      ]),
-      _: 3
-    })
-  ]))
+    createBaseVNode("div", _hoisted_2$5, [
+      createVNode(_sfc_main$a),
+      createVNode(_sfc_main$b, null, {
+        optionsTop: withCtx(() => [
+          renderSlot(_ctx.$slots, "optionsTop")
+        ]),
+        optionsBottom: withCtx(() => [
+          renderSlot(_ctx.$slots, "optionsBottom")
+        ]),
+        _: 3
+      })
+    ])
+  ], 2))
 }
 }
 
@@ -11632,7 +12204,7 @@ const _hoisted_1$5 = { class: "[ typeArea ] h-full relative transition-opacity d
 const _sfc_main$5 = {
   __name: 'ReaderWrapper',
   setup(__props) {
-const { currentPage } = usePagination;
+const { currentPage, changeSource } = usePagination;
 
 const el = ref(null);
 
@@ -11655,13 +12227,13 @@ return (_ctx, _cache) => {
   return (openBlock(), createElementBlock("div", {
     ref_key: "el",
     ref: el,
-    class: "columnsArea",
+    class: normalizeClass(["columnsArea", { 'search-navigation': unref(changeSource) === 'search' }]),
     style: normalizeStyle(`margin-left: -${100 * (unref(currentPage) - 1)}%`)
   }, [
     createBaseVNode("div", _hoisted_1$5, [
       renderSlot(_ctx.$slots, "default")
     ])
-  ], 4))
+  ], 6))
 }
 }
 
@@ -11673,7 +12245,7 @@ const _hoisted_1$4 = {
   class: "[ reference-popup ] bg-gray-800 text-white fixed z-40 bottom-0 md:bottom-14 right-0 md:right-3 rounded flex justify-between p-4 shadow w-full md:w-2/5"
 };
 const _hoisted_2$2 = ["innerHTML"];
-const _hoisted_3$1 = { class: "mt-3 flex self-end" };
+const _hoisted_3$2 = { class: "mt-3 flex self-end" };
 
 
 const _sfc_main$4 = {
@@ -11709,7 +12281,7 @@ return (_ctx, _cache) => {
               class: "w-4/5",
               innerHTML: unref(reference).ref
             }, null, 8, _hoisted_2$2),
-            createBaseVNode("div", _hoisted_3$1, [
+            createBaseVNode("div", _hoisted_3$2, [
               createBaseVNode("button", {
                 onClick: _cache[0] || (_cache[0] = withModifiers($event => (closeRef()), ["prevent"])),
                 class: "button button-negative"
@@ -11791,7 +12363,7 @@ const _hoisted_1$1 = {
   class: "absolute top-0 right-0 w-96 md:w-[40em] flex-shrink-0 h-screen overflow-auto overflow-x-hidden z-20 shadow-2xl"
 };
 const _hoisted_2$1 = { class: "w-full p-4" };
-const _hoisted_3 = { class: "text-areia py-4 pl-4" };
+const _hoisted_3$1 = { class: "text-areia py-4 pl-4" };
 const _hoisted_4 = { class: "flex items-center mb-6" };
 const _hoisted_5 = { class: "ml-4" };
 const _hoisted_6 = { class: "ml-10" };
@@ -11860,7 +12432,7 @@ return (_ctx, _cache) => {
               createVNode(IconClose, { class: "w-6 h-6 text-white" })
             ]),
             createBaseVNode("div", _hoisted_2$1, [
-              createBaseVNode("header", _hoisted_3, [
+              createBaseVNode("header", _hoisted_3$1, [
                 createBaseVNode("div", _hoisted_4, [
                   createVNode(IconNotes, { class: "w-8 h-8" }),
                   createBaseVNode("span", _hoisted_5, [
@@ -11899,12 +12471,17 @@ return (_ctx, _cache) => {
 };
 const FootnotesAside = /*#__PURE__*/_export_sfc(_sfc_main$1, [['__scopeId',"data-v-5391e486"]]);
 
-const _style_0 = ".border-primary { border-color: var(--theme-primary, #690000);\n}\n.text-primary { color: var(--theme-primary, #690000);\n}\n.bg-primary { background-color: var(--theme-primary, #690000);\n}\n.border-primary-extralight { border-color: var(--theme-primary-extralight, #f3f4f6);\n}\n.text-primary-extralight { color: var(--theme-primary-extralight, #f3f4f6);\n}\n.bg-primary-extralight { background-color: var(--theme-primary-extralight, #f3f4f6);\n}\n.border-secondary { border-color: var(--theme-secondary, #ffa03c);\n}\n.text-secondary { color: var(--theme-secondary, #ffa03c);\n}\n.bg-secondary { background-color: var(--theme-secondary, #ffa03c);\n}\n.rootWrapper {\n\tmax-height: 100%;\n    height: 100%;\n}\nmain#rootComponent {\n\theight: 100%;\n\tmax-height: 100%;\n}\nmain#rootComponent.light {\n\t\tbackground-color: var(--bg-light-mode, #fff7e0)\n}\nmain#rootComponent.dark {\n\t\tbackground-color: var(--bg-dark-mode, #2d2d2d);\n}\nmain#rootComponent.dark #content-area {\n\t\t\tcolor: #fff\n}\nheader.wrapper {\n\twidth: 200px;\n\tmargin: 0 auto;\n}\n#engine {\n\theight: calc(100% - 8.4rem);\n\tposition: relative;\n    right: 0;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n}\n.rootWrapper.safari {\n\tmax-height: initial;\n\theight: initial;\n}\n.rootWrapper.safari #engine {\n\theight: auto !important;\n}\n#reader-component {\n\twidth: calc(100% - 5rem);\n}\n.typeArea {\n\twidth: 100%;\n}\n.engineWrapper {\n\theight: 100%;\n    display: flex;\n    justify-content: space-between;\n\tposition: relative;\n    right: 0;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n}\n.rootWrapper:not(.safari) .columns-double .columnsArea {\n\t-moz-column-count: 2;\n    column-count: 2;\n    grid-column-gap: 0;\n    -moz-column-gap: 0;\n    column-gap: 0;\n    height: 100%;\n    padding: 0;\n    width: 100%;\n}\n@media only screen and (max-width: 1020px) {\n.rootWrapper:not(.safari) .columns-double .columnsArea {\n\t\t-moz-column-count: 1;\n    \tcolumn-count: 1\n}\n}\n.rootWrapper:not(.safari) .columns-single .columnsArea {\n\t-moz-column-count: 1;\n\t     column-count: 1;\n\t-moz-column-gap: 0;\n\t     column-gap: 0;\n\theight: 100%;\n    padding: 0;\n    width: 100%;\n}\n.rootWrapper:not(.safari) .columns-single .columnsArea #content-area {\n\t\tmax-width: 37em;\n\t\tmargin: 0 auto;\n}\n.nav-prev { left: 0px;\n}\n.nav-next { right: 0px;\n}\n.viewer-nav {\n\theight: 100%;\n\tposition: relative;\n\ttop: 0px;\n\tbottom: 0px;\n\tz-index: 10;\n\twidth: 2.5rem;\n\tflex-shrink: 0;\n\tcursor: pointer;\n\talign-self: center;\n\ttransition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n\ttransition-duration: 500ms;\n\ttransition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n}\n.viewer-nav:focus,\n\t.viewer-nav:active {\n\t\tborder: none !important;\n\t\tbox-shadow: none !important;\n\t\toutline-color: transparent !important;\n}\n#content-area *::-moz-selection {\n\tcolor: var(--theme-primary-extralight, #690000);\n\tbackground: var(--theme-secondary, #ffa03c);\n}\n#content-area *::selection {\n\tcolor: var(--theme-primary-extralight, #690000);\n\tbackground: var(--theme-secondary, #ffa03c);\n}\n.viewer-nav-icon { opacity: 0;\n}\n@media (min-width: 768px) {\n.viewer-nav-icon { opacity: 0.8;\n}\n}\n@media only screen and (max-width: 600px) {\n.columnsArea {\n\t\ttransition: margin 100ms\n}\n}\n#asidebar {\n\tbackground: var(--sidebar-backgorund, #690000);\n\tcolor: var(--sidebar-text, #f3f4f6);\n}\n\n/* slider */\n.rootWrapper.safari .slider-target,\n.rootWrapper.safari .slider-target *{\n\tdisplay: none !important;\n}\n.slider-target,.slider-target *{\n    -webkit-touch-callout:none;\n    -webkit-tap-highlight-color:rgba(0,0,0,0);\n    box-sizing:border-box;\n    touch-action:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    user-select:none\n}\n.slider-target{\n    position:relative\n}\n.slider-base,.slider-connects{\n    height:100%;\n    position:relative;\n    width:100%;\n    z-index:1\n}\n.slider-connects{\n    overflow:hidden;\n    z-index:0\n}\n.slider-connect,.slider-origin{\n    height:100%;\n    position:absolute;\n    right:0;\n    top:0;\n    transform-origin:0 0;\n    transform-style:flat;\n    width:100%;\n    will-change:transform;\n    z-index:1\n}\n.slider-txt-dir-rtl.slider-horizontal .slider-origin{\n    left:0;\n    right:auto\n}\n.slider-vertical .slider-origin{\n    top:-100%;\n    width:0\n}\n.slider-horizontal .slider-origin{\n    height:0\n}\n.slider-handle{\n    backface-visibility:hidden;\n    position:absolute\n}\n.slider-touch-area{\n    height:100%;\n    width:100%\n}\n.slider-state-tap .slider-connect,.slider-state-tap .slider-origin{\n    transition:transform .3s\n}\n.slider-state-drag *{\n    cursor:inherit!important\n}\n.slider-tooltip-drag .slider-tooltip,.slider-tooltip-focus .slider-tooltip{\n    display:none!important\n}\n.slider-tooltip-drag .slider-active .slider-tooltip,.slider-tooltip-drag.slider-state-drag .slider-tooltip:not(.slider-tooltip-hidden),.slider-tooltip-focus.slider-focused .slider-tooltip:not(.slider-tooltip-hidden){\n    display:block!important\n}\n.slider-horizontal{\n    height:var(--slider-height,6px)\n}\n.slider-horizontal .slider-handle{\n    height:var(--slider-handle-height,16px);\n    right:calc(var(--slider-handle-width, 16px)/2*-1);\n    top:calc((var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2*-1 + -1px);\n    width:var(--slider-handle-width,16px)\n}\n.slider-vertical{\n    height:var(--slider-vertical-height,300px);\n    width:var(--slider-height,6px)\n}\n.slider-vertical .slider-handle{\n    bottom:calc(var(--slider-handle-width, 16px)/2*-1);\n    height:var(--slider-handle-width,16px);\n    right:calc((var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2*-1 + -1px);\n    width:var(--slider-handle-height,16px)\n}\n.slider-txt-dir-rtl.slider-horizontal .slider-handle{\n    left:calc(var(--slider-handle-width, 16px)/2*-1);\n    right:auto\n}\n.slider-base{\n    background-color:var(--slider-bg,#d1d5db)\n}\n.slider-base,.slider-connects{\n    border-radius:var(--slider-radius,9999px)\n}\n.slider-connect{\n    background:var(--theme-secondary, #690000);\n    cursor:pointer\n}\n.slider-draggable{\n    cursor:ew-resize\n}\n.slider-vertical .slider-draggable{\n    cursor:ns-resize\n}\n.slider-handle{\n    background:var(--slider-handle-bg,#fff);\n    border:var(--slider-handle-border,0);\n    border-radius:var(--slider-handle-radius,9999px);\n    box-shadow:var(--slider-handle-shadow,.5px .5px 2px 1px rgba(0,0,0,.32));\n    cursor:grab;\n    height:var(--slider-handle-height,16px);\n    width:var(--slider-handle-width,16px)\n}\n.slider-handle:focus{\n    box-shadow:0 0 0 var(--slider-handle-ring-width,3px) var(--slider-handle-ring-color,rgba(16,185,129,.188)),var(--slider-handle-shadow,.5px .5px 2px 1px rgba(0,0,0,.32));\n    outline:none\n}\n.slider-active{\n    box-shadow:var(--slider-handle-shadow-active,.5px .5px 2px 1px rgba(0,0,0,.42));\n    cursor:grabbing\n}\n[disabled] .slider-connect{\n    background:var(--slider-connect-bg-disabled,#9ca3af)\n}\n[disabled] .slider-handle,[disabled].slider-handle,[disabled].slider-target{\n    cursor:not-allowed\n}\n[disabled] .slider-tooltip{\n    background:var(--theme-secondary, #690000);\n    border-color:var(--theme-secondary, #690000);\n\topacity: 0.5;\n}\n.slider-tooltip{\n    background:var(--theme-secondary, #690000);\n    border:1px solid var(--theme-secondary, #690000);\n    border-radius:var(--slider-tooltip-radius,5px);\n    color:var(--slider-tooltip-color,#fff);\n    display:block;\n    font-size:var(--slider-tooltip-font-size,.875rem);\n    font-weight:var(--slider-tooltip-font-weight,600);\n    line-height:var(--slider-tooltip-line-height,1.25rem);\n    min-width:var(--slider-tooltip-min-width,20px);\n    padding:var(--slider-tooltip-py,2px) var(--slider-tooltip-px,6px);\n    position:absolute;\n    text-align:center;\n    white-space:nowrap\n}\n.slider-horizontal .slider-tooltip-top{\n    bottom:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    left:50%;\n    transform:translate(-50%)\n}\n.slider-horizontal .slider-tooltip-top:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-top-color:inherit;\n    bottom:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    content:\"\";\n    height:0;\n    left:50%;\n    position:absolute;\n    transform:translate(-50%);\n    width:0\n}\n.slider-horizontal .slider-tooltip-bottom{\n    left:50%;\n    top:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    transform:translate(-50%)\n}\n.slider-horizontal .slider-tooltip-bottom:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-bottom-color:inherit;\n    content:\"\";\n    height:0;\n    left:50%;\n    position:absolute;\n    top:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    transform:translate(-50%);\n    width:0\n}\n.slider-vertical .slider-tooltip-left{\n    right:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    top:50%;\n    transform:translateY(-50%)\n}\n.slider-vertical .slider-tooltip-left:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-left-color:inherit;\n    content:\"\";\n    height:0;\n    position:absolute;\n    right:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    top:50%;\n    transform:translateY(-50%);\n    width:0\n}\n.slider-vertical .slider-tooltip-right{\n    left:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    top:50%;\n    transform:translateY(-50%)\n}\n.slider-vertical .slider-tooltip-right:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-right-color:inherit;\n    content:\"\";\n    height:0;\n    left:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    position:absolute;\n    top:50%;\n    transform:translateY(-50%);\n    width:0\n}\n.slider-horizontal .slider-origin>.slider-tooltip{\n    left:auto;\n    transform:translate(50%)\n}\n.slider-horizontal .slider-origin>.slider-tooltip-top{\n    bottom:calc(var(--slider-tooltip-arrow-size, 5px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) + 1px)\n}\n.slider-horizontal .slider-origin>.slider-tooltip-bottom{\n    top:calc(var(--slider-tooltip-arrow-size, 5px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) + var(--slider-height, 6px) - 1px)\n}\n.slider-vertical .slider-origin>.slider-tooltip{\n    top:auto;\n    transform:translateY(calc((var(--slider-tooltip-line-height, 1.25rem) - var(--slider-tooltip-py, 2px))*-1 + 1px))\n}\n.slider-vertical .slider-origin>.slider-tooltip-left{\n    right:calc(var(--slider-tooltip-arrow-size, 5px) + var(--slider-height, 6px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) - 1px)\n}\n.slider-vertical .slider-origin>.slider-tooltip-right{\n    left:calc(var(--slider-tooltip-arrow-size, 5px) + var(--slider-height, 6px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) - var(--slider-height, 6px) + 1px)\n}\n\n";
+const _style_0 = ".border-primary { border-color: var(--theme-primary, #690000);\n}\n.text-primary { color: var(--theme-primary, #690000);\n}\n.bg-primary { background-color: var(--theme-primary, #690000);\n}\n.border-primary-extralight { border-color: var(--theme-primary-extralight, #f3f4f6);\n}\n.text-primary-extralight { color: var(--theme-primary-extralight, #f3f4f6);\n}\n.bg-primary-extralight { background-color: var(--theme-primary-extralight, #f3f4f6);\n}\n.border-secondary { border-color: var(--theme-secondary, #ffa03c);\n}\n.text-secondary { color: var(--theme-secondary, #ffa03c);\n}\n.bg-secondary { background-color: var(--theme-secondary, #ffa03c);\n}\n.rootWrapper {\n\tmax-height: 100%;\n    height: 100%;\n}\nmain#rootComponent {\n\theight: 100%;\n\tmax-height: 100%;\n}\nmain#rootComponent.light {\n\t\tbackground-color: var(--bg-light-mode, #fff7e0)\n}\nmain#rootComponent.dark {\n\t\tbackground-color: var(--bg-dark-mode, #2d2d2d);\n}\nmain#rootComponent.dark #content-area {\n\t\t\tcolor: #fff\n}\nheader.wrapper {\n\twidth: 200px;\n\tmargin: 0 auto;\n}\n#engine {\n\theight: calc(100% - 8.4rem);\n\tposition: relative;\n    right: 0;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n}\n.rootWrapper.safari {\n\tmax-height: initial;\n\theight: initial;\n}\n.rootWrapper.safari #engine {\n\theight: auto !important;\n}\n#reader-component {\n\twidth: calc(100% - 5rem);\n\tposition: relative;\n}\n.header-actions {\n\tdisplay: flex;\n\talign-items: center;\n\tgap: 0.75rem;\n\tflex-shrink: 0;\n}\n@media (max-width: 600px) {\n.search-enabled #options-button > span { display: none;\n}\n}\n#component-header {\n\tposition: relative;\n\tz-index: 20;\n}\n#search-dropdown {\n\tposition: absolute;\n\ttop: calc(100% + 0.25rem);\n\tright: 1rem;\n\twidth: min(23rem, calc(100% - 2rem));\n\tpadding: 1rem;\n\tbackground: #fff;\n\tcolor: #222;\n\tbox-shadow: 0 4px 12px #0003;\n\tfont-size: 0.875rem;\n\tline-height: 1.5;\n}\n.search-input-row, .search-results-row {\n\tdisplay: flex;\n\talign-items: center;\n\tgap: 0.5rem;\n}\n.search-results-row { margin-top: 0.5rem;\n}\n.search-input-control { position: relative; flex: 1; min-width: 0;\n}\n#search-input {\n\tmin-width: 0;\n\twidth: 100%;\n\tpadding: 0.5rem;\n\tpadding-right: 2.75rem;\n\tborder: 1px solid currentColor;\n\tborder-radius: 0.25rem;\n\tbackground: transparent;\n\tcolor: inherit;\n\tfont: inherit;\n}\n#search-status { flex: 1;\n}\n#search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none;\n}\n#search-clear-button {\n\tposition: absolute;\n\tright: 0.25rem;\n\ttop: 0;\n\tbottom: 0;\n\tmargin: auto;\n\twidth: 2rem;\n\theight: 2rem;\n}\n.search-icon-button {\n\tdisplay: inline-flex;\n\talign-items: center;\n\tjustify-content: center;\n\tflex-shrink: 0;\n\tborder-radius: 0.25rem;\n\tcursor: pointer;\n\ttransition: background-color 120ms ease, transform 80ms ease;\n}\n#search-button {\n\t--search-control-hover: #ffffff26;\n\t--search-control-active: #ffffff40;\n}\n.search-icon-button:not(:disabled):hover,\n.search-icon-button:not(:disabled):focus-visible {\n\tbackground-color: var(--search-control-hover, #0000000d);\n}\n.search-icon-button:not(:disabled):active {\n\tbackground-color: var(--search-control-active, #0000001f);\n\ttransform: scale(0.94);\n}\n#search-dropdown button { padding: 0.375rem;\n}\n#search-dropdown button:disabled { opacity: 0.4; cursor: default;\n}\n#search-dropdown :focus-visible, #search-button:focus-visible {\n\toutline: 2px solid currentColor;\n\toutline-offset: 2px;\n}\n.search-highlights {\n\tposition: absolute;\n\tinset: 0;\n\toverflow: hidden;\n\tpointer-events: none;\n}\n.search-highlight-track { width: 100%; height: 100%;\n}\n.search-highlight {\n\tposition: absolute;\n\tbackground: #ffc40033;\n\tborder-radius: 2px;\n}\n.search-highlight-active {\n\tbackground: #ffc40066;\n\toutline: 1px solid #b87800;\n}\n.columnsArea.search-navigation { transition: margin-left 220ms ease;\n}\n.search-highlight-track.search-navigation { transition: transform 220ms ease;\n}\n@media (prefers-reduced-motion: reduce) {\n.columnsArea.search-navigation, .search-highlight-track.search-navigation { transition: none;\n}\n.search-icon-button { transition: none;\n}\n.search-icon-button:not(:disabled):active { transform: none;\n}\n}\n.typeArea {\n\twidth: 100%;\n}\n.engineWrapper {\n\theight: 100%;\n    display: flex;\n    justify-content: space-between;\n\tposition: relative;\n    right: 0;\n    left: 0;\n    bottom: 0;\n    width: 100%;\n}\n.rootWrapper:not(.safari) .columns-double .columnsArea {\n\t-moz-column-count: 2;\n    column-count: 2;\n    grid-column-gap: 0;\n    -moz-column-gap: 0;\n    column-gap: 0;\n    height: 100%;\n    padding: 0;\n    width: 100%;\n}\n@media only screen and (max-width: 1020px) {\n.rootWrapper:not(.safari) .columns-double .columnsArea {\n\t\t-moz-column-count: 1;\n    \tcolumn-count: 1\n}\n}\n.rootWrapper:not(.safari) .columns-single .columnsArea {\n\t-moz-column-count: 1;\n\t     column-count: 1;\n\t-moz-column-gap: 0;\n\t     column-gap: 0;\n\theight: 100%;\n    padding: 0;\n    width: 100%;\n}\n.rootWrapper:not(.safari) .columns-single .columnsArea #content-area {\n\t\tmax-width: 37em;\n\t\tmargin: 0 auto;\n}\n.nav-prev { left: 0px;\n}\n.nav-next { right: 0px;\n}\n.viewer-nav {\n\theight: 100%;\n\tposition: relative;\n\ttop: 0px;\n\tbottom: 0px;\n\tz-index: 10;\n\twidth: 2.5rem;\n\tflex-shrink: 0;\n\tcursor: pointer;\n\talign-self: center;\n\ttransition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n\ttransition-duration: 500ms;\n\ttransition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n}\n.viewer-nav:focus,\n\t.viewer-nav:active {\n\t\tborder: none !important;\n\t\tbox-shadow: none !important;\n\t\toutline-color: transparent !important;\n}\n#content-area *::-moz-selection {\n\tcolor: var(--theme-primary-extralight, #690000);\n\tbackground: var(--theme-secondary, #ffa03c);\n}\n#content-area *::selection {\n\tcolor: var(--theme-primary-extralight, #690000);\n\tbackground: var(--theme-secondary, #ffa03c);\n}\n.viewer-nav-icon { opacity: 0;\n}\n@media (min-width: 768px) {\n.viewer-nav-icon { opacity: 0.8;\n}\n}\n@media only screen and (max-width: 600px) {\n.columnsArea {\n\t\ttransition: margin 100ms\n}\n}\n#asidebar {\n\tbackground: var(--sidebar-backgorund, #690000);\n\tcolor: var(--sidebar-text, #f3f4f6);\n}\n\n/* slider */\n.rootWrapper.safari .slider-target,\n.rootWrapper.safari .slider-target *{\n\tdisplay: none !important;\n}\n.slider-target,.slider-target *{\n    -webkit-touch-callout:none;\n    -webkit-tap-highlight-color:rgba(0,0,0,0);\n    box-sizing:border-box;\n    touch-action:none;\n    -webkit-user-select:none;\n    -moz-user-select:none;\n    user-select:none\n}\n.slider-target{\n    position:relative\n}\n.slider-base,.slider-connects{\n    height:100%;\n    position:relative;\n    width:100%;\n    z-index:1\n}\n.slider-connects{\n    overflow:hidden;\n    z-index:0\n}\n.slider-connect,.slider-origin{\n    height:100%;\n    position:absolute;\n    right:0;\n    top:0;\n    transform-origin:0 0;\n    transform-style:flat;\n    width:100%;\n    will-change:transform;\n    z-index:1\n}\n.slider-txt-dir-rtl.slider-horizontal .slider-origin{\n    left:0;\n    right:auto\n}\n.slider-vertical .slider-origin{\n    top:-100%;\n    width:0\n}\n.slider-horizontal .slider-origin{\n    height:0\n}\n.slider-handle{\n    backface-visibility:hidden;\n    position:absolute\n}\n.slider-touch-area{\n    height:100%;\n    width:100%\n}\n.slider-state-tap .slider-connect,.slider-state-tap .slider-origin{\n    transition:transform .3s\n}\n.slider-state-drag *{\n    cursor:inherit!important\n}\n.slider-tooltip-drag .slider-tooltip,.slider-tooltip-focus .slider-tooltip{\n    display:none!important\n}\n.slider-tooltip-drag .slider-active .slider-tooltip,.slider-tooltip-drag.slider-state-drag .slider-tooltip:not(.slider-tooltip-hidden),.slider-tooltip-focus.slider-focused .slider-tooltip:not(.slider-tooltip-hidden){\n    display:block!important\n}\n.slider-horizontal{\n    height:var(--slider-height,6px)\n}\n.slider-horizontal .slider-handle{\n    height:var(--slider-handle-height,16px);\n    right:calc(var(--slider-handle-width, 16px)/2*-1);\n    top:calc((var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2*-1 + -1px);\n    width:var(--slider-handle-width,16px)\n}\n.slider-vertical{\n    height:var(--slider-vertical-height,300px);\n    width:var(--slider-height,6px)\n}\n.slider-vertical .slider-handle{\n    bottom:calc(var(--slider-handle-width, 16px)/2*-1);\n    height:var(--slider-handle-width,16px);\n    right:calc((var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2*-1 + -1px);\n    width:var(--slider-handle-height,16px)\n}\n.slider-txt-dir-rtl.slider-horizontal .slider-handle{\n    left:calc(var(--slider-handle-width, 16px)/2*-1);\n    right:auto\n}\n.slider-base{\n    background-color:var(--slider-bg,#d1d5db)\n}\n.slider-base,.slider-connects{\n    border-radius:var(--slider-radius,9999px)\n}\n.slider-connect{\n    background:var(--theme-secondary, #690000);\n    cursor:pointer\n}\n.slider-draggable{\n    cursor:ew-resize\n}\n.slider-vertical .slider-draggable{\n    cursor:ns-resize\n}\n.slider-handle{\n    background:var(--slider-handle-bg,#fff);\n    border:var(--slider-handle-border,0);\n    border-radius:var(--slider-handle-radius,9999px);\n    box-shadow:var(--slider-handle-shadow,.5px .5px 2px 1px rgba(0,0,0,.32));\n    cursor:grab;\n    height:var(--slider-handle-height,16px);\n    width:var(--slider-handle-width,16px)\n}\n.slider-handle:focus{\n    box-shadow:0 0 0 var(--slider-handle-ring-width,3px) var(--slider-handle-ring-color,rgba(16,185,129,.188)),var(--slider-handle-shadow,.5px .5px 2px 1px rgba(0,0,0,.32));\n    outline:none\n}\n.slider-active{\n    box-shadow:var(--slider-handle-shadow-active,.5px .5px 2px 1px rgba(0,0,0,.42));\n    cursor:grabbing\n}\n[disabled] .slider-connect{\n    background:var(--slider-connect-bg-disabled,#9ca3af)\n}\n[disabled] .slider-handle,[disabled].slider-handle,[disabled].slider-target{\n    cursor:not-allowed\n}\n[disabled] .slider-tooltip{\n    background:var(--theme-secondary, #690000);\n    border-color:var(--theme-secondary, #690000);\n\topacity: 0.5;\n}\n.slider-tooltip{\n    background:var(--theme-secondary, #690000);\n    border:1px solid var(--theme-secondary, #690000);\n    border-radius:var(--slider-tooltip-radius,5px);\n    color:var(--slider-tooltip-color,#fff);\n    display:block;\n    font-size:var(--slider-tooltip-font-size,.875rem);\n    font-weight:var(--slider-tooltip-font-weight,600);\n    line-height:var(--slider-tooltip-line-height,1.25rem);\n    min-width:var(--slider-tooltip-min-width,20px);\n    padding:var(--slider-tooltip-py,2px) var(--slider-tooltip-px,6px);\n    position:absolute;\n    text-align:center;\n    white-space:nowrap\n}\n.slider-horizontal .slider-tooltip-top{\n    bottom:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    left:50%;\n    transform:translate(-50%)\n}\n.slider-horizontal .slider-tooltip-top:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-top-color:inherit;\n    bottom:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    content:\"\";\n    height:0;\n    left:50%;\n    position:absolute;\n    transform:translate(-50%);\n    width:0\n}\n.slider-horizontal .slider-tooltip-bottom{\n    left:50%;\n    top:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    transform:translate(-50%)\n}\n.slider-horizontal .slider-tooltip-bottom:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-bottom-color:inherit;\n    content:\"\";\n    height:0;\n    left:50%;\n    position:absolute;\n    top:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    transform:translate(-50%);\n    width:0\n}\n.slider-vertical .slider-tooltip-left{\n    right:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    top:50%;\n    transform:translateY(-50%)\n}\n.slider-vertical .slider-tooltip-left:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-left-color:inherit;\n    content:\"\";\n    height:0;\n    position:absolute;\n    right:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    top:50%;\n    transform:translateY(-50%);\n    width:0\n}\n.slider-vertical .slider-tooltip-right{\n    left:calc(var(--slider-handle-height, 16px) + var(--slider-tooltip-arrow-size, 5px) + var(--slider-tooltip-distance, 3px));\n    top:50%;\n    transform:translateY(-50%)\n}\n.slider-vertical .slider-tooltip-right:before{\n    border:var(--slider-tooltip-arrow-size,5px) solid transparent;\n    border-right-color:inherit;\n    content:\"\";\n    height:0;\n    left:calc(var(--slider-tooltip-arrow-size, 5px)*-2);\n    position:absolute;\n    top:50%;\n    transform:translateY(-50%);\n    width:0\n}\n.slider-horizontal .slider-origin>.slider-tooltip{\n    left:auto;\n    transform:translate(50%)\n}\n.slider-horizontal .slider-origin>.slider-tooltip-top{\n    bottom:calc(var(--slider-tooltip-arrow-size, 5px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) + 1px)\n}\n.slider-horizontal .slider-origin>.slider-tooltip-bottom{\n    top:calc(var(--slider-tooltip-arrow-size, 5px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) + var(--slider-height, 6px) - 1px)\n}\n.slider-vertical .slider-origin>.slider-tooltip{\n    top:auto;\n    transform:translateY(calc((var(--slider-tooltip-line-height, 1.25rem) - var(--slider-tooltip-py, 2px))*-1 + 1px))\n}\n.slider-vertical .slider-origin>.slider-tooltip-left{\n    right:calc(var(--slider-tooltip-arrow-size, 5px) + var(--slider-height, 6px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) - 1px)\n}\n.slider-vertical .slider-origin>.slider-tooltip-right{\n    left:calc(var(--slider-tooltip-arrow-size, 5px) + var(--slider-height, 6px) + (var(--slider-handle-height, 16px) - var(--slider-height, 6px))/2 + var(--slider-tooltip-distance, 3px) - var(--slider-height, 6px) + 1px)\n}\n";
 
 const _style_1 = "/* In your Vue component's <style> section */\n:host {\n  -webkit-user-select: text;\n     -moz-user-select: text;\n          user-select: text;\n}\n::slotted(*) {\n  -webkit-user-select: text;\n     -moz-user-select: text;\n          user-select: text;\n}\n\n/* Ensure paragraphs can be selected across boundaries */\n::slotted(p) {\n  -webkit-user-select: text;\n     -moz-user-select: text;\n          user-select: text;\n  display: block;\n  /* Avoid inline-block which can break selection */\n}";
 
 const _hoisted_1 = { class: "text-white text-center text-sm" };
 const _hoisted_2 = { class: "text-white text-center text-xs" };
+const _hoisted_3 = {
+  key: 0,
+  class: "search-highlights",
+  "aria-hidden": "true"
+};
 
 
 const _sfc_main = {
@@ -11933,6 +12510,8 @@ const { width, height } = useWindowSize();
 const readerComponent = ref(null);
 const contentArea = ref(null);
 const rootComponent = ref(null);
+const search = useSearch(rootComponent, readerComponent, contentArea);
+provide(searchKey, search);
 let paginationRevision = 0;
 let hostElement = null;
 
@@ -11953,6 +12532,7 @@ function getState() {
 			columns: columns.value,
 			mode: mode.value,
 			blocked: useReaderSettings.blocked.value,
+			searchEnabled: search.enabled.value,
 			readingProgressEnabled: useReaderSettings.readingProgressEnabled.value
 		},
 		content: {
@@ -12010,6 +12590,7 @@ function estimatePagesAndSyncProgress() {
 
 		useReadingProgress.resume();
 		useReadingProgress.save(currentPage.value, nextTotal);
+		search.measure();
 	}));
 }
 
@@ -12031,6 +12612,7 @@ onMounted(async () => {
 		hostElement.previousPage = () => usePagination.prev(false, 'api');
 	}
 	useReaderSettings.initSettings(props.readerSettings);
+	search.init(props.readerSettings);
 	useReadingProgress.init(
 		props.readerSettings,
 		props.bookTitle || bookTitle.value
@@ -12183,7 +12765,23 @@ return (_ctx, _cache) => {
                 ], 4)
               ]),
               _: 3
-            })
+            }),
+            (unref(search).open.value)
+              ? (openBlock(), createElementBlock("div", _hoisted_3, [
+                  createBaseVNode("div", {
+                    class: normalizeClass(["search-highlight-track", { 'search-navigation': unref(changeSource) === 'search' }]),
+                    style: normalizeStyle({ transform: `translateX(-${100 * (unref(currentPage) - 1)}%)` })
+                  }, [
+                    (openBlock(true), createElementBlock(Fragment, null, renderList(unref(search).rectangles.value, (rectangle) => {
+                      return (openBlock(), createElementBlock("span", {
+                        key: rectangle.key,
+                        class: normalizeClass(["search-highlight", { 'search-highlight-active': rectangle.active }]),
+                        style: normalizeStyle(rectangle.style)
+                      }, null, 6))
+                    }), 128))
+                  ], 6)
+                ]))
+              : createCommentVNode("", true)
           ], 512)
         ]),
         _: 3
@@ -12202,7 +12800,7 @@ return (_ctx, _cache) => {
 };
 const App = /*#__PURE__*/_export_sfc(_sfc_main, [['styles',[_style_0,_style_1]]]);
 
-const tailwindStyles = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*/\n\n/*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box;\n  /* 1 */\n  border-width: 0;\n  /* 2 */\n  border-style: solid;\n  /* 2 */\n  border-color: #e5e7eb;\n  /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5;\n  /* 1 */\n  -webkit-text-size-adjust: 100%;\n  /* 2 */\n  -moz-tab-size: 4;\n  /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4;\n  /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n  /* 4 */\n  font-feature-settings: normal;\n  /* 5 */\n  font-variation-settings: normal;\n  /* 6 */\n  -webkit-tap-highlight-color: transparent;\n  /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0;\n  /* 1 */\n  line-height: inherit;\n  /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0;\n  /* 1 */\n  color: inherit;\n  /* 2 */\n  border-top-width: 1px;\n  /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  /* 1 */\n  font-feature-settings: normal;\n  /* 2 */\n  font-variation-settings: normal;\n  /* 3 */\n  font-size: 1em;\n  /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0;\n  /* 1 */\n  border-color: inherit;\n  /* 2 */\n  border-collapse: collapse;\n  /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit;\n  /* 1 */\n  font-feature-settings: inherit;\n  /* 1 */\n  font-variation-settings: inherit;\n  /* 1 */\n  font-size: 100%;\n  /* 1 */\n  font-weight: inherit;\n  /* 1 */\n  line-height: inherit;\n  /* 1 */\n  letter-spacing: inherit;\n  /* 1 */\n  color: inherit;\n  /* 1 */\n  margin: 0;\n  /* 2 */\n  padding: 0;\n  /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button;\n  /* 1 */\n  background-color: transparent;\n  /* 2 */\n  background-image: none;\n  /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield;\n  /* 1 */\n  outline-offset: -2px;\n  /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button;\n  /* 1 */\n  font: inherit;\n  /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\n\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block;\n  /* 1 */\n  vertical-align: middle;\n  /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n\n.fixed {\n  position: fixed;\n}\n\n.absolute {\n  position: absolute;\n}\n\n.relative {\n  position: relative;\n}\n\n.-right-2 {\n  right: -0.5rem;\n}\n\n.bottom-0 {\n  bottom: 0px;\n}\n\n.right-0 {\n  right: 0px;\n}\n\n.right-8 {\n  right: 2rem;\n}\n\n.top-0 {\n  top: 0px;\n}\n\n.top-14 {\n  top: 3.5rem;\n}\n\n.top-4 {\n  top: 1rem;\n}\n\n.z-10 {\n  z-index: 10;\n}\n\n.z-20 {\n  z-index: 20;\n}\n\n.z-40 {\n  z-index: 40;\n}\n\n.col-span-1 {\n  grid-column: span 1 / span 1;\n}\n\n.col-span-2 {\n  grid-column: span 2 / span 2;\n}\n\n.mx-auto {\n  margin-left: auto;\n  margin-right: auto;\n}\n\n.my-3 {\n  margin-top: 0.75rem;\n  margin-bottom: 0.75rem;\n}\n\n.my-8 {\n  margin-top: 2rem;\n  margin-bottom: 2rem;\n}\n\n.mb-2 {\n  margin-bottom: 0.5rem;\n}\n\n.mb-6 {\n  margin-bottom: 1.5rem;\n}\n\n.ml-10 {\n  margin-left: 2.5rem;\n}\n\n.ml-3 {\n  margin-left: 0.75rem;\n}\n\n.ml-4 {\n  margin-left: 1rem;\n}\n\n.mr-3 {\n  margin-right: 0.75rem;\n}\n\n.mt-1 {\n  margin-top: 0.25rem;\n}\n\n.mt-3 {\n  margin-top: 0.75rem;\n}\n\n.mt-5 {\n  margin-top: 1.25rem;\n}\n\n.block {\n  display: block;\n}\n\n.inline-block {\n  display: inline-block;\n}\n\n.flex {\n  display: flex;\n}\n\n.inline-flex {\n  display: inline-flex;\n}\n\n.grid {\n  display: grid;\n}\n\n.hidden {\n  display: none;\n}\n\n.h-10 {\n  height: 2.5rem;\n}\n\n.h-5 {\n  height: 1.25rem;\n}\n\n.h-6 {\n  height: 1.5rem;\n}\n\n.h-8 {\n  height: 2rem;\n}\n\n.h-full {\n  height: 100%;\n}\n\n.h-screen {\n  height: 100vh;\n}\n\n.w-11 {\n  width: 2.75rem;\n}\n\n.w-4\\/5 {\n  width: 80%;\n}\n\n.w-5 {\n  width: 1.25rem;\n}\n\n.w-6 {\n  width: 1.5rem;\n}\n\n.w-60 {\n  width: 15rem;\n}\n\n.w-8 {\n  width: 2rem;\n}\n\n.w-96 {\n  width: 24rem;\n}\n\n.w-full {\n  width: 100%;\n}\n\n.flex-shrink-0 {\n  flex-shrink: 0;\n}\n\n.translate-x-0 {\n  --tw-translate-x: 0px;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.translate-x-5 {\n  --tw-translate-x: 1.25rem;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-100 {\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-95 {\n  --tw-scale-x: .95;\n  --tw-scale-y: .95;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.cursor-default {\n  cursor: default;\n}\n\n.cursor-pointer {\n  cursor: pointer;\n}\n\n.grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n.grid-cols-4 {\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n}\n\n.items-center {\n  align-items: center;\n}\n\n.justify-center {\n  justify-content: center;\n}\n\n.justify-between {\n  justify-content: space-between;\n}\n\n.gap-2 {\n  gap: 0.5rem;\n}\n\n.divide-opacity-75 > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 0.75;\n}\n\n.self-end {\n  align-self: flex-end;\n}\n\n.overflow-auto {\n  overflow: auto;\n}\n\n.overflow-hidden {\n  overflow: hidden;\n}\n\n.overflow-x-hidden {\n  overflow-x: hidden;\n}\n\n.rounded {\n  border-radius: 0.25rem;\n}\n\n.rounded-full {\n  border-radius: 9999px;\n}\n\n.rounded-sm {\n  border-radius: 0.125rem;\n}\n\n.border {\n  border-width: 1px;\n}\n\n.border-2 {\n  border-width: 2px;\n}\n\n.border-b {\n  border-bottom-width: 1px;\n}\n\n.border-t {\n  border-top-width: 1px;\n}\n\n.border-gray-300 {\n  --tw-border-opacity: 1;\n  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));\n}\n\n.border-transparent {\n  border-color: transparent;\n}\n\n.border-white {\n  --tw-border-opacity: 1;\n  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));\n}\n\n.border-b-white\\/25 {\n  border-bottom-color: rgb(255 255 255 / 0.25);\n}\n\n.bg-gray-300 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));\n}\n\n.bg-gray-800 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));\n}\n\n.bg-white {\n  --tw-bg-opacity: 1;\n  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));\n}\n\n.p-10 {\n  padding: 2.5rem;\n}\n\n.p-3 {\n  padding: 0.75rem;\n}\n\n.p-4 {\n  padding: 1rem;\n}\n\n.px-1 {\n  padding-left: 0.25rem;\n  padding-right: 0.25rem;\n}\n\n.px-10 {\n  padding-left: 2.5rem;\n  padding-right: 2.5rem;\n}\n\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n\n.py-4 {\n  padding-top: 1rem;\n  padding-bottom: 1rem;\n}\n\n.pl-4 {\n  padding-left: 1rem;\n}\n\n.pt-10 {\n  padding-top: 2.5rem;\n}\n\n.pt-5 {\n  padding-top: 1.25rem;\n}\n\n.text-left {\n  text-align: left;\n}\n\n.text-center {\n  text-align: center;\n}\n\n.text-base {\n  font-size: 1rem;\n  line-height: 1.5rem;\n}\n\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\n\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n\n.font-light {\n  font-weight: 300;\n}\n\n.lowercase {\n  text-transform: lowercase;\n}\n\n.tracking-wide {\n  letter-spacing: 0.025em;\n}\n\n.text-black {\n  --tw-text-opacity: 1;\n  color: rgb(0 0 0 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-500 {\n  --tw-text-opacity: 1;\n  color: rgb(107 114 128 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-700 {\n  --tw-text-opacity: 1;\n  color: rgb(55 65 81 / var(--tw-text-opacity, 1));\n}\n\n.text-white {\n  --tw-text-opacity: 1;\n  color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n}\n\n.opacity-0 {\n  opacity: 0;\n}\n\n.opacity-100 {\n  opacity: 1;\n}\n\n.opacity-30 {\n  opacity: 0.3;\n}\n\n.opacity-50 {\n  opacity: 0.5;\n}\n\n.opacity-75 {\n  opacity: 0.75;\n}\n\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-lg {\n  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-opacity {\n  transition-property: opacity;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-transform {\n  transition-property: transform;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.duration-100 {\n  transition-duration: 100ms;\n}\n\n.duration-200 {\n  transition-duration: 200ms;\n}\n\n.duration-75 {\n  transition-duration: 75ms;\n}\n\n.ease-in {\n  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);\n}\n\n.ease-out {\n  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);\n}\n\n.last\\:border-transparent:last-child {\n  border-color: transparent;\n}\n\n.hover\\:bg-gray-100:hover {\n  --tw-bg-opacity: 1;\n  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));\n}\n\n@media (min-width: 768px) {\n  .md\\:bottom-14 {\n    bottom: 3.5rem;\n  }\n\n  .md\\:right-16 {\n    right: 4rem;\n  }\n\n  .md\\:right-3 {\n    right: 0.75rem;\n  }\n\n  .md\\:flex {\n    display: flex;\n  }\n\n  .md\\:grid {\n    display: grid;\n  }\n\n  .md\\:w-2\\/5 {\n    width: 40%;\n  }\n\n  .md\\:w-\\[40em\\] {\n    width: 40em;\n  }\n\n  .md\\:px-24 {\n    padding-left: 6rem;\n    padding-right: 6rem;\n  }\n}\n\n@media (prefers-color-scheme: dark) {\n  .dark\\:text-white {\n    --tw-text-opacity: 1;\n    color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n  }\n}";
+const tailwindStyles = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*/\n\n/*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box;\n  /* 1 */\n  border-width: 0;\n  /* 2 */\n  border-style: solid;\n  /* 2 */\n  border-color: #e5e7eb;\n  /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5;\n  /* 1 */\n  -webkit-text-size-adjust: 100%;\n  /* 2 */\n  -moz-tab-size: 4;\n  /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4;\n  /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\";\n  /* 4 */\n  font-feature-settings: normal;\n  /* 5 */\n  font-variation-settings: normal;\n  /* 6 */\n  -webkit-tap-highlight-color: transparent;\n  /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0;\n  /* 1 */\n  line-height: inherit;\n  /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0;\n  /* 1 */\n  color: inherit;\n  /* 2 */\n  border-top-width: 1px;\n  /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace;\n  /* 1 */\n  font-feature-settings: normal;\n  /* 2 */\n  font-variation-settings: normal;\n  /* 3 */\n  font-size: 1em;\n  /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0;\n  /* 1 */\n  border-color: inherit;\n  /* 2 */\n  border-collapse: collapse;\n  /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit;\n  /* 1 */\n  font-feature-settings: inherit;\n  /* 1 */\n  font-variation-settings: inherit;\n  /* 1 */\n  font-size: 100%;\n  /* 1 */\n  font-weight: inherit;\n  /* 1 */\n  line-height: inherit;\n  /* 1 */\n  letter-spacing: inherit;\n  /* 1 */\n  color: inherit;\n  /* 1 */\n  margin: 0;\n  /* 2 */\n  padding: 0;\n  /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button;\n  /* 1 */\n  background-color: transparent;\n  /* 2 */\n  background-image: none;\n  /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield;\n  /* 1 */\n  outline-offset: -2px;\n  /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button;\n  /* 1 */\n  font: inherit;\n  /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\n\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1;\n  /* 1 */\n  color: #9ca3af;\n  /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block;\n  /* 1 */\n  vertical-align: middle;\n  /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\n\n.fixed {\n  position: fixed;\n}\n\n.absolute {\n  position: absolute;\n}\n\n.relative {\n  position: relative;\n}\n\n.-right-2 {\n  right: -0.5rem;\n}\n\n.bottom-0 {\n  bottom: 0px;\n}\n\n.right-0 {\n  right: 0px;\n}\n\n.right-8 {\n  right: 2rem;\n}\n\n.top-0 {\n  top: 0px;\n}\n\n.top-14 {\n  top: 3.5rem;\n}\n\n.top-4 {\n  top: 1rem;\n}\n\n.z-10 {\n  z-index: 10;\n}\n\n.z-20 {\n  z-index: 20;\n}\n\n.z-40 {\n  z-index: 40;\n}\n\n.col-span-1 {\n  grid-column: span 1 / span 1;\n}\n\n.col-span-2 {\n  grid-column: span 2 / span 2;\n}\n\n.mx-auto {\n  margin-left: auto;\n  margin-right: auto;\n}\n\n.my-3 {\n  margin-top: 0.75rem;\n  margin-bottom: 0.75rem;\n}\n\n.my-8 {\n  margin-top: 2rem;\n  margin-bottom: 2rem;\n}\n\n.mb-2 {\n  margin-bottom: 0.5rem;\n}\n\n.mb-6 {\n  margin-bottom: 1.5rem;\n}\n\n.ml-10 {\n  margin-left: 2.5rem;\n}\n\n.ml-3 {\n  margin-left: 0.75rem;\n}\n\n.ml-4 {\n  margin-left: 1rem;\n}\n\n.mr-3 {\n  margin-right: 0.75rem;\n}\n\n.mt-1 {\n  margin-top: 0.25rem;\n}\n\n.mt-3 {\n  margin-top: 0.75rem;\n}\n\n.mt-5 {\n  margin-top: 1.25rem;\n}\n\n.block {\n  display: block;\n}\n\n.inline-block {\n  display: inline-block;\n}\n\n.inline {\n  display: inline;\n}\n\n.flex {\n  display: flex;\n}\n\n.inline-flex {\n  display: inline-flex;\n}\n\n.grid {\n  display: grid;\n}\n\n.contents {\n  display: contents;\n}\n\n.hidden {\n  display: none;\n}\n\n.h-10 {\n  height: 2.5rem;\n}\n\n.h-4 {\n  height: 1rem;\n}\n\n.h-5 {\n  height: 1.25rem;\n}\n\n.h-6 {\n  height: 1.5rem;\n}\n\n.h-8 {\n  height: 2rem;\n}\n\n.h-full {\n  height: 100%;\n}\n\n.h-screen {\n  height: 100vh;\n}\n\n.w-11 {\n  width: 2.75rem;\n}\n\n.w-4 {\n  width: 1rem;\n}\n\n.w-4\\/5 {\n  width: 80%;\n}\n\n.w-5 {\n  width: 1.25rem;\n}\n\n.w-6 {\n  width: 1.5rem;\n}\n\n.w-60 {\n  width: 15rem;\n}\n\n.w-8 {\n  width: 2rem;\n}\n\n.w-96 {\n  width: 24rem;\n}\n\n.w-full {\n  width: 100%;\n}\n\n.flex-shrink-0 {\n  flex-shrink: 0;\n}\n\n.translate-x-0 {\n  --tw-translate-x: 0px;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.translate-x-5 {\n  --tw-translate-x: 1.25rem;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-100 {\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.scale-95 {\n  --tw-scale-x: .95;\n  --tw-scale-y: .95;\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\n\n.cursor-default {\n  cursor: default;\n}\n\n.cursor-pointer {\n  cursor: pointer;\n}\n\n.grid-cols-3 {\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n}\n\n.grid-cols-4 {\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n}\n\n.items-center {\n  align-items: center;\n}\n\n.justify-center {\n  justify-content: center;\n}\n\n.justify-between {\n  justify-content: space-between;\n}\n\n.gap-2 {\n  gap: 0.5rem;\n}\n\n.divide-opacity-75 > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 0.75;\n}\n\n.self-end {\n  align-self: flex-end;\n}\n\n.overflow-auto {\n  overflow: auto;\n}\n\n.overflow-hidden {\n  overflow: hidden;\n}\n\n.overflow-x-hidden {\n  overflow-x: hidden;\n}\n\n.rounded {\n  border-radius: 0.25rem;\n}\n\n.rounded-full {\n  border-radius: 9999px;\n}\n\n.rounded-sm {\n  border-radius: 0.125rem;\n}\n\n.border {\n  border-width: 1px;\n}\n\n.border-2 {\n  border-width: 2px;\n}\n\n.border-b {\n  border-bottom-width: 1px;\n}\n\n.border-t {\n  border-top-width: 1px;\n}\n\n.border-gray-300 {\n  --tw-border-opacity: 1;\n  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));\n}\n\n.border-transparent {\n  border-color: transparent;\n}\n\n.border-white {\n  --tw-border-opacity: 1;\n  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));\n}\n\n.border-b-white\\/25 {\n  border-bottom-color: rgb(255 255 255 / 0.25);\n}\n\n.bg-gray-300 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(209 213 219 / var(--tw-bg-opacity, 1));\n}\n\n.bg-gray-800 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(31 41 55 / var(--tw-bg-opacity, 1));\n}\n\n.bg-white {\n  --tw-bg-opacity: 1;\n  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));\n}\n\n.p-10 {\n  padding: 2.5rem;\n}\n\n.p-3 {\n  padding: 0.75rem;\n}\n\n.p-4 {\n  padding: 1rem;\n}\n\n.px-1 {\n  padding-left: 0.25rem;\n  padding-right: 0.25rem;\n}\n\n.px-10 {\n  padding-left: 2.5rem;\n  padding-right: 2.5rem;\n}\n\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\n\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\n\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\n\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\n\n.py-4 {\n  padding-top: 1rem;\n  padding-bottom: 1rem;\n}\n\n.pl-4 {\n  padding-left: 1rem;\n}\n\n.pt-10 {\n  padding-top: 2.5rem;\n}\n\n.pt-5 {\n  padding-top: 1.25rem;\n}\n\n.text-left {\n  text-align: left;\n}\n\n.text-center {\n  text-align: center;\n}\n\n.text-base {\n  font-size: 1rem;\n  line-height: 1.5rem;\n}\n\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\n\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\n\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\n\n.font-light {\n  font-weight: 300;\n}\n\n.lowercase {\n  text-transform: lowercase;\n}\n\n.tracking-wide {\n  letter-spacing: 0.025em;\n}\n\n.text-black {\n  --tw-text-opacity: 1;\n  color: rgb(0 0 0 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-500 {\n  --tw-text-opacity: 1;\n  color: rgb(107 114 128 / var(--tw-text-opacity, 1));\n}\n\n.text-gray-700 {\n  --tw-text-opacity: 1;\n  color: rgb(55 65 81 / var(--tw-text-opacity, 1));\n}\n\n.text-white {\n  --tw-text-opacity: 1;\n  color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n}\n\n.opacity-0 {\n  opacity: 0;\n}\n\n.opacity-100 {\n  opacity: 1;\n}\n\n.opacity-30 {\n  opacity: 0.3;\n}\n\n.opacity-50 {\n  opacity: 0.5;\n}\n\n.opacity-75 {\n  opacity: 0.75;\n}\n\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.shadow-lg {\n  --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\n\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\n\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-colors {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-opacity {\n  transition-property: opacity;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.transition-transform {\n  transition-property: transform;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\n\n.duration-100 {\n  transition-duration: 100ms;\n}\n\n.duration-200 {\n  transition-duration: 200ms;\n}\n\n.duration-75 {\n  transition-duration: 75ms;\n}\n\n.ease-in {\n  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);\n}\n\n.ease-out {\n  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);\n}\n\n.last\\:border-transparent:last-child {\n  border-color: transparent;\n}\n\n.hover\\:bg-gray-100:hover {\n  --tw-bg-opacity: 1;\n  background-color: rgb(243 244 246 / var(--tw-bg-opacity, 1));\n}\n\n@media (min-width: 768px) {\n  .md\\:bottom-14 {\n    bottom: 3.5rem;\n  }\n\n  .md\\:right-16 {\n    right: 4rem;\n  }\n\n  .md\\:right-3 {\n    right: 0.75rem;\n  }\n\n  .md\\:flex {\n    display: flex;\n  }\n\n  .md\\:grid {\n    display: grid;\n  }\n\n  .md\\:w-2\\/5 {\n    width: 40%;\n  }\n\n  .md\\:w-\\[40em\\] {\n    width: 40em;\n  }\n\n  .md\\:px-24 {\n    padding-left: 6rem;\n    padding-right: 6rem;\n  }\n}\n\n@media (prefers-color-scheme: dark) {\n  .dark\\:text-white {\n    --tw-text-opacity: 1;\n    color: rgb(255 255 255 / var(--tw-text-opacity, 1));\n  }\n}";
 
 // https://maximomussini.com/posts/vue-custom-elements
 

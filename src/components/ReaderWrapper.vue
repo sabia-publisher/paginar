@@ -6,7 +6,7 @@ import usePagination from '../composables/usePagination'
 import useReaderSettings from '../composables/useReaderSettings'
 
 const { columns } = useReaderSettings
-const { currentPage } = usePagination
+const { currentPage, changeSource } = usePagination
 
 const el = ref(null)
 
@@ -27,7 +27,8 @@ const { distanceX } = usePointerSwipe(el, {
 </script>
 
 <template>
-	<div  ref="el" class="columnsArea" :style="`margin-left: -${100 * (currentPage - 1)}%`">
+	<div ref="el" class="columnsArea" :class="{ 'search-navigation': changeSource === 'search' }"
+		:style="`margin-left: -${100 * (currentPage - 1)}%`">
 		<div class="[ typeArea ] h-full relative
 			transition-opacity duration-100 opacity-100 px-2 md:px-24
 		">

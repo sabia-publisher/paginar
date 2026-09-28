@@ -46,8 +46,16 @@ Para mudanças de comportamento, selecione os cenários afetados; antes de relea
 - Na demo `/demo/events/`, confirme que ações por botão, teclado, roda, gesto, slider e API atualizam o estado e emitem a origem esperada; confira também eventos de sumário, opções e preferências.
 - Com `readingProgress` configurado, avance, recarregue e confirme retorno com diferença máxima de uma página da posição proporcional. Repita após alterar viewport, fonte e colunas; teste a desativação pelo menu e isole a limpeza à chave `paginar:reading-progress:v1`.
 - Slots de customização e CSS do consumidor continuam funcionando. Teste também o bundle construído antes da publicação.
+- Na [demo de busca](../demo/search/index.html), teste `acao`, `lietura`, `sao paulo` e `jabuticabeira`: contagem, primeira ocorrência distante, Enter/Shift+Enter, Ctrl+F/Cmd+F, clique fora e Esc. Confira o slider, destaque, uma/duas colunas, resize, fonte e tema; a busca não deve alterar o total de páginas. Repita com `search` ausente e confirme ausência da lupa e preservação do Ctrl+F nativo. Para HTML por arquivo, habilite `search: true` na demo de sumário e troque de capítulo com uma consulta aberta.
+- Ao buscar `leitura`, confirme as três ocorrências por coluna: a selecionada tem fundo forte e contorno, e as demais têm fundo suave. Navegue também pelo slider, confira os destaques nos dois temas e confirme que limpar/fechar a busca os remove. O dropdown usa fundo branco, como Opções/Sumário, e botões de navegação com SVG.
+- Na busca, confira hover, pressionado e foco por Tab nos botões de ícone, inclusive no X de limpar. Limpar deve manter o dropdown aberto, remover os destaques e devolver o foco ao campo. Sem resultados, as setas ficam desabilitadas. O contêiner do dropdown não tem borda nem cantos arredondados.
 - Alterações de layout ou detecção de plataforma: verificar Chromium e, quando disponível, Safari/iOS. Registre navegadores/dispositivos efetivamente usados e qualquer cobertura pendente.
 
-Não há suíte automatizada, linter ou verificação de tipos configurados. Um build bem-sucedido comprova compilação, não correção da paginação. Se uma correção justificar teste automatizado, escolha um teste que reproduza a falha e documente o comando introduzido aqui.
+O teste da lógica de busca usa somente o runner nativo do Node, sem dependências
+adicionais: `node --test tests/search.test.mjs`. Ele verifica normalização,
+offsets Unicode, expressões, tolerância a erros e ausência de duplicatas.
+Não substitui a validação no navegador do DOM, atalhos, layout e paginação.
+Não há script npm de testes, linter ou verificação de tipos configurados. Um build
+bem-sucedido comprova compilação, não correção da paginação.
 
 Para documentação, revise caminhos, links relativos, consistência com o código e `git diff --check`. Para mudanças de empacotamento, execute também `npm pack --dry-run --json` e confira a lista de arquivos.

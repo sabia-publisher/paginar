@@ -15,7 +15,7 @@ incluem um snapshot completo em `event.detail.state`.
 
 As origens (`source`) conhecidas são `next-button`, `previous-button`, `slider`,
 `keyboard`, `wheel`, `swipe`, `summary`, `api`, `reading-progress`,
-`repagination` e `go-to-page`.
+`repagination`, `search` e `go-to-page`.
 
 ```js
 const reader = document.querySelector('paginate-content')
@@ -50,7 +50,7 @@ reader.addEventListener('paginar:ready', () => {
 	pagination: { currentPage, totalPages, progress }, // progress entre 0 e 1
 	settings: {
 		baseFont, textFont, fontSize, columns, mode, blocked,
-		readingProgressEnabled
+		readingProgressEnabled, searchEnabled
 	},
 	content: { bookTitle, chapterTitle, chapter }
 }

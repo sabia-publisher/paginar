@@ -18,6 +18,7 @@ import useStyles from './composables/useStyles'
 import useBrowser from './composables/useBrowser'
 import useReadingProgress from './composables/useReadingProgress'
 import { publicEventKey } from './publicApi'
+import useSearch, { searchKey } from './composables/useSearch'
 
 const props = defineProps({
 	bookTitle: String,
@@ -40,6 +41,8 @@ const { width, height } = useWindowSize()
 const readerComponent = ref(null)
 const contentArea = ref(null)
 const rootComponent = ref(null)
+const search = useSearch(rootComponent, readerComponent, contentArea)
+provide(searchKey, search)
 let paginationRevision = 0
 let hostElement = null
 
@@ -60,6 +63,7 @@ function getState() {
 			columns: columns.value,
 			mode: mode.value,
 			blocked: useReaderSettings.blocked.value,
+			searchEnabled: search.enabled.value,
 			readingProgressEnabled: useReaderSettings.readingProgressEnabled.value
 		},
 		content: {
@@ -117,6 +121,7 @@ function estimatePagesAndSyncProgress() {
 
 		useReadingProgress.resume()
 		useReadingProgress.save(currentPage.value, nextTotal)
+		search.measure()
 	}))
 }
 
@@ -138,6 +143,7 @@ onMounted(async () => {
 		hostElement.previousPage = () => usePagination.prev(false, 'api')
 	}
 	useReaderSettings.initSettings(props.readerSettings)
+	search.init(props.readerSettings)
 	useReadingProgress.init(
 		props.readerSettings,
 		props.bookTitle || bookTitle.value
@@ -283,6 +289,14 @@ watchDebounced(content,
 							</BookContent>
 						</section>
 					</ReaderWrapper>
+					<div v-if="search.open.value" class="search-highlights" aria-hidden="true">
+						<div class="search-highlight-track" :class="{ 'search-navigation': changeSource === 'search' }"
+							:style="{ transform: `translateX(-${100 * (currentPage - 1)}%)` }">
+							<span v-for="rectangle in search.rectangles.value" :key="rectangle.key"
+								class="search-highlight" :class="{ 'search-highlight-active': rectangle.active }"
+								:style="rectangle.style" />
+						</div>
+					</div>
 				</div>
 			</EngineWrapper>
 

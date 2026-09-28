@@ -31,7 +31,7 @@ Esse link acima sempre puxa a última versão disponível para o software, e tam
 Para apontar para uma versão estável, e assim evitar possíveis bugs ou desconfigurações vindas das melhorias, pode ser da seguinte maneira:
 
 ```html
-<script type="module" src="https://unpkg.com/paginar@0.3.6/dist/index.es.js"></script>
+<script type="module" src="https://unpkg.com/paginar@0.3.7/dist/index.es.js"></script>
 ```
 
 No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
@@ -98,6 +98,10 @@ const settings = {
     // chapterTitle
     // titulo do capítulo, a ser mostrado no cabeçalho do paginador
     chapterTitle: 'Chapter One - The Period',
+
+	// search
+	// habilita a busca no texto do capítulo atual (desativada por padrão).
+	search: true,
 
 	// readingProgress
 	// disponibiliza no menu a retomada da leitura e salva a posição por percentual.
@@ -173,6 +177,33 @@ explícito e estável.
 Ao alterar fonte, tamanho, colunas ou dimensões da janela, o leitor preserva o
 percentual anterior e seleciona a página mais próxima no novo total. Quando a
 posição fica exatamente entre duas páginas, a página seguinte é escolhida.
+
+### Busca no texto
+
+Defina `search: true` no JSON de `reader-settings`, antes de montar o componente.
+Quando omitida ou `false`, a lupa não aparece e Ctrl+F mantém a busca do navegador.
+A configuração não é persistida nas preferências do leitor.
+
+Com a busca ativa, a lupa à esquerda de **Opções**, Ctrl+F ou Cmd+F abre o campo
+abaixo do cabeçalho. Clicar fora mantém o campo aberto; Esc, o botão de fechar ou
+a lupa o fecha. O atalho preserva a busca nativa quando o foco está em um campo
+editável externo ao leitor.
+
+A busca funciona no conteúdo atual, tanto em `slot="content"` como em HTML
+carregado por arquivo. Não carrega outros capítulos para pesquisá-los. Ignora
+maiúsculas, acentos e cedilha, normaliza espaços e pontuação e encontra trechos
+de palavras. Também aceita uma inserção, remoção, substituição ou inversão de
+letras adjacentes por palavra consultada com cinco ou mais caracteres. Por
+exemplo, `acao` encontra `ação` e `lietura` encontra `leitura`.
+
+Após digitar, o leitor desliza até a primeira ocorrência e mostra a posição e o
+total. Enter/Shift+Enter e as setas do dropdown percorrem os resultados em ordem,
+retornando ao início/fim quando necessário. As ocorrências visíveis recebem um
+destaque suave, com cor mais forte e contorno na ocorrência atual, sem modificar
+o HTML nem a distribuição das páginas. Limpar o campo remove os destaques.
+Alterações no texto ou troca de capítulo atualizam os resultados da consulta.
+
+Veja a [demo de busca](demo/search/index.html).
 
 ## Eventos, estado e navegação por JavaScript
 
