@@ -136,6 +136,12 @@ function sync(page, total, allowRestore = false) {
 		if (!allowRestore)
 			return
 
+		if (/[?&]origin=/.test(window.location.search) || window.location.hash) {
+			state.restored = true
+			save(page, total)
+			return
+		}
+
 		const percentage = readStore().entries[key]
 		if (Number.isFinite(percentage) && percentage >= 0 && percentage <= 1) {
 			if (total <= 1 && percentage > 0)

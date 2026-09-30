@@ -17,6 +17,8 @@ import useReaderSettings from './composables/useReaderSettings'
 import useStyles from './composables/useStyles'
 import useBrowser from './composables/useBrowser'
 import useReadingProgress from './composables/useReadingProgress'
+import useFootnotes from './composables/useFootnotes'
+import useReferences from './composables/useReferences'
 import { publicEventKey } from './publicApi'
 import useSearch, { searchKey } from './composables/useSearch'
 
@@ -41,7 +43,7 @@ const { width, height } = useWindowSize()
 const readerComponent = ref(null)
 const contentArea = ref(null)
 const rootComponent = ref(null)
-const search = useSearch(rootComponent, readerComponent, contentArea)
+const search = useSearch(rootComponent, readerComponent, contentArea, dispatchPublicEvent)
 provide(searchKey, search)
 let paginationRevision = 0
 let hostElement = null
@@ -141,6 +143,21 @@ onMounted(async () => {
 		hostElement.goToPage = page => usePagination.set(page, 'api')
 		hostElement.nextPage = () => usePagination.next(false, 'api')
 		hostElement.previousPage = () => usePagination.prev(false, 'api')
+		hostElement.refresh = () => {
+			try {
+				const content = JSON.parse(hostElement.getAttribute('book-content') || 'null')
+				if (content?.footnotes)
+					useFootnotes.setFootnotes(content.footnotes)
+				if (content?.references)
+					useReferences.setReferences(content.references)
+			} catch (error) {
+				// Keep the existing collections when the attribute cannot be read.
+			}
+			estimatePagesAndSyncProgress()
+		}
+		hostElement.search = search.searchText
+		hostElement.getSearchState = search.getState
+		hostElement.setSearchResults = search.setResults
 	}
 	useReaderSettings.initSettings(props.readerSettings)
 	search.init(props.readerSettings)
@@ -171,6 +188,10 @@ onBeforeUnmount(() => {
 		delete hostElement.goToPage
 		delete hostElement.nextPage
 		delete hostElement.previousPage
+		delete hostElement.refresh
+		delete hostElement.search
+		delete hostElement.getSearchState
+		delete hostElement.setSearchResults
 	}
 	hostElement = null
 })

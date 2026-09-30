@@ -1,7 +1,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import usePagination from './usePagination'
 import useReaderSettings from './useReaderSettings'
-import { findSearchMatches, normalizeSearchText } from '../search'
+import { externalSearchResults, findSearchMatches, normalizeSearchText, searchExcerpt } from '../search'
 
 export const searchKey = Symbol('paginarSearch')
 
@@ -32,7 +32,7 @@ function indexContent(root) {
 		if (separator) text += ' '
 	}
 	visit(root)
-	return { ...normalizeSearchText(text), nodes }
+	return { ...normalizeSearchText(text), original: text, nodes }
 }
 
 function rangeForMatch(index, match) {
@@ -58,14 +58,19 @@ function rangeForMatch(index, match) {
 	return range
 }
 
-export default function useSearch(root, viewport, content) {
+export default function useSearch(root, viewport, content, emit) {
 	const enabled = ref(false)
 	const open = ref(false)
 	const query = ref('')
 	const input = ref(null)
 	const button = ref(null)
 	const active = ref(-1)
-	const total = ref(0)
+	const panel = ref(false)
+	const localResults = shallowRef([])
+	const externalResults = shallowRef([])
+	const results = computed(() => [...localResults.value, ...externalResults.value])
+	const total = computed(() => results.value.length)
+	let requestId = 0
 	const geometry = shallowRef([])
 	const pageWidth = ref(0)
 	const rectangles = computed(() => {
@@ -84,7 +89,34 @@ export default function useSearch(root, viewport, content) {
 	let host = null
 
 	function init(settingsString) {
-		enabled.value = settingsString ? JSON.parse(settingsString).search === true : false
+		const settings = settingsString ? JSON.parse(settingsString) : {}
+		enabled.value = settings.search === true
+		panel.value = settings.searchResults === 'panel'
+	}
+
+	function getState() {
+		return {
+			query: query.value, requestId, open: open.value, view: panel.value ? 'panel' : 'compact',
+			pending: pending.value, activeIndex: active.value,
+			results: results.value.map(result => ({ ...result }))
+		}
+	}
+
+	function notifySearch() {
+		emit('search', { query: query.value, requestId, open: open.value,
+			results: localResults.value.map(result => ({ ...result })) })
+	}
+
+	function setResults(response) {
+		if (!enabled.value || !open.value || pending.value || !query.value.trim() ||
+			response?.requestId !== requestId) return false
+		const items = externalSearchResults(response.results)
+		if (!items) return false
+		const selected = results.value[active.value]
+		externalResults.value = items
+		if (selected?.source === 'external')
+			active.value = results.value.findIndex(item => item.source === 'external' && item.id === selected.id)
+		return true
 	}
 
 	function measure() {
@@ -96,6 +128,7 @@ export default function useSearch(root, viewport, content) {
 		const origin = columns.getBoundingClientRect()
 		pageWidth.value = viewport.value.getBoundingClientRect().width
 		const measured = []
+		const firstRects = new Map()
 		ranges.forEach((range, match) => {
 			if (!range.startContainer.isConnected) return
 			const seen = new Set()
@@ -105,51 +138,82 @@ export default function useSearch(root, viewport, content) {
 				// Inline elements can yield the same rectangle as their text node.
 				if (seen.has(key)) continue
 				seen.add(key)
-				measured.push({
+				const rectangle = {
 					key: `${match}:${key}`, match,
 					left: rect.left - origin.left, right: rect.right - origin.left,
 					style: {
 						left: `${rect.left - origin.left}px`, top: `${rect.top - origin.top}px`,
 						width: `${rect.width}px`, height: `${rect.height}px`
 					}
-				})
+				}
+				measured.push(rectangle)
+				if (!firstRects.has(match)) firstRects.set(match, rectangle)
 			}
 		})
 		geometry.value = measured
+		localResults.value = localResults.value.map((result, match) => {
+			const rect = firstRects.get(match)
+			return { ...result, page: rect && pageWidth.value
+				? Math.floor(Math.max(0, rect.left) / pageWidth.value) + 1 : null }
+		})
 	}
 
-	function navigate(position) {
-		if (!ranges.length || useReaderSettings.blocked.value)
+	function navigate(position, notify = true) {
+		if (!total.value || useReaderSettings.blocked.value)
 			return
-		active.value = (position + ranges.length) % ranges.length
+		active.value = ((position % total.value) + total.value) % total.value
+		const result = results.value[active.value]
 		const rect = geometry.value.find(rect => rect.match === active.value)
-		if (rect && pageWidth.value)
+		if (result.source === 'local' && rect && pageWidth.value)
 			usePagination.set(Math.floor(Math.max(0, rect.left) / pageWidth.value) + 1, 'search')
+		if (notify)
+			emit('search-select', { query: query.value, requestId, result: { ...result }, index: active.value })
 	}
 
-	function run() {
+	function run(position = 0) {
 		clearTimeout(timer)
 		pending.value = false
 		if (!enabled.value || !open.value || !content.value)
 			return
 		index ||= indexContent(content.value)
-		ranges = findSearchMatches(index, query.value)
-			.map(match => rangeForMatch(index, match)).filter(Boolean)
-		total.value = ranges.length
+		requestId++
+		externalResults.value = []
+		ranges = []
+		localResults.value = findSearchMatches(index, query.value).flatMap(match => {
+			const range = rangeForMatch(index, match)
+			if (!range) return []
+			ranges.push(range)
+			return [{ id: `local:${match.start}:${match.end}`, source: 'local',
+				...searchExcerpt(index.original, match), page: null }]
+		})
 		active.value = -1
 		measure()
-		navigate(0)
+		navigate(position, false)
+		notifySearch()
 	}
 
 	function schedule(invalidate = false) {
 		if (invalidate) index = null
 		clearTimeout(timer)
+		requestId++
 		ranges = []
-		total.value = 0
+		localResults.value = []
+		externalResults.value = []
 		active.value = -1
 		geometry.value = []
 		pending.value = open.value && Boolean(query.value.trim())
 		if (pending.value) timer = setTimeout(run, 180)
+		else if (enabled.value && open.value) notifySearch()
+	}
+
+	function searchText(value, options = {}) {
+		if (!enabled.value || useReaderSettings.blocked.value || typeof value !== 'string') return false
+		open.value = true
+		if (options.view === 'panel' || options.view === 'compact') panel.value = options.view === 'panel'
+		query.value = value
+		run(Number.isInteger(options.resultIndex) && options.resultIndex >= 0 ? options.resultIndex : 0)
+		nextTick(() => input.value?.focus({ preventScroll: true }))
+		return true
 	}
 
 	async function show() {
@@ -164,9 +228,8 @@ export default function useSearch(root, viewport, content) {
 
 	function close() {
 		open.value = false
-		clearTimeout(timer)
-		pending.value = false
-		geometry.value = []
+		schedule()
+		notifySearch()
 		button.value?.focus({ preventScroll: true })
 	}
 
@@ -214,14 +277,14 @@ export default function useSearch(root, viewport, content) {
 		ranges = []
 		index = null
 	})
-	watch(query, () => schedule())
+	watch(query, () => schedule(), { flush: 'sync' })
 	watch(useReaderSettings.blocked, blocked => {
-		if (!blocked && open.value && active.value < 0)
-			navigate(0)
+		if (!blocked && open.value && active.value < 0 && localResults.value.length)
+			navigate(0, false)
 	})
 	return {
-		enabled, open, query, input, button, active, total, rectangles, pending,
-		init, show, close, step, measure,
+		enabled, open, query, input, button, active, total, rectangles, pending, panel, results,
+		init, show, close, step, measure, navigate, getState, setResults, searchText,
 		status: computed(() => pending.value ? 'Buscando…' : total.value
 			? `${active.value >= 0 ? `${active.value + 1} de ` : ''}${total.value} ${total.value === 1 ? 'ocorrência' : 'ocorrências'}`
 			: query.value.trim() ? 'Nenhuma ocorrência' : 'Digite para buscar')

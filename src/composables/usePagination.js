@@ -6,6 +6,7 @@ import useEstimatePages from './useEstimatePages'
 import useTextContent from './useTextContent'
 import useBrowser from './useBrowser'
 import useReadingProgress from './useReadingProgress'
+import { isPaginarIgnoredEvent } from '../paginationEvents'
 
 const state = reactive({
 	currentPage: 1,
@@ -77,11 +78,15 @@ function next(usingScroll = false, source = 'next') {
 	}
 }
 onKeyStroke('ArrowRight', (e) => {
+	if (isPaginarIgnoredEvent(e))
+		return
 	e.preventDefault()
 	next(false, 'keyboard')
 })
 
 function onWheel(event) {
+	if (isPaginarIgnoredEvent(event))
+		return
 	if (event.wheelDelta < 0) {
 		next(true, 'wheel')
 	} else {
@@ -112,6 +117,8 @@ function prev(usingScroll = false, source = 'previous') {
 	}
 }
 onKeyStroke('ArrowLeft', (e) => {
+	if (isPaginarIgnoredEvent(e))
+		return
 	e.preventDefault()
 	prev(false, 'keyboard')
 })

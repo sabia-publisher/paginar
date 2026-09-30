@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Busca no livro — Paginar</title>
+	<style>
+		html, body { margin: 0; height: 100%; font: 14px system-ui; }
+		body { display: flex; flex-direction: column; }
+		.demo-controls { padding: 0.5rem 1rem; background: #eee; }
+		.demo-controls p { margin: 0.25rem 0; }
+		#log { display: block; max-height: 3rem; overflow: auto; }
+		paginate-content { display: block; flex: 1; min-height: 0; }
+		[slot="content"] p { margin: 1em 0; }
+		[slot="content"] section + section { break-before: column; }
+	</style>
+</head>
+<body>
+	<div class="demo-controls">
+		<p><a href="../../">Demos</a> · Busca no livro: <strong id="chapter-title"></strong></p>
+		<p>Busque <button data-query="memória">memória</button>, <button data-query="oceano">oceano (só no capítulo 3)</button>
+			ou <button data-query="inexistente">inexistente</button>.
+			<label><input id="external" type="checkbox" checked> Incluir outros capítulos</label></p>
+		<output id="log" aria-live="polite">Carregando capítulo…</output>
+	</div>
+	<paginate-content book-title="Caderno de viagens" reader-settings='{"search":true,"searchResults":"panel","fontSize":19}'>
+		<div slot="content" id="chapter"></div>
+	</paginate-content>
+	<script type="module" src="./integration.js"></script>
+</body>
+</html>

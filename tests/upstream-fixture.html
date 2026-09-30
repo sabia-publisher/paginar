@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<meta charset="UTF-8">
+<style>
+	html, body, #mount, paginate-content { display: block; height: 100%; margin: 0; }
+	[slot="content"] section + section { break-before: column; }
+</style>
+<div id="mount"></div>
+<script type="module">
+	const params = new URLSearchParams(location.search)
+	const variant = params.get('variant') || 'current'
+	const readingProgress = params.get('progress') !== 'off'
+	const summary = [
+		{ title: 'Título inicial' },
+		{ title: 'Atual', link: '/tests/upstream-fixture.html' },
+		{ title: 'Parte I', author: 'Autora' },
+		{ title: 'Indisponível', link: '/tests/unavailable.html', disabled: true },
+		{ title: 'Seguinte', link: '/tests/destination.html' },
+		{ title: 'Arquivo', file: '/demo/summary/_content/2chapter.html' },
+		{ title: 'Título final' }
+	]
+	if (params.get('navigation') === 'back') summary.reverse()
+	if (params.get('navigation') === 'file') summary[4] = { title: 'Só arquivo', file: '/demo/summary/_content/2chapter.html' }
+	if (params.get('summary') === 'empty') summary.length = 0
+	if (params.get('summary') === 'disabled') summary.splice(0, summary.length, { title: 'Sem destino' }, { title: 'Bloqueado', link: '/tests/unavailable.html', disabled: 'false' })
+	const notes = [{ id: 'footnote-1', text: 'Nota inicial' }]
+	const references = [{ cit: 'REF', ref: 'Referência inicial' }]
+	const settings = { columns: 'single', fontSize: 16, mode: 'light', search: false,
+		readingProgress: { id: 'upstream', enabled: readingProgress } }
+	localStorage.setItem('readerSettings', JSON.stringify(settings))
+	localStorage.setItem('paginar:reading-progress:v1', JSON.stringify({ version: 1,
+		entries: { 'upstream::/tests/upstream-fixture.html': 0.5 } }))
+	window.events = []
+	window.errors = []
+	window.addEventListener('error', event => errors.push(event.message))
+	window.addEventListener('unhandledrejection', event => errors.push(String(event.reason)))
+	const eventNames = ['ready', 'page-change', 'chapter-change', 'settings-change', 'summary-toggle', 'options-toggle']
+	for (const name of eventNames) document.addEventListener(`paginar:${name}`, event => events.push({ name, detail: event.detail }))
+	const makeSections = count => Array.from({ length: count }, (_, index) => `<section><h2>Seção ${index + 1}</h2><p>Conteúdo para medir a paginação do leitor.</p></section>`).join('')
+	await import(variant === 'reference' ? '/reference.js' : '/dist/index.es.js')
+	if (params.has('vue')) {
+		const { createApp, h, ref, nextTick, version } = await import('/host-vue.js')
+		const content = ref(JSON.stringify({ summary, footnotes: notes, references }))
+		const title = ref('Compatibilidade')
+		const app = createApp({ render: () => h('paginate-content', {
+			'book-content': content.value, 'book-title': title.value,
+			'reader-settings': JSON.stringify(settings)
+		}, [h('div', { slot: 'content', innerHTML: makeSections(9) })]) })
+		app.mount('#mount')
+		window.updateHost = async () => {
+			content.value = JSON.stringify({ summary, footnotes: [], references: [] })
+			title.value = 'Atualizado pelo Vue'
+			await nextTick()
+			reader.refresh()
+			return version
+		}
+		window.unmountHost = () => app.unmount()
+	} else {
+		const element = document.createElement('paginate-content')
+		element.setAttribute('book-content', JSON.stringify({ summary, footnotes: notes, references }))
+		element.setAttribute('reader-settings', JSON.stringify(settings))
+		element.innerHTML = `<div slot="content">${makeSections(9)}</div>`
+		document.querySelector('#mount').append(element)
+	}
+	window.reader = document.querySelector('paginate-content')
+	window.setSections = count => { reader.querySelector('[slot="content"]').innerHTML = makeSections(count) }
+	window.fixtureReady = true
+</script>
+</html>

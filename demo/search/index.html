@@ -20,6 +20,10 @@
 	</div>
 	<script>
 		const content = document.querySelector('#demo-text')
+		// ?view=panel abre diretamente a lista; sem parâmetro, use “Ver trechos”.
+		if (new URLSearchParams(location.search).get('view') === 'panel')
+			document.querySelector('paginate-content').setAttribute('reader-settings',
+				JSON.stringify({ search: true, searchResults: 'panel', fontSize: 19 }))
 		for (let index = 1; index <= 12; index++) {
 			const section = document.createElement('section')
 			section.innerHTML = `<h2>Trecho ${index}</h2>

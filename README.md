@@ -31,7 +31,7 @@ Esse link acima sempre puxa a última versão disponível para o software, e tam
 Para apontar para uma versão estável, e assim evitar possíveis bugs ou desconfigurações vindas das melhorias, pode ser da seguinte maneira:
 
 ```html
-<script type="module" src="https://unpkg.com/paginar@0.3.7/dist/index.es.js"></script>
+<script type="module" src="https://unpkg.com/paginar@0.4.0/dist/index.es.js"></script>
 ```
 
 No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
@@ -203,15 +203,36 @@ destaque suave, com cor mais forte e contorno na ocorrência atual, sem modifica
 o HTML nem a distribuição das páginas. Limpar o campo remove os destaques.
 Alterações no texto ou troca de capítulo atualizam os resultados da consulta.
 
-Veja a [demo de busca](demo/search/index.html).
+Use **Ver trechos** para abrir um painel lateral com todas as ocorrências,
+palavras antes/depois e o termo destacado. Clicar em um trecho navega à página.
+Com o foco na lista, ↑/↓ percorrem os trechos; ao abrir, o foco fica no campo.
+Para usar esse modo ao abrir a busca, configure `searchResults: 'panel'` junto
+de `search: true`; o modo compacto continua disponível.
+
+Para complementar a busca com outros capítulos, escute `paginar:search` e
+injete a resposta com `reader.setSearchResults({ requestId, results })`.
+`paginar:search-select` informa a seleção externa para sua aplicação abrir o
+capítulo. Veja formatos, controle de respostas atrasadas e métodos no guia de
+[integração da busca](docs/events-and-state.md#busca-painel-de-trechos-e-resultados-externos).
+
+Exemplos: [busca compacta](demo/search/index.html),
+[painel de trechos](demo/search/index.html?view=panel) e
+[busca no livro com resultados externos](demo/search-book/index.html).
+Para ajustar a aparência, consulte [cores, variáveis CSS e classes do painel](docs/search-customization.md).
 
 ## Eventos, estado e navegação por JavaScript
 
 O componente emite eventos públicos ao mudar de página, usar o slider, abrir o
 sumário ou as opções, trocar capítulo e alterar fonte, tamanho, colunas ou tema.
-Também oferece `getState()`, `goToPage()`, `nextPage()` e `previousPage()` no
+Também oferece `getState()`, `goToPage()`, `nextPage()`, `previousPage()` e `refresh()` no
 elemento. Todos os detalhes, nomes e formatos estão no guia de
 [eventos e estado público](docs/events-and-state.md).
+
+Depois de atualizar o slot e `book-content`, chame `refresh()` para recalcular
+páginas e reler notas/referências. Campos e regiões com `data-paginar-ignore`
+preservam suas interações de teclado/roda. No sumário, `disabled: true` ou a
+ausência de destino mantém o título visível e o exclui da navegação sequencial.
+Os detalhes e limites de compatibilidade estão no mesmo guia.
 
 ```js
 const reader = document.querySelector('paginate-content')

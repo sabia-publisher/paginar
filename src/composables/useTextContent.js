@@ -3,6 +3,7 @@ import { useEventListener } from '@vueuse/core'
 
 import useReferences from './useReferences'
 import useFootnotes from './useFootnotes'
+import { nearestNavigable } from '../summary'
 
 const state = reactive({
 	summary: null,
@@ -15,18 +16,14 @@ const summary = computed(() => state.summary)
 const context = computed(() => {
 	const chapters = state.summary || []
 	const linkedChapter = chapters.findIndex(
-		chapter => window.location.href.includes(chapter.link)
+		chapter => chapter.link && window.location.href.includes(chapter.link)
 	)
 	const current = linkedChapter >= 0 ? linkedChapter : state.activeChapter
 	return {
 		chapter: chapters[current],
 		surround: {
-			before: current - 1 >= 0
-				? chapters[current - 1]
-				: null,
-			after: current + 1 < chapters.length
-				? chapters[current + 1]
-				: null,
+			before: nearestNavigable(chapters, current - 1, -1),
+			after: nearestNavigable(chapters, current + 1, 1),
 		}
 	}
 })

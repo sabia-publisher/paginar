@@ -21,3 +21,27 @@ prefixo `paginar:`, `bubbles: true` e `composed: true`. Assim consumidores de
 qualquer framework usam APIs nativas do navegador sem acessar composables Vue,
 o Shadow DOM ou o `localStorage`. Cada evento carrega um snapshot completo para
 evitar consultas adicionais e dados reativos compartilhados.
+
+## 2026-09-29 — Busca externa sob controle da aplicação
+
+O leitor pesquisa apenas o DOM carregado. Para livros com capítulos externos,
+`paginar:search` e `setSearchResults` integram um provedor sem acoplar a biblioteca
+a rede, rotas ou formatos de livro. Um identificador por consulta impede que
+respostas atrasadas substituam a busca atual. O painel combina trechos locais
+e externos como texto simples; a seleção externa emite `paginar:search-select`,
+e a aplicação decide como carregar o destino. O painel sobrepõe o leitor para
+preservar paginação e offsets, mantendo o dropdown como apresentação padrão.
+
+## 2026-09-29 — Port de compatibilidade dos patches do consumidor
+
+Os ajustes de atualização de conteúdo, atalhos, prioridade de retomada,
+compatibilidade do custom element e itens indisponíveis no sumário preservam
+o comportamento da referência `0.3.7-2`. `refresh()` reutiliza a ordem existente
+de repaginação, sem prometer Promise ou preservação universal do número da
+página. O build resolve o ambiente de produção sem atualizar o Vue embutido.
+Os hooks de compatibilidade só são instalados se o runtime não os fornecer.
+
+Não foi incorporado `ResizeObserver`: o hospedeiro continua chamando
+`refresh()` conforme as mudanças de layout. A navegação por arquivo sem link
+na sequência e a coerção histórica dos campos permanecem caracterizadas nos
+testes; corrigi-las requer avaliar uma mudança de contrato separada.

@@ -1,3 +1,45 @@
+// Plain text only: consumers render each part as text, never as HTML.
+export function searchExcerpt(text, { start, end }, contextWords = 8) {
+	// Walk only nearby words; do not tokenize the entire chapter for every hit.
+	function boundary(offset, direction) {
+		let words = 0
+		let inWord = false
+		while (offset >= 0 && offset < text.length) {
+			const isWord = /\S/u.test(text[offset])
+			if (isWord && !inWord && ++words > contextWords) break
+			inWord = isWord
+			offset += direction
+		}
+		return offset
+	}
+	const left = boundary(start - 1, -1)
+	const right = boundary(end, 1)
+	const compact = value => value.replace(/\s+/gu, ' ')
+	return {
+		before: (left >= 0 ? '… ' : '') + compact(text.slice(left + 1, start)).trimStart(),
+		match: compact(text.slice(start, end)),
+		after: compact(text.slice(end, right)).trimEnd() + (right < text.length ? ' …' : '')
+	}
+}
+
+export function externalSearchResults(results) {
+	if (!Array.isArray(results)) return null
+	const ids = new Set()
+	const items = []
+	for (const result of results) {
+		if (!result || typeof result.id !== 'string' || !result.id || ids.has(result.id) ||
+			typeof result.match !== 'string' || !result.match.trim()) return null
+		ids.add(result.id)
+		const item = { id: result.id, source: 'external' }
+		for (const key of ['chapterTitle', 'before', 'match', 'after', 'href']) {
+			if (result[key] !== undefined && typeof result[key] !== 'string') return null
+			item[key] = result[key] || ''
+		}
+		items.push(item)
+	}
+	return items
+}
+
 // Keep offsets into the original UTF-16 text so matches can become DOM Ranges.
 export function normalizeSearchText(value) {
 	let text = ''

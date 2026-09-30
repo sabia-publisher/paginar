@@ -2,7 +2,7 @@
 
 ## Estado confirmado e alcance deste roteiro
 
-O pacote público é [paginar](https://www.npmjs.com/package/paginar). Em 2026-09-13, `npm view paginar version dist-tags repository.url --json --registry=https://registry.npmjs.org/` retornou versão e tag `latest` iguais a `0.3.5`. Consulte novamente a cada release; esta informação não é uma versão fixa a publicar.
+O pacote público é [paginar](https://www.npmjs.com/package/paginar). Consulte a versão e as tags atuais a cada release com `npm view paginar version dist-tags repository.url --json --registry=https://registry.npmjs.org/`; o estado do registry não deve ser inferido de uma versão registrada anteriormente nesta documentação.
 
 O repositório e os metadados npm usam https://github.com/sabia-publisher/paginar. O README oferece tanto CDN do GitHub quanto URL npm via unpkg. Atualizar arquivos no GitHub e publicar no npm são operações independentes.
 

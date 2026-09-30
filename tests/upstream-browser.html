@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<meta charset="UTF-8">
+<title>Verificando compatibilidade</title>
+<style>body { margin: 0; font: 14px system-ui; } iframe { width: 1100px; height: 760px; border: 0; } pre { white-space: pre-wrap; }</style>
+<iframe title="Leitor em teste"></iframe>
+<pre id="report">Executando…</pre>
+<script type="module">
+	const frame = document.querySelector('iframe')
+	const report = document.querySelector('#report')
+	const comparisons = []
+	const checks = []
+	const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+	const frames = win => new Promise(resolve => win.requestAnimationFrame(() => win.requestAnimationFrame(resolve)))
+	const check = (value, message) => {
+		if (!value) throw new Error(message)
+		checks.push(message)
+		report.textContent = `${checks.length} verificações\n${message}`
+	}
+	const load = async (variant, suffix = '') => {
+		frame.src = `/tests/upstream-fixture.html?variant=${variant}${suffix}`
+		await new Promise(resolve => frame.addEventListener('load', resolve, { once: true }))
+		for (let index = 0; index < 100 && !frame.contentWindow.fixtureReady; index++) await wait(30)
+		await wait(350)
+		const win = frame.contentWindow
+		await frames(win)
+		check(win.fixtureReady && typeof win.reader.refresh === 'function', `${variant}: refresh disponível`)
+		return win
+	}
+	const snapshot = win => JSON.parse(JSON.stringify({ state: win.reader.getState(), events: win.events,
+		progress: JSON.parse(win.localStorage.getItem('paginar:reading-progress:v1')) }))
+	const compare = (name, results) => {
+		comparisons.push({ name, ...results })
+		check(JSON.stringify(results.reference) === JSON.stringify(results.current), `Equivalência: ${name}`)
+	}
+	try {
+		for (const enabled of ['on', 'off']) {
+			const result = {}
+			for (const variant of ['reference', 'current']) {
+				const win = await load(variant, `&progress=${enabled}`)
+				const reader = win.reader
+				check(reader.getState().pagination.totalPages === 9, `${variant}: nove páginas iniciais (medido: ${reader.getState().pagination.totalPages})`)
+				check(win.events.find(event => event.name === 'ready'), `${variant}: evento ready`)
+				win.events.length = 0
+				check(reader.refresh() === undefined, `${variant}: refresh retorna undefined`)
+				await frames(win)
+				await wait(60)
+				check(!win.events.some(event => event.name === 'page-change'), `${variant}: refresh sem mudança não emite página`)
+				reader.goToPage(5)
+				win.events.length = 0
+				win.setSections(17)
+				reader.refresh()
+				await frames(win)
+				await wait(60)
+				check(reader.getState().pagination.currentPage === (enabled === 'on' ? 9 : 5), `${variant}: crescimento preserva política de progresso`)
+				const growth = snapshot(win)
+				win.events.length = 0
+				win.setSections(3)
+				reader.refresh()
+				await frames(win)
+				await wait(60)
+				check(reader.getState().pagination.currentPage <= 3, `${variant}: redução limita página`)
+				const shrink = snapshot(win)
+				win.events.length = 0
+				win.setSections(9)
+				reader.refresh()
+				win.setSections(17)
+				reader.refresh()
+				await frames(win)
+				await wait(60)
+				check(reader.getState().pagination.totalPages === 17, `${variant}: duas revisões convergem`)
+				result[variant] = { growth, shrink, consecutive: snapshot(win) }
+			}
+			compare(`refresh com progresso ${enabled}`, result)
+		}
+		const urls = ['&origin=prev', '&origin=next', '&origin=', '&origin=outro', '#nota-1', '&origin', '&Origin=next', '&%6Frigin=next', '&x=origin=next', '#', '']
+		for (const suffix of urls) {
+			const results = {}
+			for (const variant of ['reference', 'current']) {
+				const win = await load(variant, suffix)
+				const page = win.reader.getState().pagination.currentPage
+				const suppressed = /[?&]origin=/.test(win.location.search) || win.location.hash
+				const explicitEnd = new URLSearchParams(win.location.search).get('origin') === 'next'
+				check(page === (explicitEnd ? 9 : suppressed ? 1 : 5), `${variant}: prioridade da URL ${suffix || 'sem marcador'}`)
+				win.reader.refresh()
+				await wait(60)
+				check(win.reader.getState().pagination.currentPage === page, `${variant}: URL permanece resolvida após refresh`)
+				results[variant] = snapshot(win)
+			}
+			compare(`URL ${suffix}`, results)
+		}
+		const interactions = {}
+		for (const variant of ['reference', 'current']) {
+			const win = await load(variant)
+			const { reader, document: doc } = win
+			const shadow = reader.shadowRoot
+			const slot = reader.querySelector('[slot="content"]')
+			const cases = ['<input>', '<input type="range">', '<input type="checkbox">', '<textarea></textarea>', '<select><option>Opção</option></select>',
+				'<div contenteditable><span>Texto</span></div>', '<div data-paginar-ignore="false"><button>Controle</button></div>',
+				'<div contenteditable><span contenteditable="false">Texto</span></div>']
+			const eventOutcomes = []
+			for (const inside of [slot, shadow.querySelector('#rootComponent')]) {
+				for (const html of cases) {
+					const wrapper = doc.createElement('div')
+					wrapper.innerHTML = html
+					inside.append(wrapper)
+					const target = wrapper.querySelector('span, button') || wrapper.firstElementChild
+					for (const key of ['ArrowLeft', 'ArrowRight', 'wheel']) {
+						reader.goToPage(5)
+						const event = key === 'wheel' ? new win.WheelEvent('wheel', { bubbles: true, composed: true, cancelable: true })
+							: new win.KeyboardEvent('keydown', { key, bubbles: true, composed: true, cancelable: true })
+						target.dispatchEvent(event)
+						check(reader.getState().pagination.currentPage === 5 && !event.defaultPrevented, `${variant}: campo protegido ${key} ${html}`)
+						eventOutcomes.push([reader.getState().pagination.currentPage, event.defaultPrevented])
+					}
+					wrapper.remove()
+				}
+			}
+			const plain = doc.createElement('span')
+			plain.setAttribute('contenteditable', 'false')
+			slot.append(plain)
+			for (const key of ['ArrowRight', 'ArrowLeft', 'wheel']) {
+				reader.goToPage(5)
+				const event = key === 'wheel' ? new win.Event('wheel', { bubbles: true, composed: true })
+					: new win.KeyboardEvent('keydown', { key, bubbles: true, composed: true, cancelable: true })
+				plain.dispatchEvent(event)
+				check(reader.getState().pagination.currentPage === (key === 'ArrowRight' ? 6 : 4), `${variant}: paginação fora de regiões protegidas ${key}`)
+				eventOutcomes.push([reader.getState().pagination.currentPage, event.defaultPrevented])
+			}
+			reader.goToPage(5)
+			const noPath = new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })
+			Object.defineProperty(noPath, 'composedPath', { value: undefined })
+			win.dispatchEvent(noPath)
+			check(reader.getState().pagination.currentPage === 6, `${variant}: evento sem composedPath mantém fallback`)
+			shadow.querySelector('#summary-button').click()
+			await wait(30)
+			const menu = shadow.querySelector('#summary-menu-dropdown')
+			check(menu.getAttribute('role') === 'menu' && menu.getAttribute('aria-orientation') === 'vertical' && menu.getAttribute('aria-labelledby') === 'summary-menu', `${variant}: atributos ARIA do sumário`)
+			const menuItems = [...menu.querySelector('nav').children].filter(node => node.tagName !== 'SLOT')
+			const menuSnapshot = menuItems.map(item => ({ tag: item.tagName, text: item.textContent, class: item.className,
+				disabled: item.getAttribute('aria-disabled'), href: item.getAttribute('href'), title: item.getAttribute('title'),
+				tabIndex: item.tabIndex, opacity: win.getComputedStyle(item).opacity, cursor: win.getComputedStyle(item).cursor }))
+			check(menuSnapshot.length === 7 && menuSnapshot.filter(item => item.disabled).length === 4, `${variant}: indisponíveis permanecem no sumário`)
+			const count = win.events.length
+			menu.querySelector('[aria-disabled]').click()
+			await wait(20)
+			check(win.events.length === count, `${variant}: item indisponível sem evento`)
+			reader.setAttribute('book-content', JSON.stringify({ summary: [{ title: 'Não deve substituir' }] }))
+			reader.refresh()
+			await wait(30)
+			check(menu.textContent.includes('Parte I') && !menu.textContent.includes('Não deve substituir'), `${variant}: refresh não atualiza sumário`)
+			shadow.querySelector('#summary-button').click()
+			await wait(30)
+			interactions[variant] = { eventOutcomes, menu: menuSnapshot }
+		}
+		compare('campos, fallback e DOM/estilos do sumário', interactions)
+		const collections = {}
+		for (const variant of ['reference', 'current']) {
+			const win = await load(variant)
+			const reader = win.reader
+			const shadow = reader.shadowRoot
+			const controls = win.document.createElement('div')
+			controls.innerHTML = '<button class="footnote footnote-1">Nota</button><button class="reference reference-REF">Referência</button>'
+			reader.querySelector('[slot="content"]').prepend(controls)
+			const snapshots = []
+			const inspect = async (label, expectedNote, expectedReference) => {
+				controls.children[0].click()
+				await wait(60)
+				const note = shadow.querySelector('#asidebar li')?.textContent || ''
+				check(expectedNote ? note.includes(expectedNote) : !note, `${variant}: notas ${label}`)
+				shadow.querySelector('#asidebar button')?.click()
+				await wait(550)
+				controls.children[1].click()
+				await wait(30)
+				const reference = shadow.querySelector('.reference-popup p')?.textContent || ''
+				check(reference === expectedReference, `${variant}: referências ${label}`)
+				shadow.querySelector('.reference-popup button')?.click()
+				await wait(250)
+				snapshots.push({ label, note, reference })
+			}
+			await inspect('iniciais', 'Nota inicial', 'Referência inicial')
+			reader.setAttribute('book-content', JSON.stringify({ footnotes: [{ id: 'footnote-1', text: 'Nota nova' }], references: [{ cit: 'REF', ref: 'Referência nova' }] }))
+			reader.refresh()
+			await inspect('atualizadas', 'Nota nova', 'Referência nova')
+			for (const [label, value] of [['ausentes', '{}'], ['nulas', '{"footnotes":null,"references":null}'], ['falsas', '{"footnotes":false,"references":0}'], ['vazias como string', '{"footnotes":"","references":""}'], ['JSON inválido', '{']]) {
+				reader.setAttribute('book-content', value)
+				reader.refresh()
+				await inspect(label, 'Nota nova', 'Referência nova')
+			}
+			reader.setAttribute('book-content', '{"footnotes":[],"references":[]}')
+			reader.refresh()
+			await inspect('arrays vazios', '', '')
+			check(!win.errors.length, `${variant}: coleções sem erro público`)
+			collections[variant] = snapshots
+		}
+		compare('refresh de notas e referências', collections)
+		for (const navigation of ['forward', 'back', 'file']) {
+			const results = {}
+			for (const variant of ['reference', 'current']) {
+				const win = await load(variant, `&navigation=${navigation}`)
+				win.reader.goToPage(navigation === 'back' ? 1 : 9)
+				if (navigation === 'back') win.reader.previousPage()
+				else win.reader.nextPage()
+				await new Promise(resolve => frame.addEventListener('load', resolve, { once: true }))
+				results[variant] = frame.contentWindow.location.pathname + frame.contentWindow.location.search
+				check(results[variant] === (navigation === 'file' ? '/tests/undefined?origin=prev' : `/tests/destination.html?origin=${navigation === 'back' ? 'next' : 'prev'}`), `${variant}: sequência ${navigation}`)
+			}
+			compare(`sequência ${navigation}`, results)
+		}
+		for (const summary of ['empty', 'disabled']) {
+			const results = {}
+			for (const variant of ['reference', 'current']) {
+				const win = await load(variant, `&summary=${summary}`)
+				win.reader.goToPage(9)
+				win.reader.nextPage()
+				win.reader.goToPage(1)
+				win.reader.previousPage()
+				await wait(20)
+				check(!win.errors.length && win.location.pathname === '/tests/upstream-fixture.html', `${variant}: sumário ${summary} sem vizinhos`)
+				results[variant] = snapshot(win)
+			}
+			compare(`sumário ${summary}`, results)
+		}
+		const hosts = {}
+		for (const variant of ['reference', 'current']) {
+			const win = await load(variant, '&vue')
+			const reader = win.reader
+			check(typeof reader._beginPatch === 'function' && typeof reader._endPatch === 'function', `${variant}: hooks do custom element`)
+			const version = await win.updateHost()
+			await wait(50)
+			check(reader.getState().content.bookTitle === 'Atualizado pelo Vue' && !win.errors.length, `${variant}: atualização com Vue ${version}`)
+			hosts[variant] = { version, state: reader.getState(), errors: win.errors }
+			win.unmountHost()
+			await wait(20)
+			check(reader.refresh === undefined && reader.getState === undefined, `${variant}: remove API no unmount`)
+		}
+		compare('hospedeiro Vue e descarte', hosts)
+		document.title = `PASS ${checks.length} verificações; ${comparisons.length} comparações`
+		report.textContent = document.title
+		report.dataset.result = btoa(unescape(encodeURIComponent(JSON.stringify({ checks, comparisons }))))
+	} catch (error) {
+		document.title = 'FAIL compatibilidade'
+		report.textContent += `\n${error.stack}`
+		report.dataset.result = btoa(unescape(encodeURIComponent(JSON.stringify({ checks, comparisons, error: error.message }))))
+	}
+</script>
+</html>

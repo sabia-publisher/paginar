@@ -30,9 +30,27 @@ Props declaradas na raiz: `bookTitle`, `bookContent`, `readerSettings`, `readerB
 Slots expostos pela raiz: `content`, `header`, `summaryTop`, `summaryBottom`, `optionsTop`, `optionsBottom`. Preserve a grafia. Um slot em um componente interno não é automaticamente uma API do custom element: o `footer` interno, por exemplo, não é encaminhado pela raiz.
 
 A API JavaScript pública é instalada na instância do elemento após a montagem:
-`getState()`, `goToPage()`, `nextPage()` e `previousPage()`. Eventos com prefixo
+`getState()`, `goToPage()`, `nextPage()`, `previousPage()` e `refresh()`. Eventos com prefixo
 `paginar:` comunicam prontidão, navegação, preferências e abertura de menus. O
 contrato completo está em [eventos e estado público](events-and-state.md).
+
+`refresh()` relê notas e referências do atributo `book-content` e reutiliza a
+rotina de repaginação, com revisão para descartar callbacks anteriores. Não
+reinicializa o sumário nem observa tamanho: o hospedeiro continua responsável
+por chamar a API depois de alterar conteúdo ou carregar imagens/fontes.
+`summary.js` compartilha a regra de navegabilidade entre sumário e contexto;
+itens indisponíveis permanecem na lista, mas são pulados pelos vizinhos.
+`paginationEvents.js` protege campos e regiões `data-paginar-ignore` nos
+handlers globais de setas e roda, usando o caminho composto dos eventos.
+
+Na primeira restauração de progresso, a presença literal de `origin=` na query
+ou fragmento não vazio marca a restauração como resolvida sem aplicar o valor
+salvo, preservando a prioridade da navegação explícita.
+
+O build define `process.env.NODE_ENV` como `production`, eliminando ramos de
+desenvolvimento e dispensando `process` global. O runtime Vue 3.5.21 foi
+preservado: `main.js` acrescenta hooks vazios `_beginPatch`/`_endPatch` somente
+quando ausentes no custom element, para hospedeiros Vue a partir de 3.5.22.
 
 A interface vive no Shadow DOM; conteúdo em slot permanece no DOM da página hospedeira. CSS externo pode estilizar o conteúdo fornecido por slot. Para a interface, existem `css-string`, `css-file` e `reader-settings.cssString`. Fontes externas são inseridas no documento. Os seletores de customização também são parte prática da integração pública.
 
@@ -60,6 +78,18 @@ a geometria do destaque. Um observador invalida o índice quando o texto muda,
 inclusive ao trocar de capítulo; a pesquisa abrange somente o conteúdo carregado.
 Listeners, observador e debounce da busca são removidos na desmontagem.
 
+`SearchButton.vue` alterna a mesma interface entre dropdown e painel lateral,
+sem mudar as dimensões das colunas. `useSearch` mantém descritores de trechos
+locais e resultados externos por instância; apenas locais possuem `Range`.
+`searchResults: 'panel'` escolhe a apresentação inicial. A API da raiz encaminha
+`search`, `getSearchState` e `setSearchResults`. O evento `paginar:search` fornece
+consulta, identificador da requisição e resultados locais; o consumidor devolve
+externos associados ao identificador. Alterações de consulta ou conteúdo e
+fechamento invalidam respostas pendentes. `paginar:search-select` delega à
+aplicação o carregamento/navegação para capítulos externos. Trechos são texto,
+sem `v-html`, e não alteram o DOM do livro. Veja o
+[contrato completo](events-and-state.md#busca-painel-de-trechos-e-resultados-externos).
+
 ## Limitações observadas no código
 
 Estas observações orientam investigação; não são tarefas obrigatórias para cada alteração.
@@ -68,6 +98,7 @@ Estas observações orientam investigação; não são tarefas obrigatórias par
 - Há uso direto de `window`, `document`, `navigator` e `customElements`, inclusive durante importação. Não presumir suporte a SSR ou importação repetida de bundles distintos.
 - `usePagination.init` instala listener global e intervalo sem limpeza correspondente. Ao trabalhar com montagem/desmontagem, verificar duplicação e retenção de estado.
 - Configurações e conteúdo são inicializados na montagem; o watcher de props trata `readerBlocked`. Não prometer atualização dinâmica de todos os atributos.
+- `refresh()` atualiza somente notas/referências e layout. A navegação sequencial ainda exige `link` nos vizinhos, embora o sumário aceite itens apenas com `file`; essa limitação foi preservada por compatibilidade.
 - HTML carregado é renderizado com `v-html` e CSS pode ser injetado. Não existe sanitização geral implementada; integrações devem fornecer conteúdo confiável.
 - O sumário é fornecido no JSON. A lista histórica de funcionalidades do README não comprova geração automática a partir de títulos HTML nem parsing de Markdown.
 - `useBrowser.isSafari` usa detecção de dispositivos Apple móveis/iPad por heurística, não uma detecção completa de Safari desktop. Verificar plataformas reais quando alterar esse ramo.

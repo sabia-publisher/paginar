@@ -1,10 +1,31 @@
 <script setup>
-import { inject } from 'vue'
+import { inject, nextTick, watch } from 'vue'
 import { searchKey } from '../../composables/useSearch'
 import IconClose from '../icons/Close.vue'
 
 const search = inject(searchKey)
-const { enabled, open, query, input, button, total, status, pending } = search
+const { enabled, open, query, input, button, total, status, pending, panel, results, active } = search
+
+watch(panel, async value => {
+	if (value && open.value) {
+		await nextTick()
+		input.value?.focus({ preventScroll: true })
+	}
+})
+
+watch(active, async () => {
+	await nextTick()
+	if (panel.value)
+		input.value?.getRootNode().querySelector('.search-result[aria-current="true"]')
+			?.scrollIntoView({ block: 'nearest' })
+})
+
+async function selectResult(index) {
+	search.navigate(index)
+	await nextTick()
+	input.value?.getRootNode().querySelector('.search-result[aria-current="true"]')
+		?.focus({ preventScroll: true })
+}
 
 function clearQuery() {
 	query.value = ''
@@ -27,9 +48,11 @@ function clearQuery() {
 			</svg>
 		</button>
 		<form v-show="open" id="search-dropdown" role="search" aria-label="Buscar no texto"
+			:class="{ 'search-panel': panel }"
 			@submit.prevent="search.step(1)" @wheel.stop @keydown.stop
 			@keydown.esc.prevent="search.close()"
 		>
+			<h2 v-if="panel" class="search-panel-title">Resultados da busca</h2>
 			<div class="search-input-row">
 				<div class="search-input-control">
 					<input id="search-input" ref="input" v-model="query" type="search"
@@ -63,6 +86,23 @@ function clearQuery() {
 					</svg>
 				</button>
 			</div>
+			<button id="search-view-button" class="search-icon-button" type="button"
+				:aria-expanded="panel" aria-controls="search-result-list" @click="panel = !panel">
+				{{ panel ? 'Usar busca compacta' : 'Ver trechos' }}
+			</button>
+			<ol v-if="panel" id="search-result-list" :aria-busy="pending" aria-label="Trechos encontrados">
+				<li v-for="(result, index) in results" :key="`${result.source}:${result.id}`">
+					<button type="button" class="search-result" :aria-current="active === index ? 'true' : undefined"
+						@click="selectResult(index)"
+						@keydown.down.prevent.stop="selectResult(index + 1)"
+						@keydown.up.prevent.stop="selectResult(index - 1)">
+						<span class="search-result-location">{{ result.source === 'local'
+							? `Neste capítulo${result.page ? ` · Página ${result.page}` : ''}`
+							: result.chapterTitle || 'Outro capítulo' }}</span>
+						<span class="search-result-excerpt">{{ result.before }}<mark>{{ result.match }}</mark>{{ result.after }}</span>
+					</button>
+				</li>
+			</ol>
 		</form>
 	</div>
 </template>
