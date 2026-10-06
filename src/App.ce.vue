@@ -181,6 +181,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+	usePagination.stopObserving()
 	window.removeEventListener('pagehide', saveCurrentReadingProgress)
 	document.removeEventListener('visibilitychange', saveReadingProgressWhenHidden)
 	if (hostElement) {
@@ -331,6 +332,8 @@ watchDebounced(content,
 </template>
 
 <style lang="scss" src="./assets/main.css"></style>
+<!-- Swap for ./assets/vueform-slider.css when using VueformPageSlider.vue. -->
+<style src="./assets/page-slider.css"></style>
 
 <style lang="scss">
 /* In your Vue component's <style> section */

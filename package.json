@@ -7,7 +7,7 @@
 	"files": [
 		"dist/"
 	],
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/sabia-publisher/paginar.git"
@@ -18,15 +18,14 @@
 		"dev": "concurrently \"npm run start:css\" \"npm run start --host\"",
 		"start": "vite",
 		"start:css": "tailwindcss -o src/tailwind.css --watch",
-		"build": "npm run build:css && vite build",
+		"build": "npm run build:css && vite build && vite build --mode vue-external",
 		"build:css": "tailwindcss -o src/tailwind.css",
 		"preview": "vite preview --port 4173"
 	},
 	"dependencies": {
 		"@vueform/slider": "^2.1.5",
 		"@vueuse/core": "^9.2.0",
-		"vue": "^3.2.37",
-		"vue-slider-component": "^4.1.0-beta.2"
+		"vue": "^3.2.37"
 	},
 	"devDependencies": {
 		"@vitejs/plugin-vue": "^3.0.1",

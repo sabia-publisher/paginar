@@ -41,9 +41,53 @@ function init(viewport, content, estimate = null) {
 		addEventListener('wheel', onWheel)
 	}
 
-	setInterval(() => {
-		updatePages()
-	}, 5000)
+	observeLayout(viewport, content, updatePages)
+}
+
+let observer = null
+let fallbackTimer = null
+let observedFrame = 0
+
+// Page count depends only on the viewport and content box sizes, so repaginate
+// when either changes (late web fonts, images, slot edits) instead of polling.
+function observeLayout(viewport, content, updatePages) {
+	stopObserving()
+	if (typeof ResizeObserver !== 'function') {
+		fallbackTimer = setInterval(updatePages, 5000)
+		return
+	}
+
+	const sizes = new WeakMap()
+	observer = new ResizeObserver(entries => {
+		let changed = false
+		for (const { target, borderBoxSize, contentRect } of entries) {
+			const box = borderBoxSize?.[0]
+			const size = box
+				? `${box.inlineSize}x${box.blockSize}`
+				: `${contentRect.width}x${contentRect.height}`
+			// The first notification only records the size already measured on mount.
+			if (sizes.has(target) && sizes.get(target) !== size)
+				changed = true
+			sizes.set(target, size)
+		}
+		if (changed && !observedFrame)
+			observedFrame = requestAnimationFrame(() => {
+				observedFrame = 0
+				updatePages()
+			})
+	})
+	for (const element of [viewport.value, content.value])
+		if (element)
+			observer.observe(element)
+}
+
+function stopObserving() {
+	observer?.disconnect()
+	observer = null
+	clearInterval(fallbackTimer)
+	fallbackTimer = null
+	cancelAnimationFrame(observedFrame)
+	observedFrame = 0
 }
 
 // when resizing the viewport, totalPages change
@@ -138,5 +182,6 @@ export default {
 	next,
 	prev,
 	init,
+	stopObserving,
 	set
 }

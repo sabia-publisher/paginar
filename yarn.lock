@@ -1312,11 +1312,6 @@ vue-demi@*:
   resolved "https://registry.yarnpkg.com/vue-demi/-/vue-demi-0.14.10.tgz#afc78de3d6f9e11bf78c55e8510ee12814522f04"
   integrity sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==
 
-vue-slider-component@^4.1.0-beta.2:
-  version "4.1.0-beta.7"
-  resolved "https://registry.yarnpkg.com/vue-slider-component/-/vue-slider-component-4.1.0-beta.7.tgz#f6aaac2557df8b9d5460482e2576a009d0ed2dae"
-  integrity sha512-Qb7K920ZG7PoQswoF6Ias+i3W2rd3k4fpk04JUl82kEUcN86Yg6et7bVSKWt/7VpQe8a5IT3BqCKSCOZ7AJgCA==
-
 vue@^3.2.37:
   version "3.5.21"
   resolved "https://registry.yarnpkg.com/vue/-/vue-3.5.21.tgz#30af9553fd9642870321b7dc547b46c395cb7b91"

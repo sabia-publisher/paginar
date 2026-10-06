@@ -28,7 +28,7 @@ const { distanceX } = usePointerSwipe(el, {
 
 <template>
 	<div ref="el" class="columnsArea" :class="{ 'search-navigation': changeSource === 'search' }"
-		:style="`margin-left: -${100 * (currentPage - 1)}%`">
+		:style="currentPage > 1 ? `transform: translateX(-${100 * (currentPage - 1)}%)` : ''">
 		<div class="[ typeArea ] h-full relative
 			transition-opacity duration-100 opacity-100 px-2 md:px-24
 		">

@@ -1,14 +1,6 @@
 <script setup>
-import { ref } from 'vue'
-import Slider from '@vueform/slider'
-
-import usePagination from '../composables/usePagination';
-const { totalPages, currentPage, set } = usePagination
-
-function format() {
-	return `${currentPage.value} de ${totalPages.value}`
-}
-
+// The previous @vueform/slider version lives in VueformPageSlider.vue.
+import PageSlider from './PageSlider.vue'
 </script>
 
 <template>
@@ -17,16 +9,6 @@ function format() {
 			<p>&nbsp;</p>
 		</slot>
 
-		<Slider
-			:modelValue="currentPage"
-			@update:modelValue="set(Math.round($event), 'slider')"
-			:min="1"
-			:max="totalPages"
-			:step="-1"
-			showTooltip="drag"
-			:format="format"
-			:lazy="false"
-			class="w-full"
-		/>
+		<PageSlider class="w-full" />
 	</div>
 </template>

@@ -42,6 +42,37 @@ página. O build resolve o ambiente de produção sem atualizar o Vue embutido.
 Os hooks de compatibilidade só são instalados se o runtime não os fornecer.
 
 Não foi incorporado `ResizeObserver`: o hospedeiro continua chamando
-`refresh()` conforme as mudanças de layout. A navegação por arquivo sem link
+`refresh()` conforme as mudanças de layout. (Substituído em 2026-10-05: a
+repaginação passou a observar tamanhos; `refresh()` segue necessário para notas
+e referências.) A navegação por arquivo sem link
 na sequência e a coerção histórica dos campos permanecem caracterizadas nos
 testes; corrigi-las requer avaliar uma mudança de contrato separada.
+
+## 2026-10-05 — Desempenho de carregamento e navegação
+
+Medições no Chromium com CPU 4x mais lenta e rede de 4 Mbps mostraram que cada
+página virada refazia o layout do capítulo inteiro (`margin-left` em
+`.columnsArea`), que fontes ou imagens tardias só corrigiam o total de páginas
+no intervalo de 5 s e que o bundle era distribuído sem minificação. Passamos a
+deslocar as páginas com `transform`, a repaginar por `ResizeObserver` (com o
+intervalo como alternativa) e a minificar `dist/`, inclusive os espaços que o
+Vite 3 mantém em bibliotecas ES. Uma variante com `vue` externo é gerada para
+aplicações Vue, sem alterar `main`/`module`.
+
+Consequências: o contrato JavaScript, eventos, atributos e o resultado visual
+foram comparados com o bundle anterior e permanecem equivalentes. A partir da
+página 2, `.columnsArea` passa a ser bloco de contenção para `position: fixed`
+e contexto de empilhamento; conteúdo que dependa disso precisa ser revisto.
+Remover a medição imediata na montagem não trouxe ganho mensurável e foi
+mantida.
+
+O slider de páginas passou a ser um `<input type="range">` (`PageSlider.vue`),
+retirando `@vueform/slider` do bundle (de 68 para 54 KB gzip). Ele reproduz o
+arrasto contínuo arredondado para a página, o tooltip "X de Y" durante o
+arrasto, o clique no trilho, a origem `slider` dos eventos e as variáveis
+`--slider-*`. As classes `.slider-*` deixam de existir; a nova raiz é
+`.page-slider`. Com o slider em foco, as setas viram uma página (antes o
+noUiSlider e o atalho global agiam juntos, pulando cerca de 10% do capítulo).
+A versão anterior fica em `VueformPageSlider.vue` e `vueform-slider.css`, e
+`@vueform/slider` continua em `dependencies`: para reverter, importe esse
+componente em `FooterSlot.vue` e troque o `<style src>` em `App.ce.vue`.

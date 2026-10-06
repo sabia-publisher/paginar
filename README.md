@@ -31,7 +31,7 @@ Esse link acima sempre puxa a última versão disponível para o software, e tam
 Para apontar para uma versão estável, e assim evitar possíveis bugs ou desconfigurações vindas das melhorias, pode ser da seguinte maneira:
 
 ```html
-<script type="module" src="https://unpkg.com/paginar@0.4.0/dist/index.es.js"></script>
+<script type="module" src="https://unpkg.com/paginar@0.5.0/dist/index.es.js"></script>
 ```
 
 No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o Web Component conforme abaixo, e inclua o conteúdo que deseja paginar dentro de um div com propriedade slot="content":
@@ -43,6 +43,32 @@ No corpo do html, no local onde deseja que seja renderizado o leitor, utilizar o
     </div>
 </paginate-content>
 ```
+
+### Carregamento mais rápido
+
+O leitor só começa a buscar o primeiro arquivo do `book-content` e as fontes de
+`fontsOptions` depois que o script é executado. A página hospedeira pode antecipar
+esses downloads no `<head>`; o `crossorigin` é necessário para que o `fetch` do
+leitor reaproveite o arquivo pré-carregado:
+
+```html
+<link rel="preload" href="/capitulos/capitulo-1.html" as="fetch" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+```
+
+Imagens no conteúdo devem declarar `width` e `height` (ou `aspect-ratio` no CSS)
+para reservar espaço antes de carregar. O leitor repagina sozinho quando fontes
+ou imagens mudam o tamanho do texto, mas reservar o espaço evita que o total de
+páginas mude durante a leitura. Capítulos muito longos custam mais para paginar;
+dividi-los em arquivos menores reduz o tempo até a primeira página.
+
+Aplicações que já usam Vue 3.5 ou superior com um bundler podem importar
+`paginar/dist/index.vue-external.es.js`. Esse arquivo registra o mesmo
+`<paginate-content>`, mas importa `vue` da aplicação em vez de embutir o runtime,
+reduzindo o download para cerca da metade. Use-o apenas quando `vue` estiver
+disponível como módulo (bundler ou import map); o arquivo padrão continua sendo
+`dist/index.es.js`.
 
 ## Customização
 

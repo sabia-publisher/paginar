@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<link rel="icon" href="/favicon.ico">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Texto longo - Paginar</title>
+	<!-- The chapters below are fetched before the reader starts. -->
+	<link rel="preload" href="../summary/_content/1chapter.html" as="fetch" crossorigin>
+	<link rel="preload" href="../summary/_content/2chapter.html" as="fetch" crossorigin>
+	<link rel="preload" href="../summary/_content/3chapter.html" as="fetch" crossorigin>
+	<style>
+		html, body { height: 100%; margin: 0; }
+		#app { height: 100vh; }
+		p { text-indent: 2rem; }
+	</style>
+</head>
+<body>
+	<div id="app">
+		<paginate-content id="reader" book-title="A Tale of Two Cities (texto longo)"
+			reader-settings='{"search": true}'>
+			<div slot="content"></div>
+		</paginate-content>
+	</div>
+
+	<script type="module">
+		// Repeats the public-domain demo chapters to build a long text.
+		// ?copies=N changes the length (default: about 80 pages on a desktop
+		// screen with two columns).
+		const copies = Number(new URLSearchParams(location.search).get('copies')) || 7
+		const files = ['1chapter.html', '2chapter.html', '3chapter.html']
+		const chapters = await Promise.all(files.map(file =>
+			fetch(`../summary/_content/${file}`).then(response => response.text())))
+		const content = document.querySelector('[slot="content"]')
+		content.innerHTML = Array.from({ length: copies }, () => chapters.join('')).join('')
+
+		const reader = document.getElementById('reader')
+		const start = performance.now()
+		reader.addEventListener('paginar:ready', () => requestAnimationFrame(() => {
+			const { totalPages } = reader.getState().pagination
+			const elapsed = Math.round(performance.now() - start)
+			console.info(`Paginar: ${totalPages} páginas, pronto em ${elapsed} ms`)
+		}), { once: true })
+
+		await import('../../dist/index.es.js')
+	</script>
+</body>
+</html>

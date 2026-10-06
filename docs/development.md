@@ -28,13 +28,13 @@ git diff --stat
 git diff --check
 ```
 
-O build primeiro gera `src/tailwind.css`, depois `dist/index.es.js`, seu source map e os demais arquivos de distribuição via Vite. `dist/` e o CSS gerado são rastreados. Revise essas diferenças quando alterar runtime ou estilos; para uma mudança só de documentação, evite alterações incidentais nos gerados.
+O build primeiro gera `src/tailwind.css`, depois `dist/index.es.js`, seu source map e os demais arquivos de distribuição via Vite. Uma segunda execução gera `dist/index.vue-external.es.js`, que importa `vue` como módulo; para testá-lo numa página, declare antes um import map apontando `vue` para `node_modules/vue/dist/vue.esm-browser.prod.js`. O JS gerado é minificado e contém uma linha com espaços finais dentro de uma string de CSS; `git diff --check` acusa isso em `dist/`, como já ocorria antes. `dist/` e o CSS gerado são rastreados. Revise essas diferenças quando alterar runtime ou estilos; para uma mudança só de documentação, evite alterações incidentais nos gerados.
 
 `npm run preview` serve a saída do build na porta 4173, mas esse build é uma biblioteca e não inclui o índice e as demos como aplicativo. Para testar o artefato, crie uma página HTML temporária pública/sem dados privados, servida por HTTP, com `<script type="module" src="/dist/index.es.js"></script>` e um `<paginate-content>` com conteúdo suficiente. Pode-se servir essa página pelo servidor de desenvolvimento, confirmando na aba Network que o módulo carregado vem de `dist/`, e não de `src/`. Remova apenas o arquivo temporário criado para essa verificação ao terminar.
 
 ## Verificação manual proporcional
 
-Abra `/demo/slot/slot-chapter1.html` para conteúdo em slot, `/demo/summary/index.html` para conteúdo buscado via HTTP e `/demo/events/index.html` para a API pública. As demos importam `dist/index.es.js`, como consumidores reais e como o GitHub Pages; execute `npm run build` antes de validá-las. A página `/` contém atalhos para as demos.
+Abra `/demo/long/index.html` (`?copies=N` ajusta o tamanho) para medir desempenho com texto longo, `/demo/slot/slot-chapter1.html` para conteúdo em slot, `/demo/summary/index.html` para conteúdo buscado via HTTP e `/demo/events/index.html` para a API pública. As demos importam `dist/index.es.js`, como consumidores reais e como o GitHub Pages; execute `npm run build` antes de validá-las. A página `/` contém atalhos para as demos.
 
 Para mudanças de comportamento, selecione os cenários afetados; antes de release, percorra todos:
 
@@ -97,7 +97,8 @@ sem ser corrigido implicitamente. A comparação original usa o bundle de
 referência `0.3.7-2` e Vue hospedeiro 3.5.40.
 
 Para executar o teste da busca pelo mesmo runner, acrescente
-`--page /tests/search-browser.html`. Ele também confere as variáveis de cor
+`--page /tests/search-browser.html` (no Git Bash, prefixe o comando com
+`MSYS_NO_PATHCONV=1` para que o caminho não seja convertido). Ele também confere as variáveis de cor
 nos modos claro/escuro e a ausência da faixa esquerda na seleção.
 Para validar o pacote extraído de um tarball, acrescente `--dist /path/to/package/dist`;
 o servidor usará esse diretório para todas as requisições de `/dist/`.
